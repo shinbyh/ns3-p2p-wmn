@@ -1,0 +1,492 @@
+/* -*-  Mode: C++; c-file-style: "gnu"; indent-tabs-mode:nil; -*- */
+/*
+ * Copyright (c) 2009 The Boeing Company
+ *
+ * This program is free software; you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 2 as
+ * published by the Free Software Foundation;
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
+ *
+ */
+
+#include "ns3/core-module.h"
+#include "ns3/network-module.h"
+#include "ns3/config-store-module.h"
+#include "ns3/point-to-point-module.h" // 170809
+#include "ns3/point-to-point-layout-module.h" // 170809
+#include "ns3/internet-module.h"
+#include "ns3/applications-module.h"
+#include "ns3/internet-apps-module.h"
+#include "ns3/internet-module.h"
+#include "ns3/netanim-module.h" // netanim
+#include "ns3/ipv4-static-routing-helper.h" // routing
+//#include "ns3/ipv4-list-routing-helper.h" // list routing (170916)
+//#include "ns3/olsr-helper.h" // OLSR routing (170916)
+
+#include "my_config.h"
+#include "my_node.h"
+#include "node_id_map.h"
+#include "hello.h"
+#include "app_flowreq_pkt.h"
+#include "string_tokenizer.h"
+
+#include <iostream>
+#include <string>
+#include <vector>
+
+using namespace ns3;
+using namespace std;
+
+NS_LOG_COMPONENT_DEFINE ("BhshinP2PExample");
+
+std::map<int, MyNode*> myNodes;
+NodeIdMap* nodeIdMap;
+
+/*
+ * Creates a point-to-point link between two nodes in a NodeContainer.
+ *
+ * @param allNodes NodeContainer for making connection
+ * @param i the index i of allNodes
+ * @param j the index j of allNodes
+ * @param ipv4Base the base Ipv4 address for auto assignment (e.g. "10.1.1.0")
+ */
+static Ipv4InterfaceContainer makePointToPoint(PointToPointHelper pointToPoint, NodeContainer allNodes, int i, int j, Ipv4Address ipv4Base)
+{
+	NodeContainer p2pNodes;
+	p2pNodes.Add(allNodes.Get(i));
+	p2pNodes.Add(allNodes.Get(j));
+
+	NetDeviceContainer p2pDevices;
+	p2pDevices = pointToPoint.Install (p2pNodes);
+
+	Ipv4AddressHelper address;
+	address.SetBase (ipv4Base, "255.255.255.0"); // e.g. "10.1.2.0"
+
+	Ipv4InterfaceContainer p2pInterfaces;
+	p2pInterfaces = address.Assign (p2pDevices);
+
+	//NS_LOG_UNCOND("[1] " << p2pInterfaces.Get(0).first->GetAddress(p2pInterfaces.Get(0).second, 0).GetLocal());
+	//NS_LOG_UNCOND("[2] " << p2pInterfaces.Get(1).first->GetAddress(p2pInterfaces.Get(1).second, 0).GetLocal());
+	myNodes[i]->addIpv4Address(p2pInterfaces.Get(0).first->GetAddress(p2pInterfaces.Get(0).second, 0).GetLocal());
+	myNodes[j]->addIpv4Address(p2pInterfaces.Get(1).first->GetAddress(p2pInterfaces.Get(1).second, 0).GetLocal());
+	nodeIdMap->addMapping(p2pInterfaces.Get(0).first->GetAddress(p2pInterfaces.Get(0).second, 0).GetLocal(), (uint32_t)i);
+	nodeIdMap->addMapping(p2pInterfaces.Get(1).first->GetAddress(p2pInterfaces.Get(1).second, 0).GetLocal(), (uint32_t)j);
+
+	return p2pInterfaces;
+}
+
+static void ReceiveHello (Ptr<Socket> socket)
+{
+	Time now = Simulator::Now();
+	Address from;
+	Ptr<Packet> packet = socket->RecvFrom(from);
+	InetSocketAddress senderAddr = InetSocketAddress::ConvertFrom(from);
+
+	uint8_t* dataBuffer = MyNode::getPacketDataBuffer(packet);
+	std::string dataStr = ((char*)dataBuffer);
+	Hello hello;
+	hello.parse(dataStr);
+
+	Ptr<Node> node = socket->GetNode();
+	MyNode* myNode = myNodes[node->GetId()];
+	//int ifIdx = socket->GetBoundNetDevice()->GetIfIndex(); // not used
+
+	// debug
+	//NS_LOG_UNCOND("#### ["<< node->GetId() <<"] Recv hello from: " << senderAddr.GetIpv4() << ", t=" << Simulator::Now().GetMilliSeconds());
+	//NS_LOG_UNCOND("#### ["<< node->GetId() <<"] ifIdx = " << ifIdx);
+
+	// MyNode stat
+	uint32_t senderId = nodeIdMap->getNodeId(senderAddr.GetIpv4());
+	Flow flow(senderId, (int)senderAddr.GetPort(), NODEID_BROADCAST, MyConfig::instance().getPortByName("HelloPort"), FlowType::UDP);
+	PacketInfo pktInfo((long)(now.GetMilliSeconds()), flow, 0, packet->GetSize());
+	myNode->handlePacketInfo(pktInfo);
+
+	// handle message
+	myNode->handleHello(node, senderAddr.GetIpv4(), hello);
+	delete(dataBuffer);
+}
+
+static void ReceiveDelayMeasurement(Ptr<Socket> socket)
+{
+	Address from;
+	Ptr<Packet> packet = socket->RecvFrom(from);
+	uint8_t* dataBuffer = MyNode::getPacketDataBuffer(packet);
+	std::string dataStr = ((char*)dataBuffer);
+	Time now = Simulator::Now();
+
+	// parse message
+	DelayMeasurement dm;
+	dm.parse(dataStr);
+
+	Ptr<Node> node = socket->GetNode();
+	MyNode* myNode = myNodes[node->GetId()];
+	InetSocketAddress senderAddr = InetSocketAddress::ConvertFrom(from);
+	//int ifIdx = socket->GetBoundNetDevice()->GetIfIndex();
+	//Ipv4Address nodeIpv4Addr = MyNode::getNodeIpv4Addr(node, ifIdx);
+
+	// debug
+	//NS_LOG_UNCOND("[Node " << node->GetId() << "] received DM (" << dm.getType() << ") from " << senderAddr.GetIpv4() << ", t=" << now.GetMilliSeconds());
+	//NS_LOG_UNCOND(" -packet: " << dataStr);
+
+	// MyNode stat
+	uint32_t senderId = nodeIdMap->getNodeId(senderAddr.GetIpv4());
+	Flow flow(senderId, (int)senderAddr.GetPort(), node->GetId(), MyConfig::instance().getPortByName("DelayMeasurePort"), FlowType::UDP);
+	PacketInfo pktInfo((long)(now.GetMilliSeconds()), flow, 0, packet->GetSize());
+	myNode->handlePacketInfo(pktInfo);
+
+	// handle message
+	myNode->handleDelayMeasurement(node, socket, senderAddr.GetIpv4(), 0, dm);
+	delete (dataBuffer);
+}
+
+static void ReceiveRoutingMessages (Ptr<Socket> socket)
+{
+	Time now = Simulator::Now();
+	Ptr<Node> node = socket->GetNode();
+	MyNode* myNode = myNodes[node->GetId()];
+	Address from;
+	Ptr<Packet> packet = socket->RecvFrom(from);
+	InetSocketAddress senderAddr = InetSocketAddress::ConvertFrom(from);
+	//int ifIdx = socket->GetBoundNetDevice()->GetIfIndex();
+	uint8_t* dataBuffer = MyNode::getPacketDataBuffer(packet);
+	std::string dataStr = ((char*)dataBuffer);
+	int rtMsgType = MyNode::checkRoutingMessageType(dataStr);
+
+	//NS_LOG_UNCOND("[Node " << node->GetId() << "] received RoutingMsg from "<< senderAddr.GetIpv4() << ":" << senderAddr.GetPort() << " (ifIdx=" << ifIdx << "), t=" << now.GetMilliSeconds());
+	//NS_LOG_UNCOND(" - " << dataStr);
+
+	switch(rtMsgType){
+	case ROUTE_ARREQ:
+		myNode->handleARREQ(dataStr, senderAddr.GetIpv4(), 0);
+		break;
+	case ROUTE_ARREP:
+		myNode->handleARREP(dataStr, senderAddr.GetIpv4(), 0);
+		break;
+	case ROUTE_ARERR:
+		myNode->handleARERR(dataStr, senderAddr.GetIpv4(), 0);
+		break;
+	case ROUTE_SETUP:
+		myNode->handleRouteSetup(dataStr, senderAddr.GetIpv4(), 0);
+		break;
+	case PATH_PROBE:
+		myNode->handlePathProbe(dataStr, senderAddr.GetIpv4(), 0);
+		break;
+	default:
+		break;
+	}
+
+	uint32_t senderId = nodeIdMap->getNodeId(senderAddr.GetIpv4());
+	Flow flow(senderId, (int)senderAddr.GetPort(), NODEID_BROADCAST, MyConfig::instance().getPortByName("RoutingPort"), FlowType::UDP);
+	PacketInfo pktInfo((long)(now.GetMilliSeconds()), flow, 0, packet->GetSize());
+	myNode->handlePacketInfo(pktInfo);
+
+	delete(dataBuffer);
+}
+
+static void writeFlowStat(Ptr<Node> node, Time flowWriteInterval){
+	MyNode* myNode = myNodes[node->GetId()];
+	myNode->writeFlowLog();
+	myNode->getFlowTable()->updateRealTimeBandwidth();
+	myNode->getControlFlowTable()->updateRealTimeBandwidth();
+	myNode->writeNeighborTable();
+	myNode->writeMyBWStat();
+
+	// periodically check neighbors
+	Simulator::Schedule (flowWriteInterval, &writeFlowStat, node, flowWriteInterval);
+}
+
+static void parseNodeIdAndPort(string str, uint32_t* nodeId, int* port){
+	vector<string> tokens;
+	tokenizeString(str, tokens, ":");
+	*nodeId = atoi(tokens[0].c_str());
+	*port = atoi(tokens[1].c_str());
+}
+
+static vector<AppFlowReqPkt> readFlowSettingsFromFile(string filepath) {
+	cout << "[MyFlows] reading flows file: " << filepath << endl;
+
+	ifstream inStream(filepath, ios::in);
+	string temp;
+	vector<AppFlowReqPkt> appFlowReqPkts;
+
+	while(!inStream.eof()){
+		getline(inStream, temp);
+		ltrim(temp);
+		rtrim(temp);
+
+		// Skip comments
+		if(temp.substr(0, 1) == "#" || temp.substr(0, 2) == "//"){
+			continue;
+		}
+		// skip blank lines
+		if(temp == "" || temp.size() == 0){
+			continue;
+		}
+
+		// debug
+		cout << temp << endl;
+
+		vector<string> tokens;
+		tokenizeString(temp, tokens, "\t");
+		if(tokens.size() != 11){
+			continue;
+		}
+
+		// extract information from the string
+		int initNodeId = atoi(tokens[0].c_str());
+		uint32_t src;
+		int sport = 0;
+		uint32_t dst;
+		int dport = 0;
+		parseNodeIdAndPort(tokens[1], &src, &sport);
+		parseNodeIdAndPort(tokens[2], &dst, &dport);
+		FlowType::Type type = checkType(tokens[3]);
+		int pktSize = atoi(tokens[4].c_str());
+		int sendingRate = atoi(tokens[5].c_str());
+		Time startTime = Seconds(atof(tokens[6].c_str()));
+		Time duration = Seconds(atof(tokens[7].c_str()));
+		double bwReq = (pktSize*8)*sendingRate;
+		double delayReq = atof(tokens[8].c_str());
+		double jitterReq = atof(tokens[9].c_str());
+		double lossRateReq = atof(tokens[10].c_str());
+
+		Flow flow(src, sport, dst, dport, type);
+		string data(pktSize, 'a');
+		Ptr<MyNS3Packet> myPkt = CreateObject<MyNS3Packet>(flow.getSrc(), flow.getSrcPort(), flow.getDst(), flow.getDstPort(), data);
+		QoSRequirement qosReq(bwReq, delayReq, jitterReq, lossRateReq);
+		FlowRequest flowReq(flow, qosReq, pktSize, sendingRate, startTime, duration);
+
+		AppFlowReqPkt appFlowReqPkt(initNodeId, flowReq, myPkt);
+		appFlowReqPkts.push_back(appFlowReqPkt);
+	}
+
+	return appFlowReqPkts;
+}
+
+
+int main (int argc, char *argv[])
+{
+	MyConfig::instance().readConfigFromFile("sina.config");
+
+	double totalTime = 50.0;
+	uint32_t packetSize = 1000; // bytes
+	uint32_t numPackets = 5;
+
+	bool verbose = true;
+	int numOfNodes = 9;
+	int scheme = EXISTING_WORK; // default: existing work.
+	string appsConfigFile("2apps_10pkts");
+	double helloIntervalN = atof(MyConfig::instance().getValue("HelloInterval").c_str()); // seconds
+	double dmIntervalN = atof(MyConfig::instance().getValue("DelayMeasurementInterval").c_str()); // seconds
+	double flowIntervalN = 1.0;
+	double flowLogIntervalN = 1.0; // seconds
+	Time helloInterval = Seconds (helloIntervalN);
+	Time dmInterval = Seconds (dmIntervalN);
+	Time flowInterval = Seconds(flowIntervalN);
+	Time flowLogInterval = Seconds (flowLogIntervalN);
+
+	if (verbose)
+	{
+		LogComponentEnable("UdpEchoClientApplication", LOG_LEVEL_INFO);
+		LogComponentEnable("UdpEchoServerApplication", LOG_LEVEL_INFO);
+	}
+
+	CommandLine cmd;
+	cmd.AddValue ("packetSize", "size of application packet sent", packetSize);
+	cmd.AddValue ("numPackets", "number of packets generated", numPackets);
+	cmd.AddValue ("verbose", "turn on all WifiNetDevice log components", verbose);
+	cmd.AddValue ("nodes", "number of nodes (by Byoungheon Shin)", numOfNodes);
+	cmd.AddValue ("apps", "input file for application flows (by Byoungheon Shin)", appsConfigFile);
+	cmd.AddValue ("scheme", "for research, which scheme is selected, 0 or 1 (by Byoungheon Shin)", scheme);
+	cmd.Parse (argc, argv);
+
+	/*
+	 * Create nodes and MyNodes (bhshin).
+	 */
+	NodeContainer allNodes;
+	allNodes.Create(numOfNodes);
+	for(uint32_t i=0; i<allNodes.GetN(); i++){
+		MyNode* myNode = new MyNode(i, allNodes.Get(i), scheme);
+		myNodes[i] = myNode;
+	}
+	nodeIdMap = new NodeIdMap();
+
+	// Routing protocol for all nodes
+//	OlsrHelper olsr;
+//	Ipv4StaticRoutingHelper staticRouting;
+//	Ipv4ListRoutingHelper list;
+//	list.Add(staticRouting, 0);
+//	list.Add(olsr, 10);
+
+
+	// Every node needs the Internet stack only once.
+	InternetStackHelper internet;
+	//internet.SetRoutingHelper(list);
+	internet.Install (allNodes);
+
+	// Common p-t-p connection settings
+	PointToPointHelper pointToPoint;
+	pointToPoint.SetDeviceAttribute ("DataRate", StringValue ("5Mbps"));
+	pointToPoint.SetChannelAttribute ("Delay", StringValue ("2ms"));
+
+	/*
+	 * Make point-to-point connections.
+	 */
+	Ipv4InterfaceContainer p2pIfs_0_1 = makePointToPoint(pointToPoint, allNodes, 0, 1, "10.1.1.0");
+	Ipv4InterfaceContainer p2pIfs_1_2 = makePointToPoint(pointToPoint, allNodes, 1, 2, "10.1.2.0");
+	Ipv4InterfaceContainer p2pIfs_2_3 = makePointToPoint(pointToPoint, allNodes, 2, 3, "10.1.3.0");
+	Ipv4InterfaceContainer p2pIfs_1_4 = makePointToPoint(pointToPoint, allNodes, 1, 4, "10.1.4.0");
+	Ipv4InterfaceContainer p2pIfs_4_3 = makePointToPoint(pointToPoint, allNodes, 4, 3, "10.1.5.0");
+	Ipv4InterfaceContainer p2pIfs_3_5 = makePointToPoint(pointToPoint, allNodes, 3, 5, "10.1.6.0");
+	Ipv4InterfaceContainer p2pIfs_6_4 = makePointToPoint(pointToPoint, allNodes, 6, 4, "10.1.7.0");
+	Ipv4InterfaceContainer p2pIfs_4_7 = makePointToPoint(pointToPoint, allNodes, 4, 7, "10.1.8.0");
+	Ipv4InterfaceContainer p2pIfs_3_8 = makePointToPoint(pointToPoint, allNodes, 3, 8, "10.1.9.0");
+
+
+	/*
+	 * Common sockets for all nodes
+	 */
+	TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
+	//Ptr<UniformRandomVariable> x = CreateObject<UniformRandomVariable> ();
+	for(uint32_t i=0; i<allNodes.GetN(); i++){
+		// socket for receiving Hello
+		Ptr<Socket> helloRecvSocket = Socket::CreateSocket(allNodes.Get(i), tid);
+		InetSocketAddress recvHelloAddr = InetSocketAddress (Ipv4Address::GetAny(), MyConfig::instance().getPortByName("HelloPort"));
+		helloRecvSocket->Bind(recvHelloAddr);
+		helloRecvSocket->SetRecvCallback(MakeCallback (&ReceiveHello));
+
+		// socket for receiving DM
+		Ptr<Socket> dmRecvSocket = Socket::CreateSocket(allNodes.Get(i), tid);
+		InetSocketAddress dmAddr = InetSocketAddress (Ipv4Address::GetAny(), MyConfig::instance().getPortByName("DelayMeasurePort"));
+		dmRecvSocket->Bind(dmAddr);
+		dmRecvSocket->SetRecvCallback(MakeCallback (&ReceiveDelayMeasurement));
+
+		// socket for receiving routing messages
+		Ptr<Socket> rtSocket = Socket::CreateSocket(allNodes.Get(i), tid);
+		InetSocketAddress rtAddr = InetSocketAddress (Ipv4Address::GetAny(), MyConfig::instance().getPortByName("RoutingPort"));
+		rtSocket->Bind(rtAddr);
+		rtSocket->SetRecvCallback(MakeCallback (&ReceiveRoutingMessages));
+	}
+
+	for(uint32_t i=0; i<allNodes.GetN(); i++){
+		// scheduling for broadcasting Hello
+		Simulator::ScheduleWithContext (
+				allNodes.Get(i)->GetId(),
+				Seconds(0.1),
+				&MyNode::checkBroadcastHello,
+				myNodes[allNodes.Get(i)->GetId()],
+				helloInterval);
+
+		// scheduling for unicasting DM
+		Simulator::ScheduleWithContext (
+				allNodes.Get(i)->GetId(),
+				Seconds(2.0),
+				&MyNode::checkUnicastDelayMeasurement,
+				myNodes[allNodes.Get(i)->GetId()],
+				dmInterval);
+
+		// flow statistics
+		Simulator::ScheduleWithContext (
+				allNodes.Get(i)->GetId(),
+				Seconds(1.0),
+				&writeFlowStat,
+				allNodes.Get(i),
+				flowLogInterval);
+
+		// flow verification (QoS check)
+		Simulator::ScheduleWithContext (
+				allNodes.Get(i)->GetId(),
+				Seconds(2.0),
+				&MyNode::checkFlowQoS,
+				myNodes[allNodes.Get(i)->GetId()],
+				flowInterval);
+	}
+
+	/*
+	 * Application flows Configuration from a file
+	 */
+	Ptr<UniformRandomVariable> x = CreateObject<UniformRandomVariable> ();
+	uint32_t jitter = x->GetInteger(1, 10000);
+
+	stringstream ss;
+	vector<AppFlowReqPkt> appFlowReqPkts = readFlowSettingsFromFile(appsConfigFile + ".txt");
+	for(AppFlowReqPkt appFlowReqPkt : appFlowReqPkts){
+		// debug
+		cout << "*AppFlowReqPkt\n  -nodeId = " << appFlowReqPkt.getInitNodeId() << endl;
+		cout << "  -flowReq.flow = " << appFlowReqPkt.getFlowReq().getFlow().toString() << endl;
+		cout << "  -flowReq.startTime = " << appFlowReqPkt.getFlowReq().getStartTime().GetSeconds() << endl;
+
+		int nodeId = appFlowReqPkt.getInitNodeId();
+		jitter = x->GetInteger(100, 100000);
+		Simulator::ScheduleWithContext (nodeId,
+				MicroSeconds(appFlowReqPkt.getFlowReq().getStartTime().GetMicroSeconds() + jitter), &MyNode::doRouting,
+				myNodes[nodeId], appFlowReqPkt.getMyPkt(), appFlowReqPkt.getFlowReq());
+	}
+
+	UdpEchoServerHelper echoServer (9);
+	ApplicationContainer serverApps = echoServer.Install (allNodes);
+	serverApps.Start (Seconds (1.0));
+	serverApps.Stop (Seconds (10.0));
+
+	UdpEchoClientHelper echoClient (p2pIfs_0_1.GetAddress(0), 9);
+	echoClient.SetAttribute ("MaxPackets", UintegerValue (10));
+	echoClient.SetAttribute ("Interval", TimeValue (Seconds (1.0)));
+	echoClient.SetAttribute ("PacketSize", UintegerValue (1024));
+
+	ApplicationContainer clientApps = echoClient.Install (allNodes.Get(3));
+	clientApps.Start (Seconds (3.0));
+	clientApps.Stop (Seconds (10.0));
+
+
+/*	UdpEchoClientHelper echoClient (p2pInterfaces.GetAddress(0), 9);
+	echoClient.SetAttribute ("MaxPackets", UintegerValue (10));
+	echoClient.SetAttribute ("Interval", TimeValue (Seconds (1.0)));
+	echoClient.SetAttribute ("PacketSize", UintegerValue (1024));
+
+	ApplicationContainer clientApps = echoClient.Install (p2pNodes.Get (1));
+	clientApps.Start (Seconds (2.0));
+	clientApps.Stop (Seconds (10.0));
+
+	// 2
+	UdpEchoClientHelper echoClient2 (p2pInterfaces2.GetAddress(0), 9);
+	echoClient2.SetAttribute ("MaxPackets", UintegerValue (1));
+	echoClient2.SetAttribute ("Interval", TimeValue (Seconds (1.0)));
+	echoClient2.SetAttribute ("PacketSize", UintegerValue (1024));
+
+	ApplicationContainer clientApps2 = echoClient2.Install (allNodes.Get (2));
+	clientApps2.Start (Seconds (2.0));
+	clientApps2.Stop (Seconds (10.0));
+*/
+
+	/*
+	 * Net-Anim settings
+	 */
+	//AnimationInterface anim("bhshin-animation.xml");
+	//anim.SetMobilityPollInterval(Seconds(0.1));
+	//anim.EnableIpv4RouteTracking ("bhshin-rt.xml", Seconds (0), Seconds (5), Seconds (0.25));
+
+	/*
+	 * Simulator start
+	 */
+	Simulator::Stop(Seconds(totalTime));
+	Simulator::Run ();
+	Simulator::Destroy ();
+
+	/*
+	 * bhshin, delete dynamic memory allocations
+	 */
+	for(uint32_t i=0; i<allNodes.GetN(); i++){
+		delete myNodes[i];
+	}
+	delete nodeIdMap;
+
+	return 0;
+}
