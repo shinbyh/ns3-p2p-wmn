@@ -22,8 +22,10 @@ MyConfig::~MyConfig() {
 
 void MyConfig::init() {
 	this->meshRouter = false;
-	this->proposedScheme = false;
+	//this->proposedScheme = false;
+	this->scheme = 0;
 	this->flowUnsatisfactoryThreshold = 0;
+	this->maxBandwidth = 2000000.0; // 2Mbps
 }
 
 std::pair<std::string, std::string> MyConfig::parsePairFromStr(std::string str, std::string delim) {
@@ -106,18 +108,19 @@ void MyConfig::readConfigFromFile(std::string filepath) {
 				}
 			}
 
-			// additional setting for isMeshRouter
-			if(pConf.first == "IsProposedScheme"){
-				if(pConf.second == "yes" || pConf.second == "true"){
-					this->proposedScheme = true;
-				} else {
-					this->proposedScheme = false;
-				}
+			// additional setting for selecting local repair schemes
+			if(pConf.first == "Scheme"){
+				this->scheme = atoi(pConf.second.c_str());
 			}
 
 			// additional mapping for FlowUnsatisfactoryThreshold
 			if(pConf.first == "FlowUnsatisfactoryThreshold"){
 				this->flowUnsatisfactoryThreshold = atoi(pConf.second.c_str());
+			}
+
+			// additional mapping for maximum bandwidth
+			if(pConf.first == "DefaultMaxBandwidth"){
+				this->maxBandwidth = atof(pConf.second.c_str());
 			}
 		}
 	}
@@ -156,8 +159,8 @@ bool MyConfig::isMeshRouter() const {
 	return meshRouter;
 }
 
-bool MyConfig::isProposedScheme() const {
-	return proposedScheme;
+int MyConfig::getScheme() const {
+	return scheme;
 }
 
 std::vector<std::string> MyConfig::getIfaces() {
@@ -182,4 +185,8 @@ std::string MyConfig::getBroadcastIP(std::string iface) {
 
 int MyConfig::getFlowUnsatisThreshold() {
 	return flowUnsatisfactoryThreshold;
+}
+
+double MyConfig::getMaxBandwidth() {
+	return maxBandwidth;
 }

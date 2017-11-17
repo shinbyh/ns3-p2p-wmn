@@ -76,6 +76,7 @@ public:
 	void _sendPacket(ns3::Ptr<ns3::Socket> socket, ns3::Ptr<ns3::Packet> pkt);
 	void sendRoutingPacket(ns3::Ipv4Address target, string rtMsg);
 
+	int getScheme() const;
 	void addIpv4Address(ns3::Ipv4Address addr);
 	vector<ns3::Ipv4Address> getIpv4List();
 	NeighborTable* getNcTable();
@@ -115,6 +116,8 @@ public:
 	void handleARERR(string str, ns3::Ipv4Address clientIP, int ifIdx);
 	void handleRouteSetup(string str, ns3::Ipv4Address clientIP, int ifIdx);
 	void handlePathProbe(string str, ns3::Ipv4Address clientIP, int ifIdx);
+	void handleMyPacket(ns3::Ptr<MyNS3Packet> myPkt, int pktSize, FlowType::Type type, ns3::Ipv4Address ipAddr);
+	bool checkDstOfMyPacket(MyNS3Packet* myPkt);
 	int getAndIncrementHelloSeqNo();
 
 	// static utility functions

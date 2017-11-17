@@ -12,6 +12,7 @@
 #include "neighbor_table.h"
 #include "delay_measurement.h"
 #include "my_node.h"
+#include "my_config.h"
 
 #include <boost/foreach.hpp>
 #include <sstream>
@@ -50,11 +51,10 @@ void NeighborTable::addAndUpdate(ns3::Ptr<ns3::Node> node, ns3::Ipv4Address ipAd
 		cout << " [Node "<< node->GetId() << "][NT] adding a new NeighborEntry: " << ipAddr << " (nodeId: " << hello.getNodeId() << ")" << endl;
 		entry = new NeighborEntry(hello.getNodeId(), ipAddr, hello.isIsRouter());
 		entry->setIsActive(true);
-		entry->addSampleToETX(hello.getSeqNo());
-		entry->setNumOfFlows(hello.getNumOfFlows());
-		entry->setOccupiedBw(hello.getOccBw());
-		entry->setAllocBw(hello.getAllocBw());
-		//reachable IPs
+		entry->setReachableNodeIds(hello.getNeighbors());
+		if(this->myNode->getScheme() == SCHEME_1){
+			entry->setAvgOccupiedBw(hello.getAvgOccBw());
+		}
 
 		this->ncTable[entry->getNodeId()] = entry;
 		this->keysTimeOrder.push_back(hello.getNodeId());
@@ -64,12 +64,31 @@ void NeighborTable::addAndUpdate(ns3::Ptr<ns3::Node> node, ns3::Ipv4Address ipAd
 		if(!entry->isIsActive()){
 			// re-activate entry
 			entry->setIsActive(true);
+			entry->setReachableNodeIds(hello.getNeighbors());
+			if(this->myNode->getScheme() == SCHEME_1){
+				entry->setAvgOccupiedBw(hello.getAvgOccBw());
+			}
 		}
-		entry->addSampleToETX(hello.getSeqNo());
-		entry->setNumOfFlows(hello.getNumOfFlows());
-		entry->setOccupiedBw(hello.getOccBw());
-		entry->setAllocBw(hello.getAllocBw());
-		//reachable IPs
+	}
+
+	entry->addSampleToETX(hello.getSeqNo());
+	entry->setNumOfFlows(hello.getNumOfFlows());
+	entry->setOccupiedBw(hello.getOccBw());
+	entry->setAllocBw(hello.getAllocBw());
+	//reachable IPs
+
+	if(this->myNode->getScheme() == SCHEME_1){
+		/*
+		 * Scheme 1.
+		 * Get average occupied bandwidth of a neighbor.
+		 */
+		entry->setAvgOccupiedBw(hello.getAvgOccBw());
+	} else if(this->myNode->getScheme() == SCHEME_2){
+
+	} else if(this->myNode->getScheme() == SCHEME_3){
+
+	} else {
+		// Error. invalid scheme configuration.
 	}
 
 	entry->setLastUpdateTime(Simulator::Now().GetMilliSeconds());
@@ -128,6 +147,21 @@ double NeighborTable::getAllocatedBW(uint32_t nodeId) {
 		NeighborEntry* entry = ncTable[nodeId];
 		return entry->getAllocBw();
 	}
+}
+
+double NeighborTable::getAvgOccupiedBW() {
+	double sum = 0.0;
+	int count = 0;
+
+	pair<uint32_t, NeighborEntry*> p;
+	BOOST_FOREACH (p, ncTable){
+		NeighborEntry* entry = p.second;
+		sum += entry->getOccupiedBw();
+		count++;
+	}
+
+	if(count == 0) return 0.0;
+	else return sum/(int)count;
 }
 
 void NeighborTable::updateDelay(uint32_t nodeId, long delay) {
@@ -226,4 +260,33 @@ const std::string NeighborTable::printNeighborTable(ns3::Ptr<ns3::Node> node) {
 	}
 
 	return ss.str();
+}
+
+std::vector<int> NeighborTable::getNeighbors() {
+	vector<int> nodes;
+
+	pair<uint32_t, NeighborEntry*> p;
+	BOOST_FOREACH (p, this->ncTable){
+		NeighborEntry* entry = p.second;
+		if(entry){
+			nodes.push_back(entry->getNodeId());
+		}
+	}
+	return nodes;
+}
+
+/**
+ * Find a set of neighbors whose neighbor contains the node ID.
+ * This list is used for selecting candidate detour nodes.
+ */
+std::vector<NeighborEntry*> NeighborTable::getDetourNodes(int nodeId) {
+	vector<NeighborEntry*> detours;
+	pair<uint32_t, NeighborEntry*> p;
+	BOOST_FOREACH (p, this->ncTable){
+		NeighborEntry* entry = p.second;
+		if(entry){
+			if(entry->containsNeighbor(nodeId)) detours.push_back(entry);
+		}
+	}
+	return detours;
 }

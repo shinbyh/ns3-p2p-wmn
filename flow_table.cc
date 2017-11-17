@@ -210,7 +210,7 @@ std::string FlowTable::printFlowTable(int nodeId){
 				"  -allocBW[0]: " << entry->getAllocatedBandwidth(0) << "\n" <<
 				"  -allocBW[1]: " << entry->getAllocatedBandwidth(1) << "\n" <<
 				"  -avgRTBW[0]: " << entry->getAvgRealTimeBandwidth(0) << "\n" <<
-				"  -avgRTBW[0]: " << entry->getAvgRealTimeBandwidth(1) << "\n";
+				"  -avgRTBW[1]: " << entry->getAvgRealTimeBandwidth(1) << "\n";
 	}
 
 	return ss.str();

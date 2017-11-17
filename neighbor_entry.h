@@ -22,8 +22,10 @@ private:
 	uint32_t nodeId;
 	ns3::Ipv4Address ipAddr;
 	std::vector<ns3::Ipv4Address> reachableIPs;
+	std::vector<int> reachableNodeIds;
 	int numOfFlows;
 	double occupiedBw;
+	double avgOccupiedBw;
 	double allocBw;
 	long delay;
 	double lossRate;
@@ -37,6 +39,7 @@ private:
 	bool isMeshRouter;
 	int dmSeqNo; // DelayMeasurement seqNo.
 	ns3::Time dmSendTime; // DelayMeasurement Requested time
+
 
 	void initialize();
 	double calculateLossRate();
@@ -64,6 +67,8 @@ public:
 	void setNumOfFlows(int numOfFlows);
 	double getOccupiedBw() const;
 	void setOccupiedBw(double occupiedBw);
+	double getAvgOccupiedBw() const; // Scheme 1 2017.11.16)
+	void setAvgOccupiedBw(double avgOccupiedBw); // Scheme 1 (2017.11.16)
 	const ns3::Time& getPrevDstDelayMsrTime() const;
 	void setPrevDstDelayMsrTime(const ns3::Time& prevDstDelayMsrTime);
 	const ns3::Time& getPrevSrcDelayMsrTime() const;
@@ -75,6 +80,7 @@ public:
 	void incrementDmSeqNo();
 
 	bool containsIP(ns3::Ipv4Address ipAddr);
+	bool containsNeighbor(int nodeId);
 	void addSampleToETX(int sample);
 	void addDelayToMovingAvg(long delay);
 	void addJitterToMovingAvg(long jitter);
@@ -82,6 +88,8 @@ public:
 	double getAverageJitter();
 
 	const std::string toString();
+	const std::vector<int>& getReachableNodeIds() const;
+	void setReachableNodeIds(const std::vector<int>& reachableNodeIds);
 };
 
 

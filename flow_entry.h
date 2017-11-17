@@ -71,7 +71,7 @@ public:
 	double getAvgRealTimeBandwidth(int iface);
 	double getAvgRealTimeBandwidth();
 	QoSRequirement getQosReq() const;
-	void setQosReq(QoSRequirement& qosReq);
+	void setQosReq(QoSRequirement qosReq);
 	QoSRequirement getHopQosReq() const;
 	void setHopQosReq(QoSRequirement& hopQosReq);
 	std::string toFormattedFlowInfo();

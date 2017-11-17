@@ -99,7 +99,7 @@ bool Flow::operator ==(const Flow& ref) const {
 }
 
 bool Flow::operator <(const Flow& ref) const {
-	return ((this->src + this->srcPort + this->dst + this->dstPort) < (ref.getSrc() + ref.getSrcPort() + ref.getDst() + ref.getDstPort()));
+	return ((this->src + this->srcPort + this->dst*10000 + this->dstPort*100) < (ref.getSrc() + ref.getSrcPort() + ref.getDst()*10000 + ref.getDstPort()*100));
 }
 
 int Flow::hashCode() {

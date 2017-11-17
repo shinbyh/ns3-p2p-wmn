@@ -15,8 +15,12 @@
 #include <cctype> // for string trim
 #include <locale> // for string trim
 
-#define EXISTING_WORK 0
-#define PROPOSED_SCHEME 1
+//#define EXISTING_WORK 0
+//#define PROPOSED_SCHEME 1
+#define BASELINE 0
+#define SCHEME_1 1
+#define SCHEME_2 2
+#define SCHEME_3 3
 
 #define ROUTE_ARREQ 501
 #define ROUTE_ARREP 502
@@ -37,8 +41,10 @@ private:
 	std::vector<std::string> meshSubnets;
 	std::vector<std::string> hostapdSubnets;
 	bool meshRouter;
-	bool proposedScheme;
+	//bool proposedScheme;
+	int scheme;
 	int flowUnsatisfactoryThreshold;
+	double maxBandwidth;
 
 	MyConfig();
 	MyConfig(const MyConfig& other); // prevent construction by copying
@@ -57,13 +63,14 @@ public:
 	void readConfigFromFile(std::string filepath);
 	std::string getValue(std::string key);
 	bool isMeshRouter() const;
-	bool isProposedScheme() const;
+	int getScheme() const;
 	std::vector<std::string> getIfaces();
 	int getPortByName(std::string name);
 	std::vector<int> getControlPorts();
 	std::vector<std::string> getSubnets();
 	std::string getBroadcastIP(std::string iface);
 	int getFlowUnsatisThreshold();
+	double getMaxBandwidth();
 };
 
 

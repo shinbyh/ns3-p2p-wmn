@@ -94,6 +94,14 @@ void NeighborEntry::setOccupiedBw(double occupiedBw) {
 	this->occupiedBw = occupiedBw;
 }
 
+double NeighborEntry::getAvgOccupiedBw() const {
+	return avgOccupiedBw;
+}
+
+void NeighborEntry::setAvgOccupiedBw(double avgOccupiedBw) {
+	this->avgOccupiedBw = occupiedBw;
+}
+
 const ns3::Time& NeighborEntry::getPrevDstDelayMsrTime() const {
 	return prevDstDelayMsrTime;
 }
@@ -126,6 +134,15 @@ bool NeighborEntry::containsIP(ns3::Ipv4Address ipAddr) {
 		}
 	}
 	return false;
+}
+
+bool NeighborEntry::containsNeighbor(int nodeId){
+	for(int neighborId : this->reachableNodeIds){
+			if(neighborId == nodeId){
+				return true;
+			}
+		}
+		return false;
 }
 
 void NeighborEntry::addSampleToETX(int sample) {
@@ -196,14 +213,24 @@ void NeighborEntry::incrementDmSeqNo() {
 
 const std::string NeighborEntry::toString() {
 	std::stringstream ss;
-	ss << format("%3d%15s %8.1f %8.1f %6.1f %6.1f %5.1f\n")
+	ss << format("%3d%15s %8.1f %8.1f %8.1f %6.1f %6.1f %5.1f\n")
 			% this->nodeId
 			% this->ipAddr
 			% this->allocBw
 			% this->occupiedBw
+			% this->avgOccupiedBw
 			% this->getAverageDelay()
 			% this->getAverageJitter()
 			% this->getLossRate();
 
 	return ss.str();
+}
+
+const std::vector<int>& NeighborEntry::getReachableNodeIds() const {
+	return reachableNodeIds;
+}
+
+void NeighborEntry::setReachableNodeIds(
+		const std::vector<int>& reachableNodeIds) {
+	this->reachableNodeIds = reachableNodeIds;
 }

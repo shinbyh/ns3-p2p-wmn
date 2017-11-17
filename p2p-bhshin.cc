@@ -31,6 +31,11 @@
 //#include "ns3/ipv4-list-routing-helper.h" // list routing (170916)
 //#include "ns3/olsr-helper.h" // OLSR routing (170916)
 
+#ifdef NS3_MPI
+#include "ns3/mpi-interface.h"
+#include <mpi.h>
+#endif
+
 #include "my_config.h"
 #include "my_node.h"
 #include "node_id_map.h"
@@ -191,6 +196,30 @@ static void ReceiveRoutingMessages (Ptr<Socket> socket)
 	delete(dataBuffer);
 }
 
+static void ReceiveMyPacket (Ptr<Socket> socket)
+{
+	Time now = Simulator::Now();
+	Address from;
+	Ptr<Packet> packet = socket->RecvFrom(from);
+	uint8_t* dataBuffer = MyNode::getPacketDataBuffer(packet);
+	std::string dataStr = ((char*)dataBuffer);
+	FlowType::Type type = FlowType::UDP;
+
+	Ptr<Node> node = socket->GetNode();
+	MyNode* myNode = myNodes[node->GetId()];
+	InetSocketAddress senderAddr = InetSocketAddress::ConvertFrom(from);
+	Ptr<MyNS3Packet> myPkt = MyNS3Packet::parse(dataStr);
+
+	myNode->handleMyPacket(myPkt, packet->GetSize(), type, senderAddr.GetIpv4());
+
+	// MyNode stat
+	Flow flow(myPkt->getSrc(), myPkt->getAppSrcPort(), myPkt->getDst(), myPkt->getAppDstPort(), FlowType::UDP);
+	PacketInfo pktInfo((long)(now.GetMilliSeconds()), flow, 0, packet->GetSize());
+	myNode->handlePacketInfo(pktInfo);
+
+	delete(dataBuffer);
+}
+
 static void writeFlowStat(Ptr<Node> node, Time flowWriteInterval){
 	MyNode* myNode = myNodes[node->GetId()];
 	myNode->writeFlowLog();
@@ -279,10 +308,12 @@ int main (int argc, char *argv[])
 	double totalTime = 50.0;
 	uint32_t packetSize = 1000; // bytes
 	uint32_t numPackets = 5;
-
+#ifdef NS3_MPI
+	bool nullmsg = false; // MPI interface, 171114
+#endif
 	bool verbose = true;
 	int numOfNodes = 9;
-	int scheme = EXISTING_WORK; // default: existing work.
+	int scheme = BASELINE; // default: existing work.
 	string appsConfigFile("2apps_10pkts");
 	double helloIntervalN = atof(MyConfig::instance().getValue("HelloInterval").c_str()); // seconds
 	double dmIntervalN = atof(MyConfig::instance().getValue("DelayMeasurementInterval").c_str()); // seconds
@@ -306,13 +337,59 @@ int main (int argc, char *argv[])
 	cmd.AddValue ("nodes", "number of nodes (by Byoungheon Shin)", numOfNodes);
 	cmd.AddValue ("apps", "input file for application flows (by Byoungheon Shin)", appsConfigFile);
 	cmd.AddValue ("scheme", "for research, which scheme is selected, 0 or 1 (by Byoungheon Shin)", scheme);
+#ifdef NS3_MPI
+	cmd.AddValue ("nullmsg", "Enable the use of null-message synchronization", nullmsg);
+#endif
 	cmd.Parse (argc, argv);
+
+#ifdef NS3_MPI
+	// Distributed simulation setup; by default use granted time window algorithm.
+	if(nullmsg){
+		GlobalValue::Bind ("SimulatorImplementationType",
+				StringValue ("ns3::NullMessageSimulatorImpl"));
+	} else {
+		GlobalValue::Bind ("SimulatorImplementationType",
+				StringValue ("ns3::DistributedSimulatorImpl"));
+	}
+
+	// Enable parallel simulator with the command line arguments
+	MpiInterface::Enable (&argc, &argv);
+
+	uint32_t systemId = MpiInterface::GetSystemId ();
+	uint32_t systemCount = MpiInterface::GetSize ();
+
+	//debug
+	NS_LOG_UNCOND("[main] System ID: " << systemId << " / System Count: " << systemCount);
+#endif
 
 	/*
 	 * Create nodes and MyNodes (bhshin).
 	 */
 	NodeContainer allNodes;
+
+#ifdef NS3_MPI
+	// MPI system ID allocation
+	for(uint32_t i=0; i<systemCount; i++){
+		int partialCount = (int)(numOfNodes/systemCount);
+
+		if(i+1 == systemCount){
+			partialCount += (int)(numOfNodes % systemCount);
+		}
+
+		// debug
+		NS_LOG_UNCOND("[main] creating " << partialCount << " nodes for system ID " << i);
+
+		NodeContainer partialNodes;
+		partialNodes.Create(partialCount, i);
+		allNodes.Add(partialNodes);
+	}
+#else
 	allNodes.Create(numOfNodes);
+#endif
+
+	// debug
+	NS_LOG_UNCOND("[main] created total " << allNodes.GetN() << " nodes.");
+
 	for(uint32_t i=0; i<allNodes.GetN(); i++){
 		MyNode* myNode = new MyNode(i, allNodes.Get(i), scheme);
 		myNodes[i] = myNode;
@@ -349,7 +426,7 @@ int main (int argc, char *argv[])
 	Ipv4InterfaceContainer p2pIfs_6_4 = makePointToPoint(pointToPoint, allNodes, 6, 4, "10.1.7.0");
 	Ipv4InterfaceContainer p2pIfs_4_7 = makePointToPoint(pointToPoint, allNodes, 4, 7, "10.1.8.0");
 	Ipv4InterfaceContainer p2pIfs_3_8 = makePointToPoint(pointToPoint, allNodes, 3, 8, "10.1.9.0");
-
+	Ipv4InterfaceContainer p2pIfs_2_4 = makePointToPoint(pointToPoint, allNodes, 4, 2, "10.1.10.0");
 
 	/*
 	 * Common sockets for all nodes
@@ -374,6 +451,12 @@ int main (int argc, char *argv[])
 		InetSocketAddress rtAddr = InetSocketAddress (Ipv4Address::GetAny(), MyConfig::instance().getPortByName("RoutingPort"));
 		rtSocket->Bind(rtAddr);
 		rtSocket->SetRecvCallback(MakeCallback (&ReceiveRoutingMessages));
+
+		// socket for receiving MyPackets
+		Ptr<Socket> mpSocket = Socket::CreateSocket(allNodes.Get(i), tid);
+		InetSocketAddress mpAddr = InetSocketAddress (Ipv4Address::GetAny(), MyConfig::instance().getPortByName("MyDataPort"));
+		mpSocket->Bind(mpAddr);
+		mpSocket->SetRecvCallback(MakeCallback (&ReceiveMyPacket));
 	}
 
 	for(uint32_t i=0; i<allNodes.GetN(); i++){

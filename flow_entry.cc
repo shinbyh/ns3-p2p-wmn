@@ -234,7 +234,7 @@ QoSRequirement FlowEntry::getQosReq() const {
 	return qosReq;
 }
 
-void FlowEntry::setQosReq(QoSRequirement& qosReq) {
+void FlowEntry::setQosReq(QoSRequirement qosReq) {
 	this->qosReq = qosReq;
 }
 

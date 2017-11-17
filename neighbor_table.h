@@ -36,8 +36,11 @@ public:
 	void setInactive(uint32_t nodeId);
 	NeighborEntry* get(uint32_t nodeId);
 	NeighborEntry* get(ns3::Ipv4Address ipAddr);
+	std::vector<int> getNeighbors();
+	std::vector<NeighborEntry*> getDetourNodes(int nodeId);
 
 	double getAllocatedBW(uint32_t nodeId); // TODO: nodeId
+	double getAvgOccupiedBW(); // SCHEME_1 (2017.11.16)
 	void updateDelay(uint32_t nodeId, long delay);
 	void updateJitter(uint32_t nodeId, long jitter);
 	void updateNumFlows(uint32_t nodeId, int flows);

@@ -59,7 +59,7 @@ void FlowRequest::setSendingRate(int sendingRate) {
 	this->sendingRate = sendingRate;
 }
 
-const QoSRequirement& FlowRequest::getQosReq() const {
+QoSRequirement FlowRequest::getQosReq() const {
 	return qosReq;
 }
 

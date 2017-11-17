@@ -33,7 +33,7 @@ public:
 	void setPktSize(int pktSize);
 	int getSendingRate() const;
 	void setSendingRate(int sendingRate);
-	const QoSRequirement& getQosReq() const;
+	QoSRequirement getQosReq() const;
 	void setQosReq(const QoSRequirement& qosReq);
 	const ns3::Time& getStartTime() const;
 	void setStartTime(const ns3::Time& startTime);
