@@ -250,7 +250,7 @@ void NeighborTable::checkSendDelayMeasurement() {
 const std::string NeighborTable::printNeighborTable(ns3::Ptr<ns3::Node> node) {
 	std::stringstream ss;
 	ss << "[Node " << node->GetId() << "] NeighborTable (t=" << Simulator::Now().GetSeconds() << ")\n"
-		<< " id       IP        allocBW    occBW  delay jitter  loss\n"
+		<< " id       IP        allocBW    occBW    avgOccBW  delay jitter  loss\n"
 		<< "-----------------------------------------------------------------\n";
 
 	pair<uint32_t, NeighborEntry*> p;

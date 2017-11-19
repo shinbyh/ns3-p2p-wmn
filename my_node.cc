@@ -671,8 +671,12 @@ void MyNode::handlePacketInfo(PacketInfo pktInfo) {
 }
 
 void MyNode::handleHello(Ptr<Node> node, Ipv4Address ipAddr, Hello hello) {
-	//NS_LOG_UNCOND("[Node "<< node->GetId() << "] handleHello");
-	//NS_LOG_UNCOND(" - " << hello.serialize());
+	if(this->nodeId == 4){
+		NS_LOG_UNCOND("[Node "<< node->GetId() << "] handleHello");
+		NS_LOG_UNCOND(" - " << hello.serialize());
+		this->nodeOut << "[Node "<< node->GetId() << "] handleHello" << "\n";
+		this->nodeOut << " - " << hello.serialize() << "\n";
+	}
 	this->ncTable->addAndUpdate(node, ipAddr, hello);
 }
 
@@ -766,10 +770,10 @@ void MyNode::handleARREQ(string str, Ipv4Address clientIP, int ifIdx) {
 	arreq.parse(str);
 
 	// debug
-	NS_LOG_UNCOND("[Node "<< this->nodeId <<"] handleARREQ (from " << clientIP << ", ifIdx=" << ifIdx << ", trIdx=" << arreq.getTrace().size() << ") t=" << Simulator::Now().GetMilliSeconds());
+	NS_LOG_UNCOND("[Node "<< this->nodeId <<"] handleARREQ (from " << nodeIdMap->getNodeId(clientIP) << ", trIdx=" << arreq.getTrace().size() << ") t=" << Simulator::Now().GetMilliSeconds());
 	NS_LOG_UNCOND(" - " << str);
 	NS_LOG_UNCOND(" - seqNo=" << arreq.getSeqNo());
-	this->nodeOut << "[Node "<< this->nodeId <<"] handleARREQ (from " << clientIP << ", ifIdx=" << ifIdx << ", trIdx=" << arreq.getTrace().size() << ") t=" << Simulator::Now().GetMilliSeconds() << "\n";
+	this->nodeOut << "[Node "<< this->nodeId <<"] handleARREQ (from " << nodeIdMap->getNodeId(clientIP) << ", trIdx=" << arreq.getTrace().size() << ") t=" << Simulator::Now().GetMilliSeconds() << "\n";
 	this->nodeOut << " - " << str << "\n";
 	this->nodeOut << " - seqNo=" << arreq.getSeqNo() << "\n";
 
