@@ -80,6 +80,8 @@ std::string RouteTable::toString() {
 	std::stringstream ss;
 	ss << std::fixed;
 	ss << "[RT] Routing Table:\n";
+	ss << "mkId  src  sport  dst  dport  type nextHop hopCnt iface\n"
+		<< "----------------------------------------------------------\n";
 
 	std::pair<Flow, Route*> p;
 	BOOST_FOREACH (p, routeTable){

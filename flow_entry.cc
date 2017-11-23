@@ -7,10 +7,12 @@
 
 #include "flow_entry.h"
 #include "flow_stat.h"
+#include "my_config.h"
 #include <sstream>
 #include <boost/foreach.hpp>
+#include <boost/format.hpp>
 
-#include "my_config.h"
+using namespace boost;
 
 FlowEntry::FlowEntry(Flow flow, long startTime) {
 	this->flow = flow;
@@ -191,13 +193,19 @@ double FlowEntry::getAvgRealTimeBandwidth(int ifIdx) {
 
 double FlowEntry::getAvgRealTimeBandwidth() {
 	double sum = 0.0;
+	int count = 0;
 
 	std::pair<std::string, FlowStat*> p;
 	BOOST_FOREACH(p, flowStats){
-		//sum += p.second->getAvgRealTimeBandwidth();
-		sum += p.second->getRealTimeBandwidth();
+		sum += p.second->getAvgRealTimeBandwidth();
+		//sum += p.second->getRealTimeBandwidth();
+		count++;
 	}
-	return sum;
+	return sum/(double)count;
+}
+
+double FlowEntry::getAvgResidualBandwidth(){
+	return MyConfig::instance().getMaxBandwidth() - getAvgRealTimeBandwidth();
 }
 
 std::string FlowEntry::toFormattedFlowInfo() {
@@ -212,22 +220,13 @@ std::string FlowEntry::toFormattedFlowInfo() {
 std::string FlowEntry::toString() {
 	std::stringstream ss;
 	ss << std::fixed;
-	ss << "(FlowEntry)\n"
-		<< " -Flow: " << flow.toString() << "\n"
-		<< " -startTime: " << startTime << "\n"
-		<< " -lastTime: " << lastTime << "\n"
-		<< " -appReqSeqNo: " << appReqSeqNo << "\n"
-		<< " -active: " << active  << "\n"
-		<< " -controlFlow: " << controlFlow << "\n"
-		<< " -FlowStats: ";
-
-	std::stringstream ss2;
-	std::pair<std::string, FlowStat*> pa;
-	BOOST_FOREACH (pa, flowStats) {
-		ss2 << "(" << pa.first << ") " << pa.second->toString() << "\n";
-	}
-
-	return ss.str() + ss2.str();
+	ss << format("%26s  %33s  %8.2f  %8.2f  %8.2f")
+			% this->flow.toString()
+			% this->qosReq.serialize()
+			% this->getAllocatedBandwidth(0)
+			% this->getAvgRealTimeBandwidth()
+			% this->getAvgResidualBandwidth();
+	return ss.str();
 }
 
 QoSRequirement FlowEntry::getQosReq() const {

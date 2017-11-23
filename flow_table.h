@@ -34,6 +34,7 @@ public:
 	void setAllocatedBW(Flow flow, int ifIdx, double allocBW);
 	double getAllocatedBW(int ifIdx);
 	double getOccupiedBW(int ifIdx);
+	double getAvgResidualBW();
 	FlowEntry* getFlowEntry(Flow flow);
 	void markInactiveFlows(long from, long threshold);
 	void setFlowInactive(Flow flow);

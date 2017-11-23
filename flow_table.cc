@@ -115,6 +115,19 @@ double FlowTable::getOccupiedBW(int ifIdx) {
 	return occBW;
 }
 
+double FlowTable::getAvgResidualBW(){
+	double resBW = 0.0;
+	std::pair<Flow, FlowEntry*> p;
+	BOOST_FOREACH (p, flowTable){
+		FlowEntry* entry = p.second;
+		resBW += entry->getAvgResidualBandwidth();
+	}
+	if(flowTable.size() > 0)
+		return resBW / (double)flowTable.size();
+	else
+		return 0.0;
+}
+
 FlowEntry* FlowTable::getFlowEntry(Flow flow) {
 	if(flowTable.find(flow) == flowTable.end()){
 		return 0;
@@ -198,6 +211,8 @@ std::string FlowTable::getFormattedFlowOutput(std::string time) {
 std::string FlowTable::printFlowTable(int nodeId){
 	std::stringstream ss;
 	ss << std::fixed << "[Node "<< nodeId << "] FlowTable\n";
+	ss << "         flow                        QoS Requirement             allocBW      avgRTBW    avgResBW\n"
+		<< "---------------------------------------------------------------------------------------------------\n";
 
 	for(Flow flow : keysTimeOrder){
 		FlowEntry* entry = flowTable[flow];
@@ -205,12 +220,7 @@ std::string FlowTable::printFlowTable(int nodeId){
 		// filter out control flows
 		if(entry->isControlFlow()) continue;
 
-		ss << entry->getFlow().toString() << "\n" <<
-				"  -qos: " << entry->getQosReq().serialize() << "\n" <<
-				"  -allocBW[0]: " << entry->getAllocatedBandwidth(0) << "\n" <<
-				"  -allocBW[1]: " << entry->getAllocatedBandwidth(1) << "\n" <<
-				"  -avgRTBW[0]: " << entry->getAvgRealTimeBandwidth(0) << "\n" <<
-				"  -avgRTBW[1]: " << entry->getAvgRealTimeBandwidth(1) << "\n";
+		ss << entry->toString() << "\n";
 	}
 
 	return ss.str();

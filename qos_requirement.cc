@@ -8,6 +8,9 @@
 #include "qos_requirement.h"
 #include <sstream>
 #include "string_tokenizer.h"
+#include <boost/format.hpp>
+
+using namespace boost;
 
 QoSRequirement::QoSRequirement() {
 	this->bandwidth = 0.0;
@@ -73,10 +76,10 @@ QoSRequirement QoSRequirement::parse(string str) {
 string QoSRequirement::serialize() {
 	stringstream ss;
 	ss << std::fixed;
-	ss << this->bandwidth << "#" <<
-			this->delay << "#" <<
-			this->jitter << "#" <<
-			this->lossRate;
+	ss << format("%.2f") % this->bandwidth << "#" <<
+			format("%.2f") % this->delay << "#" <<
+			format("%.2f") % this->jitter << "#" <<
+			format("%.2f") % this->lossRate;
 
 	return ss.str();
 }

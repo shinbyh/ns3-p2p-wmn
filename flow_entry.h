@@ -70,6 +70,7 @@ public:
 	double getAllocatedBandwidth(int iface);
 	double getAvgRealTimeBandwidth(int iface);
 	double getAvgRealTimeBandwidth();
+	double getAvgResidualBandwidth();
 	QoSRequirement getQosReq() const;
 	void setQosReq(QoSRequirement qosReq);
 	QoSRequirement getHopQosReq() const;

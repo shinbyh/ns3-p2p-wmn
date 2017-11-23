@@ -26,7 +26,7 @@ MyNS3Packet::MyNS3Packet() {
 	this->dst = 0;
 }
 
-uint32_t MyNS3Packet::getDst() const {
+const uint32_t MyNS3Packet::getDst() const {
 	return dst;
 }
 
@@ -42,7 +42,7 @@ void MyNS3Packet::setMsg(const std::string msg) {
 	this->msg = msg;
 }
 
-uint32_t MyNS3Packet::getSrc() const {
+const uint32_t MyNS3Packet::getSrc() const {
 	return src;
 }
 
@@ -75,7 +75,7 @@ Ptr<MyNS3Packet> MyNS3Packet::parse(std::string str) {
 	return myPkt;
 }
 
-int MyNS3Packet::getAppDstPort() const {
+const int MyNS3Packet::getAppDstPort() const {
 	return appDstPort;
 }
 
@@ -83,7 +83,7 @@ void MyNS3Packet::setAppDstPort(int appDstPort) {
 	this->appDstPort = appDstPort;
 }
 
-int MyNS3Packet::getAppSrcPort() const {
+const int MyNS3Packet::getAppSrcPort() const {
 	return appSrcPort;
 }
 

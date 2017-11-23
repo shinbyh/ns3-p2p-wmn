@@ -100,7 +100,7 @@ void ARREP::setFlow(const Flow& flow) {
 	this->flow = flow;
 }
 
-LinkQuality ARREP::getLinkQuality() {
+const LinkQuality ARREP::getLinkQuality() const {
 	return linkQuality;
 }
 

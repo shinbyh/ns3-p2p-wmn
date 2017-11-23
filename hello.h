@@ -24,7 +24,7 @@ private:
 	// std::string[] reachableIPs;
 	std::vector<int> neighbors; // neighbor IDs, 2017.11.16
 
-	std::string serializeTrace();
+	std::string serializeNeighbors();
 	void parseTrace(std::string str);
 public:
 	Hello();

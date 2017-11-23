@@ -8,6 +8,9 @@
 #include "link_quality.h"
 #include <sstream>
 #include "string_tokenizer.h"
+#include <boost/format.hpp>
+
+using namespace boost;
 
 LinkQuality::LinkQuality() {
 	this->bandwidth = 0.0;
@@ -31,7 +34,7 @@ LinkQuality::LinkQuality(LinkQuality* lq) {
 	this->lossRate = lq->getLossRate();
 }
 
-double LinkQuality::getBandwidth() const {
+const double LinkQuality::getBandwidth() const {
 	return bandwidth;
 }
 
@@ -39,7 +42,7 @@ void LinkQuality::setBandwidth(double bandwidth) {
 	this->bandwidth = bandwidth;
 }
 
-double LinkQuality::getDelay() const {
+const double LinkQuality::getDelay() const {
 	return delay;
 }
 
@@ -47,7 +50,7 @@ void LinkQuality::setDelay(double delay) {
 	this->delay = delay;
 }
 
-double LinkQuality::getJitter() const {
+const double LinkQuality::getJitter() const {
 	return jitter;
 }
 
@@ -55,7 +58,7 @@ void LinkQuality::setJitter(double jitter) {
 	this->jitter = jitter;
 }
 
-double LinkQuality::getLossRate() const {
+const double LinkQuality::getLossRate() const {
 	return lossRate;
 }
 
@@ -66,7 +69,7 @@ void LinkQuality::setLossRate(double lossRate) {
 LinkQuality::~LinkQuality() {
 }
 
-int LinkQuality::compare(LinkQuality target) {
+int LinkQuality::compare(const LinkQuality target) const {
 	int flag = 0;
 
 	if(this->bandwidth > target.getBandwidth()){
@@ -87,10 +90,10 @@ int LinkQuality::compare(LinkQuality target) {
 std::string LinkQuality::serialize() {
 	std::stringstream ss;
 	ss << std::fixed;
-	ss << this->bandwidth << "#" <<
-			this->delay << "#" <<
-			this->jitter << "#" <<
-			this->lossRate;
+	ss << format("%.2f") % this->bandwidth << "#" <<
+			format("%.2f") % this->delay << "#" <<
+			format("%.2f") % this->jitter << "#" <<
+			format("%.2f") % this->lossRate;
 
 	return ss.str();
 }

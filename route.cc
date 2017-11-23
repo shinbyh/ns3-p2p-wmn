@@ -8,6 +8,9 @@
 #include "route.h"
 #include "route_id_marker.h"
 #include <sstream>
+#include <boost/format.hpp>
+
+using namespace boost;
 
 Route::Route(Flow flow, uint32_t nextHop) {
 	this->flow = flow;
@@ -74,18 +77,16 @@ Route::~Route() {
 
 const std::string Route::toString() {
 	std::stringstream ss;
-	ss << std::fixed;
-
-	ss << markID <<
-		"\t" << flow.getSrc() << ":" << flow.getSrcPort() <<
-		"\t" << flow.getDst() << ":" << flow.getDstPort() <<
-		"\t" << flow.getType() <<
-		"\t" << nextHop <<
-		"\t" << hopCount <<
-		"\t" << outgoingIface <<
-		"\t" << tcBandwidth << "kbps" <<
-		"\t" << rtTableNumber;
-
+	ss << format("%4d %4d %6d %4d %6d %5d %7d %6d %5d")
+			% markID
+			% flow.getSrc()
+			% flow.getSrcPort()
+			% flow.getDst()
+			% flow.getDstPort()
+			% flow.getType()
+			% nextHop
+			% hopCount
+			% outgoingIface;
 	return ss.str();
 }
 

@@ -46,36 +46,24 @@ uint32_t NeighborTable::getNodeId(ns3::Ipv4Address ipAddr) {
 void NeighborTable::addAndUpdate(ns3::Ptr<ns3::Node> node, ns3::Ipv4Address ipAddr, Hello hello) {
 	NeighborEntry* entry;
 
-	if(ncTable.find(hello.getNodeId()) == ncTable.end()){
-		// not found
+	if(this->ncTable.find(hello.getNodeId()) == this->ncTable.end()){
+		// Neighbor entry not found.
 		cout << " [Node "<< node->GetId() << "][NT] adding a new NeighborEntry: " << ipAddr << " (nodeId: " << hello.getNodeId() << ")" << endl;
 		entry = new NeighborEntry(hello.getNodeId(), ipAddr, hello.isIsRouter());
-		entry->setIsActive(true);
-		entry->setReachableNodeIds(hello.getNeighbors());
-		if(this->myNode->getScheme() == SCHEME_1){
-			entry->setAvgOccupiedBw(hello.getAvgOccBw());
-		}
 
 		this->ncTable[entry->getNodeId()] = entry;
 		this->keysTimeOrder.push_back(hello.getNodeId());
-
 	} else {
-		entry = ncTable[hello.getNodeId()];
-		if(!entry->isIsActive()){
-			// re-activate entry
-			entry->setIsActive(true);
-			entry->setReachableNodeIds(hello.getNeighbors());
-			if(this->myNode->getScheme() == SCHEME_1){
-				entry->setAvgOccupiedBw(hello.getAvgOccBw());
-			}
-		}
+		// Existing neighbor entry.
+		entry = this->ncTable[hello.getNodeId()];
 	}
 
+	entry->setIsActive(true);
+	entry->setReachableNodeIds(hello.getNeighbors());
 	entry->addSampleToETX(hello.getSeqNo());
 	entry->setNumOfFlows(hello.getNumOfFlows());
 	entry->setOccupiedBw(hello.getOccBw());
 	entry->setAllocBw(hello.getAllocBw());
-	//reachable IPs
 
 	if(this->myNode->getScheme() == SCHEME_1){
 		/*
@@ -161,7 +149,7 @@ double NeighborTable::getAvgOccupiedBW() {
 	}
 
 	if(count == 0) return 0.0;
-	else return sum/(int)count;
+	else return sum/(double)count;
 }
 
 void NeighborTable::updateDelay(uint32_t nodeId, long delay) {
@@ -247,11 +235,11 @@ void NeighborTable::checkSendDelayMeasurement() {
 	}
 }
 
-const std::string NeighborTable::printNeighborTable(ns3::Ptr<ns3::Node> node) {
+const std::string NeighborTable::printNeighborTable(ns3::Ptr<ns3::Node> node) const {
 	std::stringstream ss;
 	ss << "[Node " << node->GetId() << "] NeighborTable (t=" << Simulator::Now().GetSeconds() << ")\n"
-		<< " id       IP        allocBW    occBW    avgOccBW  delay jitter  loss\n"
-		<< "-----------------------------------------------------------------\n";
+		<< " id       IP        allocBW    occBW avgOccBW  delay jitter   loss  neighbors\n"
+		<< "--------------------------------------------------------------------------------\n";
 
 	pair<uint32_t, NeighborEntry*> p;
 	BOOST_FOREACH (p, ncTable){
@@ -262,7 +250,7 @@ const std::string NeighborTable::printNeighborTable(ns3::Ptr<ns3::Node> node) {
 	return ss.str();
 }
 
-std::vector<int> NeighborTable::getNeighbors() {
+std::vector<int> NeighborTable::getNeighborIDs() {
 	vector<int> nodes;
 
 	pair<uint32_t, NeighborEntry*> p;
@@ -273,6 +261,10 @@ std::vector<int> NeighborTable::getNeighbors() {
 		}
 	}
 	return nodes;
+}
+
+const std::map<uint32_t, NeighborEntry*> NeighborTable::getMap(){
+	return this->ncTable;
 }
 
 /**
@@ -290,3 +282,5 @@ std::vector<NeighborEntry*> NeighborTable::getDetourNodes(int nodeId) {
 	}
 	return detours;
 }
+
+

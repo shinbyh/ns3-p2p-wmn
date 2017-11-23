@@ -30,7 +30,7 @@ public:
 	virtual ~ARREP();
 	Flow getFlow();
 	void setFlow(const Flow& flow);
-	LinkQuality getLinkQuality();
+	const LinkQuality getLinkQuality() const;
 	void setLinkQuality(const LinkQuality linkQuality);
 	const QoSRequirement getQosReq() const;
 	void setQosReq(const QoSRequirement qosReq);

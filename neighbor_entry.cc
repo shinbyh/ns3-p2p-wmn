@@ -30,7 +30,7 @@ void NeighborEntry::initialize() {
 	this->dmSeqNo = 0;
 }
 
-double NeighborEntry::getAllocBw() const {
+const double NeighborEntry::getAllocBw() const {
 	return allocBw;
 }
 
@@ -38,7 +38,7 @@ void NeighborEntry::setAllocBw(double allocBw) {
 	this->allocBw = allocBw;
 }
 
-long NeighborEntry::getDelay() const {
+const long NeighborEntry::getDelay() const {
 	return delay;
 }
 
@@ -46,7 +46,7 @@ void NeighborEntry::setDelay(long delay) {
 	this->delay = delay;
 }
 
-bool NeighborEntry::isIsActive() const {
+const bool NeighborEntry::isIsActive() const {
 	return isActive;
 }
 
@@ -54,7 +54,7 @@ void NeighborEntry::setIsActive(bool isActive) {
 	this->isActive = isActive;
 }
 
-bool NeighborEntry::isIsMeshRouter() const {
+const bool NeighborEntry::isIsMeshRouter() const {
 	return isMeshRouter;
 }
 
@@ -62,7 +62,7 @@ void NeighborEntry::setIsMeshRouter(bool isMeshRouter) {
 	this->isMeshRouter = isMeshRouter;
 }
 
-long NeighborEntry::getLastUpdateTime() const {
+const long NeighborEntry::getLastUpdateTime() const {
 	return lastUpdateTime;
 }
 
@@ -70,7 +70,7 @@ void NeighborEntry::setLastUpdateTime(long lastUpdateTime) {
 	this->lastUpdateTime = lastUpdateTime;
 }
 
-double NeighborEntry::getLossRate() const {
+const double NeighborEntry::getLossRate() const {
 	return lossRate;
 }
 
@@ -78,7 +78,7 @@ void NeighborEntry::setLossRate(double lossRate) {
 	this->lossRate = lossRate;
 }
 
-int NeighborEntry::getNumOfFlows() const {
+const int NeighborEntry::getNumOfFlows() const {
 	return numOfFlows;
 }
 
@@ -86,7 +86,7 @@ void NeighborEntry::setNumOfFlows(int numOfFlows) {
 	this->numOfFlows = numOfFlows;
 }
 
-double NeighborEntry::getOccupiedBw() const {
+const double NeighborEntry::getOccupiedBw() const {
 	return occupiedBw;
 }
 
@@ -94,12 +94,12 @@ void NeighborEntry::setOccupiedBw(double occupiedBw) {
 	this->occupiedBw = occupiedBw;
 }
 
-double NeighborEntry::getAvgOccupiedBw() const {
+const double NeighborEntry::getAvgOccupiedBw() const {
 	return avgOccupiedBw;
 }
 
 void NeighborEntry::setAvgOccupiedBw(double avgOccupiedBw) {
-	this->avgOccupiedBw = occupiedBw;
+	this->avgOccupiedBw = avgOccupiedBw;
 }
 
 const ns3::Time& NeighborEntry::getPrevDstDelayMsrTime() const {
@@ -118,8 +118,8 @@ void NeighborEntry::setPrevSrcDelayMsrTime(const ns3::Time& prevSrcDelayMsrTime)
 	this->prevSrcDelayMsrTime = prevSrcDelayMsrTime;
 }
 
-double NeighborEntry::calculateLossRate() {
-	boost::circular_buffer<double>::iterator it = etxSample.begin();
+const double NeighborEntry::calculateLossRate() const {
+	boost::circular_buffer<double>::const_iterator it = etxSample.begin();
 	double sum = 0.0;
 	for(it = etxSample.begin(); it != etxSample.end(); ++it){
 		sum += *it;
@@ -127,7 +127,7 @@ double NeighborEntry::calculateLossRate() {
 	return sum / etxSample.size();
 }
 
-bool NeighborEntry::containsIP(ns3::Ipv4Address ipAddr) {
+const bool NeighborEntry::containsIP(ns3::Ipv4Address ipAddr) const {
 	for(ns3::Ipv4Address reachableIP : this->reachableIPs){
 		if(reachableIP == ipAddr){
 			return true;
@@ -136,13 +136,13 @@ bool NeighborEntry::containsIP(ns3::Ipv4Address ipAddr) {
 	return false;
 }
 
-bool NeighborEntry::containsNeighbor(int nodeId){
+const bool NeighborEntry::containsNeighbor(int nodeId) const {
 	for(int neighborId : this->reachableNodeIds){
-			if(neighborId == nodeId){
-				return true;
-			}
+		if(neighborId == nodeId){
+			return true;
 		}
-		return false;
+	}
+	return false;
 }
 
 void NeighborEntry::addSampleToETX(int sample) {
@@ -158,8 +158,8 @@ void NeighborEntry::addJitterToMovingAvg(long jitter) {
 	avgJitter.push_back(jitter);
 }
 
-double NeighborEntry::getAverageDelay() {
-	boost::circular_buffer<long>::iterator it = avgDelay.begin();
+const double NeighborEntry::getAverageDelay() const {
+	boost::circular_buffer<long>::const_iterator it = avgDelay.begin();
 	double sum = 0.0;
 	for(it = avgDelay.begin(); it != avgDelay.end(); ++it){
 		sum += *it;
@@ -167,8 +167,8 @@ double NeighborEntry::getAverageDelay() {
 	return sum / avgDelay.size();
 }
 
-double NeighborEntry::getAverageJitter() {
-	boost::circular_buffer<long>::iterator it = avgJitter.begin();
+const double NeighborEntry::getAverageJitter() const {
+	boost::circular_buffer<long>::const_iterator it = avgJitter.begin();
 	double sum = 0.0;
 	for(it = avgJitter.begin(); it != avgJitter.end(); ++it){
 		sum += *it;
@@ -211,9 +211,9 @@ void NeighborEntry::incrementDmSeqNo() {
 	this->dmSeqNo++;
 }
 
-const std::string NeighborEntry::toString() {
+const std::string NeighborEntry::toString() const {
 	std::stringstream ss;
-	ss << format("%3d%15s %8.1f %8.1f %8.1f %6.1f %6.1f %5.1f\n")
+	ss << format("%3d%15s %8.1f %8.1f %8.1f %6.1f %6.1f %6.1f  ")
 			% this->nodeId
 			% this->ipAddr
 			% this->allocBw
@@ -222,6 +222,14 @@ const std::string NeighborEntry::toString() {
 			% this->getAverageDelay()
 			% this->getAverageJitter()
 			% this->getLossRate();
+
+	for(size_t i=0; i<this->reachableNodeIds.size(); i++){
+		if(i + 1 < this->reachableNodeIds.size())
+			ss << this->reachableNodeIds[i] << ",";
+		else
+			ss << this->reachableNodeIds[i];
+	}
+	ss << "\n";
 
 	return ss.str();
 }
@@ -232,5 +240,6 @@ const std::vector<int>& NeighborEntry::getReachableNodeIds() const {
 
 void NeighborEntry::setReachableNodeIds(
 		const std::vector<int>& reachableNodeIds) {
-	this->reachableNodeIds = reachableNodeIds;
+	this->reachableNodeIds.resize((int)reachableNodeIds.size());
+	std::copy(reachableNodeIds.begin(), reachableNodeIds.end(), this->reachableNodeIds.begin());
 }

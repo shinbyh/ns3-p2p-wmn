@@ -36,8 +36,9 @@ public:
 	void setInactive(uint32_t nodeId);
 	NeighborEntry* get(uint32_t nodeId);
 	NeighborEntry* get(ns3::Ipv4Address ipAddr);
-	std::vector<int> getNeighbors();
+	std::vector<int> getNeighborIDs();
 	std::vector<NeighborEntry*> getDetourNodes(int nodeId);
+	const std::map<uint32_t, NeighborEntry*> getMap();
 
 	double getAllocatedBW(uint32_t nodeId); // TODO: nodeId
 	double getAvgOccupiedBW(); // SCHEME_1 (2017.11.16)
@@ -48,7 +49,7 @@ public:
 	void checkNeighborTimeout(ns3::Ptr<ns3::Node> node);
 	void deleteInactiveNeighbors();
 	void checkSendDelayMeasurement();
-	const std::string printNeighborTable(ns3::Ptr<ns3::Node> node);
+	const std::string printNeighborTable(ns3::Ptr<ns3::Node> node) const;
 };
 
 

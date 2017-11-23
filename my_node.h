@@ -76,7 +76,7 @@ public:
 	void _sendPacket(ns3::Ptr<ns3::Socket> socket, ns3::Ptr<ns3::Packet> pkt);
 	void sendRoutingPacket(ns3::Ipv4Address target, string rtMsg);
 
-	int getScheme() const;
+	const int getScheme() const;
 	void addIpv4Address(ns3::Ipv4Address addr);
 	vector<ns3::Ipv4Address> getIpv4List();
 	NeighborTable* getNcTable();
@@ -85,6 +85,7 @@ public:
 	void writeFlowLog();
 	void writeNeighborTable();
 	void writeMyBWStat();
+	void writeRouteTable();
 
 	// periodically called functions
 	static void checkFlowQoS(MyNode* myNode, ns3::Time interval);
@@ -117,14 +118,15 @@ public:
 	void handleRouteSetup(string str, ns3::Ipv4Address clientIP, int ifIdx);
 	void handlePathProbe(string str, ns3::Ipv4Address clientIP, int ifIdx);
 	void handleMyPacket(ns3::Ptr<MyNS3Packet> myPkt, int pktSize, FlowType::Type type, ns3::Ipv4Address ipAddr);
-	bool checkDstOfMyPacket(MyNS3Packet* myPkt);
+	const bool checkDstOfMyPacket(const MyNS3Packet* myPkt) const;
 	int getAndIncrementHelloSeqNo();
+	const double getAvgResidualBW();
 
 	// static utility functions
-	static bool isMyAddress(ns3::Ptr<ns3::Node> node, ns3::Ipv4Address addr);
+	static const bool isMyAddress(ns3::Ptr<ns3::Node> node, const ns3::Ipv4Address addr);
 	static ns3::Ptr<ns3::Packet> createPacket(string data, int pktSize);
 	static uint8_t* getPacketDataBuffer(ns3::Ptr<ns3::Packet> packet);
-	static int checkRoutingMessageType(string msg);
+	static const int checkRoutingMessageType(const string msg);
 };
 
 #endif /* SCRATCH_BHSHIN_MY_NODE_H_ */

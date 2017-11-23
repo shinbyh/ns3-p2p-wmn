@@ -9,6 +9,9 @@
 #include <sstream>
 #include <string>
 #include "string_tokenizer.h"
+#include <boost/format.hpp>
+
+using namespace boost;
 
 Hello::Hello(){
 	this->nodeId = 0;
@@ -78,7 +81,7 @@ void Hello::setSeqNo(int seqNo) {
 	this->seqNo = seqNo;
 }
 
-std::string Hello::serializeTrace(){
+std::string Hello::serializeNeighbors(){
 	std::stringstream ss;
 	for(size_t i=0; i<this->neighbors.size(); i++){
 		if(i + 1 < this->neighbors.size())
@@ -105,11 +108,11 @@ const std::string Hello::serialize() {
 		<< this->nodeId << "/"
 		<< this->seqNo << "/"
 		<< this->numOfFlows << "/"
-		<< this->occBW << "/"
-		<< this->allocBW << "/"
-		<< this->avgOccBW << "/" // Scheme 1.
+		<< format("%.2f") % this->occBW << "/"
+		<< format("%.2f") % this->allocBW << "/"
+		<< format("%.2f") % this->avgOccBW << "/" // Scheme 1.
 		<< this->isRouter << "/"
-		<< serializeTrace();
+		<< serializeNeighbors();
 
 	return ss.str();
 }
@@ -142,7 +145,7 @@ void Hello::setNeighbors(const std::vector<int>& neighbors) {
 }
 
 void Hello::setAvgOccBw(double avgOccBw) {
-	avgOccBW = avgOccBw;
+	this->avgOccBW = avgOccBw;
 }
 
 void Hello::addNeighbor(int nodeId) {

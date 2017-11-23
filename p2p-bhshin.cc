@@ -227,6 +227,7 @@ static void writeFlowStat(Ptr<Node> node, Time flowWriteInterval){
 	myNode->getControlFlowTable()->updateRealTimeBandwidth();
 	myNode->writeNeighborTable();
 	myNode->writeMyBWStat();
+	myNode->writeRouteTable();
 
 	// periodically check neighbors
 	Simulator::Schedule (flowWriteInterval, &writeFlowStat, node, flowWriteInterval);

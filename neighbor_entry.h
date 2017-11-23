@@ -42,32 +42,32 @@ private:
 
 
 	void initialize();
-	double calculateLossRate();
+	const double calculateLossRate() const;
 
 public:
 	NeighborEntry();
 	NeighborEntry(uint32_t nodeId, ns3::Ipv4Address ipAddr, bool isMeshRouter);
-	double getAllocBw() const;
+	const double getAllocBw() const;
 	void setAllocBw(double allocBw);
-	long getDelay() const;
+	const long getDelay() const;
 	void setDelay(long delay);
 	const int getNodeId() const;
 	void setNodeId(int nodeId);
 	const ns3::Ipv4Address getIp() const;
 	void setIp(const ns3::Ipv4Address ipAddr);
-	bool isIsActive() const;
+	const bool isIsActive() const;
 	void setIsActive(bool isActive);
-	bool isIsMeshRouter() const;
+	const bool isIsMeshRouter() const;
 	void setIsMeshRouter(bool isMeshRouter);
-	long getLastUpdateTime() const;
+	const long getLastUpdateTime() const;
 	void setLastUpdateTime(long lastUpdateTime);
-	double getLossRate() const;
+	const double getLossRate() const;
 	void setLossRate(double lossRate);
-	int getNumOfFlows() const;
+	const int getNumOfFlows() const;
 	void setNumOfFlows(int numOfFlows);
-	double getOccupiedBw() const;
+	const double getOccupiedBw() const;
 	void setOccupiedBw(double occupiedBw);
-	double getAvgOccupiedBw() const; // Scheme 1 2017.11.16)
+	const double getAvgOccupiedBw() const; // Scheme 1 2017.11.16)
 	void setAvgOccupiedBw(double avgOccupiedBw); // Scheme 1 (2017.11.16)
 	const ns3::Time& getPrevDstDelayMsrTime() const;
 	void setPrevDstDelayMsrTime(const ns3::Time& prevDstDelayMsrTime);
@@ -79,15 +79,15 @@ public:
 	void setDmSeqNo(int dmSeqNo);
 	void incrementDmSeqNo();
 
-	bool containsIP(ns3::Ipv4Address ipAddr);
-	bool containsNeighbor(int nodeId);
+	const bool containsIP(ns3::Ipv4Address ipAddr) const;
+	const bool containsNeighbor(int nodeId) const;
 	void addSampleToETX(int sample);
 	void addDelayToMovingAvg(long delay);
 	void addJitterToMovingAvg(long jitter);
-	double getAverageDelay();
-	double getAverageJitter();
+	const double getAverageDelay() const;
+	const double getAverageJitter() const;
 
-	const std::string toString();
+	const std::string toString() const;
 	const std::vector<int>& getReachableNodeIds() const;
 	void setReachableNodeIds(const std::vector<int>& reachableNodeIds);
 };

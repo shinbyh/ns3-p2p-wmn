@@ -180,7 +180,7 @@ void MyNode::sendRoutingPacket(Ipv4Address target, string rtMsg){
 	sendPacketWithJitter(MicroSeconds(jitter + this->nodeId), socket, pkt);
 }
 
-int MyNode::getScheme() const {
+const int MyNode::getScheme() const {
 	return this->scheme;
 }
 
@@ -235,13 +235,17 @@ void MyNode::writeNeighborTable() {
 
 void MyNode::writeMyBWStat() {
 	stringstream ss;
-	for(int i=0; i<2; i++) {
+	for(int i=0; i<1; i++) {
 		ss << "allocBW[" << i << "] = " << this->flowTable->getAllocatedBW(i) << "\n";
 	}
-	for(int i=0; i<2; i++) {
+	for(int i=0; i<1; i++) {
 		ss << "occBW[" << i << "] = " << this->flowTable->getOccupiedBW(i) << "\n";
 	}
 	this->nodeOut << ss.str() << "\n";
+}
+
+void MyNode::writeRouteTable() {
+	this->nodeOut << this->routeTable->toString() << "\n";
 }
 
 void MyNode::checkFlowQoS(MyNode* myNode, Time interval){
@@ -369,11 +373,13 @@ Hello* MyNode::generateHello(){
 	double allocBW = 0.0;
 	double occBW = 0.0;
 	Hello* hello = new Hello(this->nodeId, seqNo, numFlows, occBW, allocBW, true);
-	hello->setNeighbors(this->ncTable->getNeighbors());
+	hello->setNeighbors(this->ncTable->getNeighborIDs());
 
 	if(this->scheme == SCHEME_1){
 		// average bandwidth occupation of all neighbor links
-		hello->setAvgOccBw(this->ncTable->getAvgOccupiedBW());
+		NS_LOG_UNCOND("[Node " << this->nodeId << "] avgResidualBW = " << this->getAvgResidualBW());
+		this->nodeOut << "[Node " << this->nodeId << "] avgResidualBW = " << this->getAvgResidualBW() << "\n";
+		hello->setAvgOccBw(this->getAvgResidualBW());
 	}
 
 	return hello;
@@ -598,7 +604,7 @@ void MyNode::broadcastARREQ(Flow flow, int seqNo, FlowRequest flowReq){
 	Simulator::Schedule(rtSetupInterval, &MyNode::setupRoute, this, flow);
 }
 
-ARREP MyNode::getOptimalARREP(vector<ARREP> arrepList) {
+ARREP MyNode::getOptimalARREP(const vector<ARREP> arrepList) {
 	ARREP temp;
 
 	for(size_t i=0; i<arrepList.size(); i++){
@@ -1281,7 +1287,7 @@ void MyNode::handleMyPacket(Ptr<MyNS3Packet> myPkt, int pktSize, FlowType::Type 
 	myPkt->Unref();
 }
 
-bool MyNode::checkDstOfMyPacket(MyNS3Packet* myPkt) {
+const bool MyNode::checkDstOfMyPacket(const MyNS3Packet* myPkt) const {
 	if(myPkt){
 		if(this->nodeId == myPkt->getDst()){
 			return true;
@@ -1297,12 +1303,53 @@ int MyNode::getAndIncrementHelloSeqNo() {
 	return this->helloSeqNo++;
 }
 
+/*
+ * Scheme 2: average residual bandwidth
+ */
+const double MyNode::getAvgResidualBW() {
+	/*
+	 * for flowEntry in flows:
+     *    flowEntry->getOccupiedBW()
+     *    Route route = routeTable->getRoute(flowEntry->getFlow());
+     *    int nextHop = route->getNextHop();
+     *    ncTable->get(nextHop)
+     *
+	 */
+
+	// all neighbors' list
+	map<uint32_t, double> ncResMap;
+	map<uint32_t, NeighborEntry*> ncMap = this->ncTable->getMap();
+	for(map<uint32_t, NeighborEntry*>::const_iterator it=ncMap.begin(); it!= ncMap.end(); it++){
+		ncResMap[it->first] = MyConfig::instance().getMaxBandwidth();
+	}
+
+	// set residual bandwidth for each neighbor.
+	vector<FlowEntry*> flowEntries = this->flowTable->getAllFlowEntries();
+	for(FlowEntry* flowEntry : flowEntries) {
+		flowEntry->getAvgRealTimeBandwidth();
+		uint32_t neighborId = this->routeTable->getNextHop(flowEntry->getFlow());
+		ncResMap[neighborId] = ncResMap[neighborId] - flowEntry->getAvgRealTimeBandwidth();
+	}
+
+	// Calculate the average of residual bandwidth values.
+	if(ncResMap.size() > 0){
+		double sum = 0.0;
+		pair<uint32_t, double> p;
+		BOOST_FOREACH (p, ncResMap){
+			sum += p.second;
+		}
+		return sum / (double)ncResMap.size();
+	} else {
+		return 0.0;
+	}
+}
+
 
 /***************************************************
  * STATIC FUNCTIONS
  ***************************************************/
 
-bool MyNode::isMyAddress(Ptr<Node> node, Ipv4Address addr){
+const bool MyNode::isMyAddress(Ptr<Node> node, const Ipv4Address addr){
 	Ptr<Ipv4> myIpv4 = node->GetObject<Ipv4>();
 	for(uint32_t i=0; i<myIpv4->GetNInterfaces(); i++){
 		if(myIpv4->GetAddress(i, 0).GetLocal() == addr){
@@ -1324,7 +1371,7 @@ uint8_t* MyNode::getPacketDataBuffer(Ptr<Packet> packet) {
 	return buffer;
 }
 
-int MyNode::checkRoutingMessageType(string msg) {
+const int MyNode::checkRoutingMessageType(const string msg) {
 	vector<std::string> tokens;
 	tokenizeString(msg, tokens, "@");
 	return atoi(tokens[0].c_str());
