@@ -29,7 +29,7 @@ private:
 	double tcBandwidth;
 
 public:
-	Route(Flow flow, uint32_t nextHop);
+	Route(Flow flow, uint32_t nextHop, int hopCount);
 	~Route();
 	const Flow getFlow() const;
 	int getHopCount() const;

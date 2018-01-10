@@ -91,14 +91,14 @@ bool QoSRequirement::isSatisfactory(LinkQuality* lq) {
 		//isVerified[0] = false;
 		return false;
 	}
-	if(this->delay < lq->getDelay()){
-		//isVerified[1] = false;
-		return false;
-	}
-	if(this->jitter < lq->getJitter()){
-		//isVerified[2] = false;
-		return false;
-	}
+//	if(this->delay < lq->getDelay()){
+//		//isVerified[1] = false;
+//		return false;
+//	}
+//	if(this->jitter < lq->getJitter()){
+//		//isVerified[2] = false;
+//		return false;
+//	}
 //	if(this->lossRate < lq->getLossRate()){
 //		//isVerified[3] = false;
 //		return false;

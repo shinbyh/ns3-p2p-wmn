@@ -33,6 +33,7 @@
 #include "route_pathprobe.h"
 #include "route_rtsetup.h"
 #include "route_pathprobe.h"
+#include "route_src_rt_update.h"
 
 
 using namespace std;
@@ -48,7 +49,7 @@ private:
 	RouteTable* routeTable;
 	ARREPRecvTable* arrepRecvTable;
 	ARREQSentTable* arreqSentTable;
-
+	map<Flow, vector<uint32_t>> srcRtMap; // source route map for source nodes
 
 	ofstream nodeOut;
 	ofstream flowOut;
@@ -117,6 +118,7 @@ public:
 	void handleARERR(string str, ns3::Ipv4Address clientIP, int ifIdx);
 	void handleRouteSetup(string str, ns3::Ipv4Address clientIP, int ifIdx);
 	void handlePathProbe(string str, ns3::Ipv4Address clientIP, int ifIdx);
+	void handleSourceRouteUpdate(string str, ns3::Ipv4Address clientIP, int ifIdx);
 	void handleMyPacket(ns3::Ptr<MyNS3Packet> myPkt, int pktSize, FlowType::Type type, ns3::Ipv4Address ipAddr);
 	const bool checkDstOfMyPacket(const MyNS3Packet* myPkt) const;
 	int getAndIncrementHelloSeqNo();

@@ -61,7 +61,7 @@ void NeighborTable::addAndUpdate(ns3::Ptr<ns3::Node> node, ns3::Ipv4Address ipAd
 	entry->setIsActive(true);
 	entry->setReachableNodeIds(hello.getNeighbors());
 	entry->addSampleToETX(hello.getSeqNo());
-	entry->setNumOfFlows(hello.getNumOfFlows());
+	//entry->setNumOfFlows(hello.getNumOfFlows()); // not used (2018.01.02)
 	entry->setOccupiedBw(hello.getOccBw());
 	entry->setAllocBw(hello.getAllocBw());
 
@@ -127,7 +127,7 @@ NeighborEntry* NeighborTable::get(ns3::Ipv4Address ipAddr) {
 	}
 }
 
-double NeighborTable::getAllocatedBW(uint32_t nodeId) {
+/*double NeighborTable::getAllocatedBW(uint32_t nodeId) {
 	if(ncTable.find(nodeId) == ncTable.end()){
 		// not found
 		return 0.0;
@@ -150,7 +150,7 @@ double NeighborTable::getAvgOccupiedBW() {
 
 	if(count == 0) return 0.0;
 	else return sum/(double)count;
-}
+}*/
 
 void NeighborTable::updateDelay(uint32_t nodeId, long delay) {
 	if(ncTable.find(nodeId) == ncTable.end()){
@@ -170,16 +170,6 @@ void NeighborTable::updateJitter(uint32_t nodeId, long jitter) {
 	} else {
 		NeighborEntry* entry = ncTable[nodeId];
 		entry->addJitterToMovingAvg(jitter);
-		entry->setLastUpdateTime(Simulator::Now().GetMilliSeconds());
-	}
-}
-
-void NeighborTable::updateNumFlows(uint32_t nodeId, int flows) {
-	if(ncTable.find(nodeId) == ncTable.end()){
-		// not found
-	} else {
-		NeighborEntry* entry = ncTable[nodeId];
-		entry->setNumOfFlows(flows);
 		entry->setLastUpdateTime(Simulator::Now().GetMilliSeconds());
 	}
 }
@@ -238,8 +228,8 @@ void NeighborTable::checkSendDelayMeasurement() {
 const std::string NeighborTable::printNeighborTable(ns3::Ptr<ns3::Node> node) const {
 	std::stringstream ss;
 	ss << "[Node " << node->GetId() << "] NeighborTable (t=" << Simulator::Now().GetSeconds() << ")\n"
-		<< " id       IP        allocBW    occBW avgOccBW  delay jitter   loss  neighbors\n"
-		<< "--------------------------------------------------------------------------------\n";
+		<< " id       IP        allocBW    occBW  avgResBW  delay jitter   loss numFlows neighbors\n"
+		<< "------------------------------------------------------------------------------------------\n";
 
 	pair<uint32_t, NeighborEntry*> p;
 	BOOST_FOREACH (p, ncTable){

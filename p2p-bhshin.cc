@@ -78,8 +78,6 @@ static Ipv4InterfaceContainer makePointToPoint(PointToPointHelper pointToPoint, 
 	Ipv4InterfaceContainer p2pInterfaces;
 	p2pInterfaces = address.Assign (p2pDevices);
 
-	//NS_LOG_UNCOND("[1] " << p2pInterfaces.Get(0).first->GetAddress(p2pInterfaces.Get(0).second, 0).GetLocal());
-	//NS_LOG_UNCOND("[2] " << p2pInterfaces.Get(1).first->GetAddress(p2pInterfaces.Get(1).second, 0).GetLocal());
 	myNodes[i]->addIpv4Address(p2pInterfaces.Get(0).first->GetAddress(p2pInterfaces.Get(0).second, 0).GetLocal());
 	myNodes[j]->addIpv4Address(p2pInterfaces.Get(1).first->GetAddress(p2pInterfaces.Get(1).second, 0).GetLocal());
 	nodeIdMap->addMapping(p2pInterfaces.Get(0).first->GetAddress(p2pInterfaces.Get(0).second, 0).GetLocal(), (uint32_t)i);
@@ -103,10 +101,6 @@ static void ReceiveHello (Ptr<Socket> socket)
 	Ptr<Node> node = socket->GetNode();
 	MyNode* myNode = myNodes[node->GetId()];
 	//int ifIdx = socket->GetBoundNetDevice()->GetIfIndex(); // not used
-
-	// debug
-	//NS_LOG_UNCOND("#### ["<< node->GetId() <<"] Recv hello from: " << senderAddr.GetIpv4() << ", t=" << Simulator::Now().GetMilliSeconds());
-	//NS_LOG_UNCOND("#### ["<< node->GetId() <<"] ifIdx = " << ifIdx);
 
 	// MyNode stat
 	uint32_t senderId = nodeIdMap->getNodeId(senderAddr.GetIpv4());
@@ -136,10 +130,6 @@ static void ReceiveDelayMeasurement(Ptr<Socket> socket)
 	InetSocketAddress senderAddr = InetSocketAddress::ConvertFrom(from);
 	//int ifIdx = socket->GetBoundNetDevice()->GetIfIndex();
 	//Ipv4Address nodeIpv4Addr = MyNode::getNodeIpv4Addr(node, ifIdx);
-
-	// debug
-	//NS_LOG_UNCOND("[Node " << node->GetId() << "] received DM (" << dm.getType() << ") from " << senderAddr.GetIpv4() << ", t=" << now.GetMilliSeconds());
-	//NS_LOG_UNCOND(" -packet: " << dataStr);
 
 	// MyNode stat
 	uint32_t senderId = nodeIdMap->getNodeId(senderAddr.GetIpv4());
@@ -183,6 +173,9 @@ static void ReceiveRoutingMessages (Ptr<Socket> socket)
 		break;
 	case PATH_PROBE:
 		myNode->handlePathProbe(dataStr, senderAddr.GetIpv4(), 0);
+		break;
+	case ROUTE_SRC_ROUTE_UPDATE:
+		myNode->handleSourceRouteUpdate(dataStr, senderAddr.GetIpv4(), 0);
 		break;
 	default:
 		break;
@@ -306,14 +299,14 @@ int main (int argc, char *argv[])
 {
 	MyConfig::instance().readConfigFromFile("sina.config");
 
-	double totalTime = 50.0;
+	double totalTime = 39.0;
 	uint32_t packetSize = 1000; // bytes
 	uint32_t numPackets = 5;
 #ifdef NS3_MPI
 	bool nullmsg = false; // MPI interface, 171114
 #endif
 	bool verbose = true;
-	int numOfNodes = 9;
+	int numOfNodes = 12;
 	int scheme = BASELINE; // default: existing work.
 	string appsConfigFile("2apps_10pkts");
 	double helloIntervalN = atof(MyConfig::instance().getValue("HelloInterval").c_str()); // seconds
@@ -428,6 +421,10 @@ int main (int argc, char *argv[])
 	Ipv4InterfaceContainer p2pIfs_4_7 = makePointToPoint(pointToPoint, allNodes, 4, 7, "10.1.8.0");
 	Ipv4InterfaceContainer p2pIfs_3_8 = makePointToPoint(pointToPoint, allNodes, 3, 8, "10.1.9.0");
 	Ipv4InterfaceContainer p2pIfs_2_4 = makePointToPoint(pointToPoint, allNodes, 4, 2, "10.1.10.0");
+	Ipv4InterfaceContainer p2pIfs_9_2 = makePointToPoint(pointToPoint, allNodes, 9, 2, "10.1.11.0");
+	Ipv4InterfaceContainer p2pIfs_3_10 = makePointToPoint(pointToPoint, allNodes, 3, 10, "10.1.12.0");
+	Ipv4InterfaceContainer p2pIfs_2_11 = makePointToPoint(pointToPoint, allNodes, 2, 11, "10.1.13.0");
+	Ipv4InterfaceContainer p2pIfs_11_10 = makePointToPoint(pointToPoint, allNodes, 11, 10, "10.1.14.0");
 
 	/*
 	 * Common sockets for all nodes

@@ -8,7 +8,7 @@ SCHEME=$4
 
 DIR_PREFIX=$HOME"/exp/ns-3"
 DIR_NAME=$NUM_NODES"nodes_"$APP_CONFIG
-FILE_PREFIXES="flowinfo_ flowlog_ ovinfo_ ovlog_ nodelog_ output $APP_CONFIG temp_ newtemp_ res_"
+FILE_PREFIXES="flowinfo_ flowlog_ ovinfo_ ovlog_ nodelog_ output $APP_CONFIG temp_"
 
 TARGET=$DIR_PREFIX"/"$EXP_TITLE"/"$SCHEME"/"$DIR_NAME
 mkdir $TARGET

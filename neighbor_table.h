@@ -40,11 +40,10 @@ public:
 	std::vector<NeighborEntry*> getDetourNodes(int nodeId);
 	const std::map<uint32_t, NeighborEntry*> getMap();
 
-	double getAllocatedBW(uint32_t nodeId); // TODO: nodeId
-	double getAvgOccupiedBW(); // SCHEME_1 (2017.11.16)
+	//double getAllocatedBW(uint32_t nodeId);
+	//double getAvgOccupiedBW(); // SCHEME_1 (2017.11.16)
 	void updateDelay(uint32_t nodeId, long delay);
 	void updateJitter(uint32_t nodeId, long jitter);
-	void updateNumFlows(uint32_t nodeId, int flows);
 	bool isNeighbor(uint32_t nodeId);
 	void checkNeighborTimeout(ns3::Ptr<ns3::Node> node);
 	void deleteInactiveNeighbors();

@@ -11,9 +11,11 @@
 #include <boost/circular_buffer.hpp>
 #include <string>
 #include <vector>
+#include <set>
 
 #include "ns3/ipv4-address.h"
 #include "ns3/applications-module.h"
+#include "flow.h"
 
 #define CIRCULAR_BUFFER_SIZE 10
 
@@ -23,7 +25,7 @@ private:
 	ns3::Ipv4Address ipAddr;
 	std::vector<ns3::Ipv4Address> reachableIPs;
 	std::vector<int> reachableNodeIds;
-	int numOfFlows;
+	std::set<Flow> flowList;
 	double occupiedBw;
 	double avgOccupiedBw;
 	double allocBw;
@@ -47,6 +49,11 @@ private:
 public:
 	NeighborEntry();
 	NeighborEntry(uint32_t nodeId, ns3::Ipv4Address ipAddr, bool isMeshRouter);
+	void addFlow(Flow flow);
+	void removeFlow(Flow flow);
+	std::set<Flow> getFlowList();
+
+	const int getNumOfFlows() const;
 	const double getAllocBw() const;
 	void setAllocBw(double allocBw);
 	const long getDelay() const;
@@ -63,8 +70,6 @@ public:
 	void setLastUpdateTime(long lastUpdateTime);
 	const double getLossRate() const;
 	void setLossRate(double lossRate);
-	const int getNumOfFlows() const;
-	void setNumOfFlows(int numOfFlows);
 	const double getOccupiedBw() const;
 	void setOccupiedBw(double occupiedBw);
 	const double getAvgOccupiedBw() const; // Scheme 1 2017.11.16)

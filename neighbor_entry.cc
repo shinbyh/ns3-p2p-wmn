@@ -30,6 +30,24 @@ void NeighborEntry::initialize() {
 	this->dmSeqNo = 0;
 }
 
+void NeighborEntry::addFlow(Flow flow) {
+	this->flowList.insert(flow);
+}
+
+void NeighborEntry::removeFlow(Flow flow) {
+	if(this->flowList.find(flow) != this->flowList.end()){
+		this->flowList.erase(flow);
+	}
+}
+
+std::set<Flow> NeighborEntry::getFlowList() {
+	return this->flowList;
+}
+
+const int NeighborEntry::getNumOfFlows() const {
+	return this->flowList.size();
+}
+
 const double NeighborEntry::getAllocBw() const {
 	return allocBw;
 }
@@ -76,14 +94,6 @@ const double NeighborEntry::getLossRate() const {
 
 void NeighborEntry::setLossRate(double lossRate) {
 	this->lossRate = lossRate;
-}
-
-const int NeighborEntry::getNumOfFlows() const {
-	return numOfFlows;
-}
-
-void NeighborEntry::setNumOfFlows(int numOfFlows) {
-	this->numOfFlows = numOfFlows;
 }
 
 const double NeighborEntry::getOccupiedBw() const {
@@ -213,7 +223,7 @@ void NeighborEntry::incrementDmSeqNo() {
 
 const std::string NeighborEntry::toString() const {
 	std::stringstream ss;
-	ss << format("%3d%15s %8.1f %8.1f %8.1f %6.1f %6.1f %6.1f  ")
+	ss << format("%3d%15s %8.1f %8.1f %9.1f %6.1f %6.1f %6.1f %8d ")
 			% this->nodeId
 			% this->ipAddr
 			% this->allocBw
@@ -221,7 +231,8 @@ const std::string NeighborEntry::toString() const {
 			% this->avgOccupiedBw
 			% this->getAverageDelay()
 			% this->getAverageJitter()
-			% this->getLossRate();
+			% this->getLossRate()
+			% this->getNumOfFlows();
 
 	for(size_t i=0; i<this->reachableNodeIds.size(); i++){
 		if(i + 1 < this->reachableNodeIds.size())

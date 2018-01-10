@@ -12,11 +12,11 @@
 
 using namespace boost;
 
-Route::Route(Flow flow, uint32_t nextHop) {
+Route::Route(Flow flow, uint32_t nextHop, int hopCount) {
 	this->flow = flow;
 	this->nextHop = nextHop;
+	this->hopCount = hopCount;
 	this->outgoingIface = 0;
-	this->hopCount = 0;
 
 	this->markID = RouteIDMarker::instance().getNextMarkID();
 	this->rtTableNumber = RT_MARK_NOT_ALLOCATED;

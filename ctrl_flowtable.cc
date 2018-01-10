@@ -51,7 +51,6 @@ std::string ControlFlowTable::getControlOutput(std::string time) {
 		ControlFlow* ctrlFlow = this->ctrlFlowTable[ctrlPort];
 		ss << "\t" << ctrlFlow->getRealTimeBandwidth();
 	}
-	ss << "\n";
 	return ss.str();
 }
 
@@ -60,7 +59,7 @@ std::string ControlFlowTable::getControlFlowInfo() {
 	ss << std::fixed;
 
 	for(int ctrlPort : this->keysTimeOrder){
-		ss << ctrlPort << "\n";
+		ss << ctrlPort << "\t";
 	}
 	return ss.str();
 }
