@@ -186,10 +186,10 @@ const double NeighborEntry::getAverageJitter() const {
 	return sum / avgJitter.size();
 }
 
-const int NeighborEntry::getNodeId() const {
+const uint32_t NeighborEntry::getNodeId() const {
 	return this->nodeId;
 }
-void NeighborEntry::setNodeId(int nodeId) {
+void NeighborEntry::setNodeId(uint32_t nodeId) {
 	this->nodeId = nodeId;
 }
 

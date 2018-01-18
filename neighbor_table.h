@@ -37,7 +37,7 @@ public:
 	NeighborEntry* get(uint32_t nodeId);
 	NeighborEntry* get(ns3::Ipv4Address ipAddr);
 	std::vector<int> getNeighborIDs();
-	std::vector<NeighborEntry*> getDetourNodes(int nodeId);
+	std::vector<NeighborEntry*> getDetourNodes(uint32_t nodeId, std::vector<uint32_t> trace);
 	const std::map<uint32_t, NeighborEntry*> getMap();
 
 	//double getAllocatedBW(uint32_t nodeId);

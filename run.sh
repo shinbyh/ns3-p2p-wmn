@@ -6,6 +6,7 @@ APPS="3apps 4apps 5apps"
 PKTS="10pkts 30pkts 50pkts 70pkts 100pkts"
 SCHEMES="0 1"
 DIR_PREFIX=$HOME"/exp/ns-3"
+APPCONFIG_DIR="./apps_config"
 
 mkdir $DIR_PREFIX/$EXP_NAME
 
@@ -21,24 +22,24 @@ do
 	do
 		# Debug
 		echo " #### "$node" nodes ####"
-	
+
 		for app in $APPS
 		do
 			for pkt in $PKTS
 			do
 				# Remove previous data files.
 				rm flowinfo_*.txt flowlog_*.txt ovinfo_*.txt ovlog_*.txt nodelog_*.txt temp_*.txt newtemp*.txt res_*.txt nodestat*.txt *.pcap 2> /dev/null
-			
+
 				# Select an app config file.
 				appConfig=$app'_'$pkt
-				appConfigFile=$appConfig'.txt'
+				appConfigFile=$APPCONFIG_DIR'/'$appConfig'.txt'
 
 				# Debug
 				echo "Simulating "$appConfigFile
 
 				# Run an ns-3 simulation.
-				./waf --run "bhshin --apps=$appConfig --nodes=$node --scheme=$scheme" &> output.txt
-				
+				./waf --run "p2p-bhshin --apps=$appConfig --nodes=$node --scheme=$scheme" &> output.txt
+
 				# Make statistics and copy to the dedicated location.
 				python stat.py $appConfigFile
 				python avg_thp.py $appConfigFile > nodestat_avg.txt

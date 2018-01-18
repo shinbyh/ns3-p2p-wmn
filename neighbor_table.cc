@@ -261,13 +261,17 @@ const std::map<uint32_t, NeighborEntry*> NeighborTable::getMap(){
  * Find a set of neighbors whose neighbor contains the node ID.
  * This list is used for selecting candidate detour nodes.
  */
-std::vector<NeighborEntry*> NeighborTable::getDetourNodes(int nodeId) {
+std::vector<NeighborEntry*> NeighborTable::getDetourNodes(uint32_t nodeId, std::vector<uint32_t> trace) {
 	vector<NeighborEntry*> detours;
 	pair<uint32_t, NeighborEntry*> p;
 	BOOST_FOREACH (p, this->ncTable){
 		NeighborEntry* entry = p.second;
 		if(entry){
-			if(entry->containsNeighbor(nodeId)) detours.push_back(entry);
+			if(entry->containsNeighbor(nodeId)){
+				if(std::find(trace.begin(), trace.end(), entry->getNodeId()) == trace.end()){
+					detours.push_back(entry);
+				}
+			}
 		}
 	}
 	return detours;

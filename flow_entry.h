@@ -25,8 +25,9 @@ private:
 	Flow flow;
 	long startTime;
 	long lastTime;
-	std::map<int, FlowStat*> flowStats;
-	std::vector<int> ifIdices;
+	std::map<int, FlowStat*> flowStats; // statistics of all associated links (neighbor IDs)
+	std::vector<int> neighbors;
+	std::vector<uint32_t> srcRoute;
 	QoSRequirement qosReq;
 	QoSRequirement hopQosReq;
 	int appReqSeqNo;
@@ -35,18 +36,20 @@ private:
 	int routingFlag;
 	bool routeSearching;
 	bool controlFlow;
+	int fwdNodeId; // forwarding node ID
+
 	void initAppReq();
-	void initFlowStats(std::vector<int> ifIdices);
+	//void initFlowStats(std::vector<int> ifIdices);
 	bool checkControlFlow();
-	void resetRealTimeBandwidth(int ifIdx);
-
-
+	std::string srcRouteToString();
 
 public:
-	FlowEntry(Flow flow, long startTime);
-	FlowEntry(PacketInfo pktInfo);
+	FlowEntry(Flow flow, int nodeId, long startTime);
+	FlowEntry(int nodeId, PacketInfo pktInfo);
 	~FlowEntry();
-	void addPacketInfo(PacketInfo pktInfo);
+	bool isFlowStatExists(int nodeId);
+	void addFlowStat(int nodeId);
+	void addPacketInfo(int nodeId, PacketInfo pktInfo); // packetinfo for a neighbor
 	bool isActive() const;
 	void setActive(bool active);
 	int getAppReqSeqNo() const;
@@ -66,17 +69,27 @@ public:
 	long getStartTime() const;
 	void setStartTime(long startTime);
 	void resetRealTimeBandwidth();
-	void setAllocatedBandwidth(int iface, double allocatedBW);
-	double getAllocatedBandwidth(int iface);
-	double getAvgRealTimeBandwidth(int iface);
-	double getAvgRealTimeBandwidth();
-	double getAvgResidualBandwidth();
+	void setAllocatedBandwidth(int nodeId, double allocatedBW);
+	double getAllocatedBandwidth(int nodeId);
+	double getAvgRealTimeBandwidth(int nodeId);
+	const double getAvgRealTimeBandwidth() const;
 	QoSRequirement getQosReq() const;
 	void setQosReq(QoSRequirement qosReq);
 	QoSRequirement getHopQosReq() const;
 	void setHopQosReq(QoSRequirement& hopQosReq);
+	const std::vector<uint32_t>& getSrcRoute() const;
+	void setSrcRoute(const std::vector<uint32_t>& srcRoute);
 	std::string toFormattedFlowInfo();
 	std::string toString();
+
+	int getFwdNodeId() const {
+		return fwdNodeId;
+	}
+	void setFwdNodeId(int fwdNodeId) {
+		this->fwdNodeId = fwdNodeId;
+	}
+
+	bool operator <(const FlowEntry &a) const;
 };
 
 

@@ -25,6 +25,7 @@
 #include "route_table.h"
 #include "route_arreqtable.h"
 #include "route_arreptable.h"
+#include "route_flowcheck_recv_table.h"
 #include "my_ns3_packet.h"
 #include "flow_request.h"
 #include "route_arreq.h"
@@ -34,6 +35,7 @@
 #include "route_rtsetup.h"
 #include "route_pathprobe.h"
 #include "route_src_rt_update.h"
+#include "route_flowcheck.h"
 
 
 using namespace std;
@@ -49,7 +51,7 @@ private:
 	RouteTable* routeTable;
 	ARREPRecvTable* arrepRecvTable;
 	ARREQSentTable* arreqSentTable;
-	map<Flow, vector<uint32_t>> srcRtMap; // source route map for source nodes
+	map<int, FlowCheckRecvTable*> flowCheckRecvMap; // map of FlowCheck-reply tables.
 
 	ofstream nodeOut;
 	ofstream flowOut;
@@ -58,6 +60,7 @@ private:
 	ofstream ctrlInfoOut;
 
 	int helloSeqNo;
+	int flowCheckSeqNo; // Scheme 2.
 	int scheme;
 	int numOfFlows;
 	ns3::Ptr<ns3::UniformRandomVariable> rngDelay; // delay random number generator
@@ -85,7 +88,6 @@ public:
 	ControlFlowTable* getControlFlowTable();
 	void writeFlowLog();
 	void writeNeighborTable();
-	void writeMyBWStat();
 	void writeRouteTable();
 
 	// periodically called functions
@@ -101,6 +103,8 @@ public:
 	void _setupRoute(Flow flow);
 	static void schedulePacketsFromFlowRequest(MyNode* myNode, FlowRequest flowReq, string msg);
 	void _schedulePacketsFromFlowRequest(FlowRequest flowReq, string msg);
+	static void selectNodeFromFlowCheck(MyNode* myNode, int seqNo);
+	void _selectNodeFromFlowCheck(int seqNo);
 	void sendMyPacket(ns3::Ipv4Address target, ns3::Ptr<MyNS3Packet> myPkt, FlowType::Type type, int pktSize);
 
 	// functions for routing
@@ -110,7 +114,8 @@ public:
 	// packet handling functions
 	static void doRouting(MyNode* myNode, ns3::Ptr<MyNS3Packet> myPkt, FlowRequest flowReq);
 	void _doRouting(ns3::Ptr<MyNS3Packet> myPkt, FlowRequest flowReq);
-	void handlePacketInfo(PacketInfo pktInfo);
+	void performLocalRepair(uint32_t prevNextHop, uint32_t newNextHop, uint32_t nextHopToSrc, Flow flow, vector<uint32_t> srcRoute, QoSRequirement qosReq, LinkQuality endToEndQuality);
+	void handlePacketInfo(int nodeId, PacketInfo pktInfo);
 	void handleHello(ns3::Ptr<ns3::Node> node, ns3::Ipv4Address ipAddr, Hello hello);
 	void handleDelayMeasurement(ns3::Ptr<ns3::Node> node, ns3::Ptr<ns3::Socket> socket, ns3::Ipv4Address ipAddr, int ifIdx, DelayMeasurement dm);
 	void handleARREQ(string str, ns3::Ipv4Address clientIP, int ifIdx);
@@ -119,6 +124,7 @@ public:
 	void handleRouteSetup(string str, ns3::Ipv4Address clientIP, int ifIdx);
 	void handlePathProbe(string str, ns3::Ipv4Address clientIP, int ifIdx);
 	void handleSourceRouteUpdate(string str, ns3::Ipv4Address clientIP, int ifIdx);
+	void handleFlowCheck(string str, ns3::Ipv4Address clientIP, int ifIdx);
 	void handleMyPacket(ns3::Ptr<MyNS3Packet> myPkt, int pktSize, FlowType::Type type, ns3::Ipv4Address ipAddr);
 	const bool checkDstOfMyPacket(const MyNS3Packet* myPkt) const;
 	int getAndIncrementHelloSeqNo();

@@ -20,13 +20,14 @@ FlowStat::~FlowStat() {
 }
 
 void FlowStat::init() {
-	cbd.set_capacity(CIRCULAR_BUFFER_SIZE);
-	totalBytes = 0;
-	totalPackets = 0;
-	realTimeBandwidth = 0;
-	realTimePackets = 0;
-	allocatedBandwidth = 0.0;
-	numOfFlows = 0;
+	this->cbd.set_capacity(CIRCULAR_BUFFER_SIZE);
+	this->totalBytes = 0;
+	this->totalPackets = 0;
+	this->realTimeBandwidth = 0;
+	this->realTimePackets = 0;
+	this->allocatedBandwidth = 0.0;
+	this->numOfFlows = 0;
+	//this->used = true;
 }
 
 double FlowStat::getAllocatedBandwidth() const {
@@ -77,19 +78,27 @@ void FlowStat::setTotalPackets(int totalPackets) {
 	this->totalPackets = totalPackets;
 }
 
+/*bool FlowStat::isUsed() {
+	return this->used;
+}
+
+void FlowStat::setUsed(bool used) {
+	this->used = used;
+}*/
+
 void FlowStat::incrementNumOfFlows(int level) {
-	numOfFlows += level;
+	this->numOfFlows += level;
 }
 
 void FlowStat::decrementNumOfFlows(int level) {
-	numOfFlows -= level;
+	this->numOfFlows -= level;
 }
 
 void FlowStat::accumulatePacket(PacketInfo pktInfo) {
-	totalBytes += pktInfo.getBytes();
-	totalPackets++;
-	realTimeBandwidth += pktInfo.getBytes() * 8;
-	realTimePackets++;
+	this->totalBytes += pktInfo.getBytes();
+	this->totalPackets++;
+	this->realTimeBandwidth += pktInfo.getBytes() * 8;
+	this->realTimePackets++;
 }
 
 void FlowStat::addToMovingAvg(double realTimeBandwidth){
@@ -97,15 +106,15 @@ void FlowStat::addToMovingAvg(double realTimeBandwidth){
 }
 
 double FlowStat::getAvgRealTimeBandwidth() {
-	if(cbd.size() == 0)
+	if(this->cbd.size() == 0)
 		return 0.0;
 
-	boost::circular_buffer<double>::iterator it = cbd.begin();
+	boost::circular_buffer<double>::iterator it = this->cbd.begin();
 	double sum = 0.0;
-	for(it = cbd.begin(); it != cbd.end(); ++it){
+	for(it = this->cbd.begin(); it != this->cbd.end(); ++it){
 		sum += *it;
 	}
-	return sum / cbd.size();
+	return sum / this->cbd.size();
 }
 
 std::string FlowStat::toString() {

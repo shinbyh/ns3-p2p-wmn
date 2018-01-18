@@ -58,8 +58,8 @@ public:
 	void setAllocBw(double allocBw);
 	const long getDelay() const;
 	void setDelay(long delay);
-	const int getNodeId() const;
-	void setNodeId(int nodeId);
+	const uint32_t getNodeId() const;
+	void setNodeId(uint32_t nodeId);
 	const ns3::Ipv4Address getIp() const;
 	void setIp(const ns3::Ipv4Address ipAddr);
 	const bool isIsActive() const;

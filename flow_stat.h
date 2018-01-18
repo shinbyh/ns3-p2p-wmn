@@ -23,8 +23,9 @@ private:
 	int realTimeBandwidth;
 	double allocatedBandwidth; // allocated bandwidth during route discovery
 	int numOfFlows; // only used by HelloClient
-	void init();
 	boost::circular_buffer<double> cbd;
+
+	void init();
 
 public:
 	FlowStat();
@@ -41,6 +42,8 @@ public:
 	void setTotalBytes(int totalBytes);
 	int getTotalPackets() const;
 	void setTotalPackets(int totalPackets);
+	//bool isUsed();
+	//void setUsed(bool used);
 	void incrementNumOfFlows(int level);
 	void decrementNumOfFlows(int level);
 	void accumulatePacket(PacketInfo pktInfo);

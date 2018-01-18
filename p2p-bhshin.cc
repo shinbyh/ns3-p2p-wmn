@@ -106,7 +106,7 @@ static void ReceiveHello (Ptr<Socket> socket)
 	uint32_t senderId = nodeIdMap->getNodeId(senderAddr.GetIpv4());
 	Flow flow(senderId, (int)senderAddr.GetPort(), NODEID_BROADCAST, MyConfig::instance().getPortByName("HelloPort"), FlowType::UDP);
 	PacketInfo pktInfo((long)(now.GetMilliSeconds()), flow, 0, packet->GetSize());
-	myNode->handlePacketInfo(pktInfo);
+	myNode->handlePacketInfo(senderId, pktInfo);
 
 	// handle message
 	myNode->handleHello(node, senderAddr.GetIpv4(), hello);
@@ -135,7 +135,7 @@ static void ReceiveDelayMeasurement(Ptr<Socket> socket)
 	uint32_t senderId = nodeIdMap->getNodeId(senderAddr.GetIpv4());
 	Flow flow(senderId, (int)senderAddr.GetPort(), node->GetId(), MyConfig::instance().getPortByName("DelayMeasurePort"), FlowType::UDP);
 	PacketInfo pktInfo((long)(now.GetMilliSeconds()), flow, 0, packet->GetSize());
-	myNode->handlePacketInfo(pktInfo);
+	myNode->handlePacketInfo(senderId, pktInfo);
 
 	// handle message
 	myNode->handleDelayMeasurement(node, socket, senderAddr.GetIpv4(), 0, dm);
@@ -177,6 +177,10 @@ static void ReceiveRoutingMessages (Ptr<Socket> socket)
 	case ROUTE_SRC_ROUTE_UPDATE:
 		myNode->handleSourceRouteUpdate(dataStr, senderAddr.GetIpv4(), 0);
 		break;
+	case ROUTE_FLOWCHECK_REQUEST:
+	case ROUTE_FLOWCHECK_REPLY:
+		myNode->handleFlowCheck(dataStr, senderAddr.GetIpv4(), 0);
+		break;
 	default:
 		break;
 	}
@@ -184,7 +188,7 @@ static void ReceiveRoutingMessages (Ptr<Socket> socket)
 	uint32_t senderId = nodeIdMap->getNodeId(senderAddr.GetIpv4());
 	Flow flow(senderId, (int)senderAddr.GetPort(), NODEID_BROADCAST, MyConfig::instance().getPortByName("RoutingPort"), FlowType::UDP);
 	PacketInfo pktInfo((long)(now.GetMilliSeconds()), flow, 0, packet->GetSize());
-	myNode->handlePacketInfo(pktInfo);
+	myNode->handlePacketInfo(senderId, pktInfo);
 
 	delete(dataBuffer);
 }
@@ -205,10 +209,13 @@ static void ReceiveMyPacket (Ptr<Socket> socket)
 
 	myNode->handleMyPacket(myPkt, packet->GetSize(), type, senderAddr.GetIpv4());
 
+	// debug
+	//NS_LOG_UNCOND("[Node " << node->GetId() << "] ReceiveMyPacket from " << nodeIdMap->getNodeId(senderAddr.GetIpv4()));
+
 	// MyNode stat
 	Flow flow(myPkt->getSrc(), myPkt->getAppSrcPort(), myPkt->getDst(), myPkt->getAppDstPort(), FlowType::UDP);
 	PacketInfo pktInfo((long)(now.GetMilliSeconds()), flow, 0, packet->GetSize());
-	myNode->handlePacketInfo(pktInfo);
+	myNode->handlePacketInfo(nodeIdMap->getNodeId(senderAddr.GetIpv4()), pktInfo);
 
 	delete(dataBuffer);
 }
@@ -219,7 +226,6 @@ static void writeFlowStat(Ptr<Node> node, Time flowWriteInterval){
 	myNode->getFlowTable()->updateRealTimeBandwidth();
 	myNode->getControlFlowTable()->updateRealTimeBandwidth();
 	myNode->writeNeighborTable();
-	myNode->writeMyBWStat();
 	myNode->writeRouteTable();
 
 	// periodically check neighbors
@@ -498,7 +504,7 @@ int main (int argc, char *argv[])
 	uint32_t jitter = x->GetInteger(1, 10000);
 
 	stringstream ss;
-	vector<AppFlowReqPkt> appFlowReqPkts = readFlowSettingsFromFile(appsConfigFile + ".txt");
+	vector<AppFlowReqPkt> appFlowReqPkts = readFlowSettingsFromFile(MyConfig::instance().getValue("AppsConfigDirectory") + "/" + appsConfigFile + ".txt");
 	for(AppFlowReqPkt appFlowReqPkt : appFlowReqPkts){
 		// debug
 		cout << "*AppFlowReqPkt\n  -nodeId = " << appFlowReqPkt.getInitNodeId() << endl;

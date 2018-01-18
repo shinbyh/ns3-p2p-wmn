@@ -2,8 +2,8 @@
 #define FLOW_FLOW_H_
 
 #include <iostream>
-
-#include "ns3/ipv4-address.h"
+#include <stdint.h>
+//#include "ns3/ipv4-address.h"
 #include "flow_type.h"
 
 class Flow {

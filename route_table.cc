@@ -10,6 +10,8 @@
 #include <boost/foreach.hpp>
 #include <sstream>
 
+using namespace ns3;
+
 RouteTable::RouteTable() {
 	//this->ns3StaticRouting = ns3StaticRouting;
 	// add a default route?
@@ -79,7 +81,7 @@ void RouteTable::deleteRoute(Flow flow) {
 std::string RouteTable::toString() {
 	std::stringstream ss;
 	ss << std::fixed;
-	ss << "[RT] Routing Table:\n";
+	ss << "[RT] Routing Table (t=" << Simulator::Now().GetSeconds() << ")\n";
 	ss << "mkId  src  sport  dst  dport  type nextHop hopCnt iface\n"
 		<< "----------------------------------------------------------\n";
 

@@ -8,7 +8,10 @@
 #include "time_util.h"
 #include <boost/foreach.hpp>
 #include <sstream> // getAllFlowInfo()
+#include <algorithm> // for sorting FlowEntries
 #include "ns3/core-module.h"
+
+using namespace ns3;
 
 FlowTable::FlowTable() {
 }
@@ -23,20 +26,20 @@ FlowTable::~FlowTable() {
 	}
 }
 
-void FlowTable::addToFlowEntry(PacketInfo pktInfo) {
+void FlowTable::addToFlowEntry(int nodeId, PacketInfo pktInfo) {
 	if(flowTable.find(pktInfo.getFlow()) == flowTable.end()){
 		// not found, new addition
-		FlowEntry* entry = new FlowEntry(pktInfo);
-
-		// debug
-		//std::cout << "  [FT] creating a new flowEntry: " << pktInfo.toString() << std::endl;
+		FlowEntry* entry = new FlowEntry(nodeId, pktInfo);
+		entry->addPacketInfo(nodeId, pktInfo);
 
 		flowTable[pktInfo.getFlow()] = entry;
 		keysTimeOrder.push_back(pktInfo.getFlow());
 	} else {
-		//std::cout << "  [FT] adding pktInfo to the existing flowEntry: " << pktInfo.toString() << std::endl;
 		FlowEntry* entry = flowTable[pktInfo.getFlow()];
-		entry->addPacketInfo(pktInfo);
+		if(!entry->isFlowStatExists(nodeId)){
+			entry->addFlowStat(nodeId);
+		}
+		entry->addPacketInfo(nodeId, pktInfo);
 	}
 }
 
@@ -50,82 +53,35 @@ void FlowTable::updateRealTimeBandwidth() {
 	}
 }
 
-void FlowTable::setQoSReq(Flow flow, int ifIdx, QoSRequirement qosReq) {
-	if(flowTable.find(flow) == flowTable.end()){
-		std::cout << "  [FT][setAllocatedBW] new FlowEntry!!! (bw = " << qosReq.getBandwidth() << ")" << std::endl;
-		FlowEntry* entry = new FlowEntry(flow, ns3::Simulator::Now().GetMilliSeconds());
-		flowTable[flow] = entry;
+void FlowTable::setQoSReq(Flow flow, int nodeId, QoSRequirement qosReq) {
+	if(this->flowTable.find(flow) == this->flowTable.end()){
+		NS_LOG_UNCOND("  [FT][setQoSReq] new FlowEntry!!! (bw=" << qosReq.getBandwidth() << ") (nodeid=" << nodeId << ")");
+		FlowEntry* entry = new FlowEntry(flow, nodeId, ns3::Simulator::Now().GetMilliSeconds());
+		this->flowTable[flow] = entry;
 		keysTimeOrder.push_back(flow);
-		entry->setQosReq(qosReq);
-		entry->setAllocatedBandwidth(ifIdx, qosReq.getBandwidth());
-	} else {
-		FlowEntry* entry = flowTable[flow];
-		entry->setQosReq(qosReq);
-		entry->setAllocatedBandwidth(ifIdx, qosReq.getBandwidth());
 	}
+
+	FlowEntry* entry = this->flowTable[flow];
+	if(!entry->isFlowStatExists(nodeId)){
+		entry->addFlowStat(nodeId);
+	}
+	entry->setQosReq(qosReq);
+	entry->setFwdNodeId(nodeId);
+	entry->setAllocatedBandwidth(nodeId, qosReq.getBandwidth());
 }
 
-void FlowTable::setHopQoSReq(Flow flow, int ifIdx, QoSRequirement qosReq) {
+void FlowTable::setHopQoSReq(Flow flow, int nodeId, QoSRequirement qosReq) {
 	if(flowTable.find(flow) == flowTable.end()){
-		std::cout << "   [FT][setAllocatedBW] new FlowEntry!!! (bw = " << qosReq.getBandwidth() << ")" << std::endl;
-		FlowEntry* entry = new FlowEntry(flow, ns3::Simulator::Now().GetMilliSeconds());
+		std::cout << "   [FT][setHopQoSReq] new FlowEntry!!! (bw = " << qosReq.getBandwidth() << ") (nodeid=" << nodeId << ")" << std::endl;
+		FlowEntry* entry = new FlowEntry(flow, nodeId, ns3::Simulator::Now().GetMilliSeconds());
 		flowTable[flow] = entry;
 		keysTimeOrder.push_back(flow);
 		entry->setHopQosReq(qosReq);
 	} else {
 		FlowEntry* entry = flowTable[flow];
 		entry->setHopQosReq(qosReq);
+		entry->setFwdNodeId(nodeId);
 	}
-}
-
-void FlowTable::setAllocatedBW(Flow flow, int ifIdx, double allocBW) {
-	if(flowTable.find(flow) == flowTable.end()){
-		std::cout << "   [FT][setAllocatedBW] new FlowEntry!!!!!! " << std::endl;
-		FlowEntry* entry = new FlowEntry(flow, ns3::Simulator::Now().GetMilliSeconds());
-		flowTable[flow] = entry;
-		keysTimeOrder.push_back(flow);
-		entry->setAllocatedBandwidth(ifIdx, allocBW);
-	} else {
-		FlowEntry* entry = flowTable[flow];
-		entry->setAllocatedBandwidth(ifIdx, allocBW);
-	}
-}
-
-/**
- * Get aggregated allocated bandwidth of all
- * flows for an interface.
- */
-double FlowTable::getAllocatedBW(int ifIdx) {
-	double allocBW = 0.0;
-	std::pair<Flow, FlowEntry*> p;
-	BOOST_FOREACH (p, flowTable){
-		FlowEntry* entry = p.second;
-		allocBW += entry->getAllocatedBandwidth(ifIdx);
-	}
-	return allocBW;
-}
-
-double FlowTable::getOccupiedBW(int ifIdx) {
-	double occBW = 0.0;
-	std::pair<Flow, FlowEntry*> p;
-	BOOST_FOREACH (p, flowTable){
-		FlowEntry* entry = p.second;
-		occBW += entry->getAvgRealTimeBandwidth(ifIdx);
-	}
-	return occBW;
-}
-
-double FlowTable::getAvgResidualBW(){
-	double resBW = 0.0;
-	std::pair<Flow, FlowEntry*> p;
-	BOOST_FOREACH (p, flowTable){
-		FlowEntry* entry = p.second;
-		resBW += entry->getAvgResidualBandwidth();
-	}
-	if(flowTable.size() > 0)
-		return resBW / (double)flowTable.size();
-	else
-		return 0.0;
 }
 
 FlowEntry* FlowTable::getFlowEntry(Flow flow) {
@@ -191,8 +147,8 @@ std::string FlowTable::getFormattedFlowOutput(std::string time) {
 	std::stringstream ss;
 	ss << std::fixed << time;
 
-	for(Flow flow : keysTimeOrder){
-		FlowEntry* entry = flowTable[flow];
+	for(Flow flow : this->keysTimeOrder){
+		FlowEntry* entry = this->flowTable[flow];
 
 		// filter out control flows
 		if(entry->isControlFlow()) continue;
@@ -208,11 +164,21 @@ std::string FlowTable::getFormattedFlowOutput(std::string time) {
 	return ss.str();
 }
 
+std::vector<FlowEntry*> FlowTable::getUnpopularFlows(size_t k) {
+	vector<FlowEntry*> flows = getAllFlowEntries();
+
+	// sort flow entires.
+	sort(flows.begin(), flows.end());
+
+	if(flows.size() > k) flows.resize(k);
+	return flows;
+}
+
 std::string FlowTable::printFlowTable(int nodeId){
 	std::stringstream ss;
-	ss << std::fixed << "[Node "<< nodeId << "] FlowTable\n";
-	ss << "         flow                        QoS Requirement             allocBW      avgRTBW    avgResBW\n"
-		<< "---------------------------------------------------------------------------------------------------\n";
+	ss << std::fixed << "[Node "<< nodeId << "] FlowTable (t=" << Simulator::Now().GetSeconds() << ")\n";
+	ss << "         flow                        QoS Requirement               fwd   nodeId     allocBW    avgRTBW    trace\n"
+		<< "---------------------------------------------------------------------------------------------------------------------";
 
 	for(Flow flow : keysTimeOrder){
 		FlowEntry* entry = flowTable[flow];

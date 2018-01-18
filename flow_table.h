@@ -27,19 +27,16 @@ public:
 	}
 	~FlowTable();
 
-	void addToFlowEntry(PacketInfo pktInfo);
+	void addToFlowEntry(int nodeId, PacketInfo pktInfo);
 	void updateRealTimeBandwidth();
 	void setQoSReq(Flow flow, int ifIdx, QoSRequirement qosReq);
 	void setHopQoSReq(Flow flow, int ifIdx, QoSRequirement qosReq);
-	void setAllocatedBW(Flow flow, int ifIdx, double allocBW);
-	double getAllocatedBW(int ifIdx);
-	double getOccupiedBW(int ifIdx);
-	double getAvgResidualBW();
 	FlowEntry* getFlowEntry(Flow flow);
 	void markInactiveFlows(long from, long threshold);
 	void setFlowInactive(Flow flow);
 	std::vector<FlowEntry*> getAllFlowEntries();
 	int getNumOfFlows();
+	std::vector<FlowEntry*> getUnpopularFlows(size_t k);
 
 	//vector<FlowEntry> getInactiveFlows();
 	//void deleteFlowEntry(Flow flow);

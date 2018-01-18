@@ -12,6 +12,7 @@
 #include "flow.h"
 #include "route.h"
 #include "ns3/core-module.h"
+#include "ns3/ipv4-address.h"
 
 class RouteTable {
 private:
