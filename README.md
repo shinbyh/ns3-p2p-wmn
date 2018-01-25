@@ -9,8 +9,9 @@ This ns-3 scratch project aims to run an application-aware multi-constrained rou
 
 ## Prerequisites
 * ns-3.26
-* Python 3.X
+* Python 3.5 or upper
 * Python libraries: subprocess, regular expression (re).
+* Linux Packages: paste, awk, curl
 
 ## Usage
 * Copy all source code files (.h, .cc) into [NS3-HOME]/scratch/p2p-bhshin. For this, you may want to create a new directory under [NS3-HOME]/scratch/.
