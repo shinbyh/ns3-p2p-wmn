@@ -42,6 +42,8 @@ public:
 	}
 
 	void addTrace(uint32_t nodeId);
+	int getNodeIdPosition(uint32_t nodeId);
+	bool containsNodeId(uint32_t nodeId);
 	const string serialize();
 	void parse(string str);
 };

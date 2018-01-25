@@ -16,7 +16,7 @@
 using namespace boost;
 using namespace ns3;
 
-FlowEntry::FlowEntry(Flow flow, int nodeId, long startTime) {
+FlowEntry::FlowEntry(Flow flow, uint32_t nodeId, long startTime) {
 	this->flow = flow;
 	this->active = true;
 	this->startTime = startTime;
@@ -28,7 +28,7 @@ FlowEntry::FlowEntry(Flow flow, int nodeId, long startTime) {
 	//initFlowStats(this->ifIdices);
 }
 
-FlowEntry::FlowEntry(int nodeId, PacketInfo pktInfo) {
+FlowEntry::FlowEntry(uint32_t nodeId, PacketInfo pktInfo) {
 	this->flow = pktInfo.getFlow();
 	this->active = true;
 	this->startTime = pktInfo.getTime();
@@ -41,7 +41,7 @@ FlowEntry::FlowEntry(int nodeId, PacketInfo pktInfo) {
 	addPacketInfo(nodeId, pktInfo);
 }
 
-void FlowEntry::addFlowStat(int nodeId) {
+void FlowEntry::addFlowStat(uint32_t nodeId) {
 	FlowStat* flowStat = new FlowStat();
 	this->flowStats[nodeId] = flowStat;
 }
@@ -51,7 +51,7 @@ void FlowEntry::addFlowStat(int nodeId) {
 //}
 
 FlowEntry::~FlowEntry() {
-	std::map<int, FlowStat*>::iterator itr;
+	std::map<uint32_t, FlowStat*>::iterator itr;
 	for(itr = this->flowStats.begin(); itr != this->flowStats.end(); itr++){
 		delete itr->second;
 	}
@@ -145,7 +145,7 @@ void FlowEntry::setStartTime(long startTime) {
 	this->startTime = startTime;
 }
 
-void FlowEntry::addPacketInfo(int nodeId, PacketInfo pktInfo) {
+void FlowEntry::addPacketInfo(uint32_t nodeId, PacketInfo pktInfo) {
 	if(!active) setActive(true);
 	lastTime = pktInfo.getTime();
 
@@ -170,7 +170,7 @@ bool FlowEntry::checkControlFlow() {
 
 void FlowEntry::resetRealTimeBandwidth() {
 	// for all interface, reset realtimeBandwidth
-	std::pair<int, FlowStat*> p;
+	std::pair<uint32_t, FlowStat*> p;
 	BOOST_FOREACH(p, this->flowStats){
 		FlowStat* stat = p.second;
 		stat->addToMovingAvg(stat->getRealTimeBandwidth());
@@ -179,7 +179,7 @@ void FlowEntry::resetRealTimeBandwidth() {
 	}
 }
 
-void FlowEntry::setAllocatedBandwidth(int nodeId, double allocatedBW) {
+void FlowEntry::setAllocatedBandwidth(uint32_t nodeId, double allocatedBW) {
 	if(this->flowStats.find(nodeId) != this->flowStats.end()){
 		this->flowStats[nodeId]->setAllocatedBandwidth(allocatedBW);
 	} else {
@@ -188,7 +188,7 @@ void FlowEntry::setAllocatedBandwidth(int nodeId, double allocatedBW) {
 	}
 }
 
-double FlowEntry::getAllocatedBandwidth(int nodeId) {
+double FlowEntry::getAllocatedBandwidth(uint32_t nodeId) {
 	if(this->flowStats.find(nodeId) == this->flowStats.end()){
 		return 0.0;
 	} else {
@@ -196,7 +196,7 @@ double FlowEntry::getAllocatedBandwidth(int nodeId) {
 	}
 }
 
-double FlowEntry::getAvgRealTimeBandwidth(int nodeId) {
+double FlowEntry::getAvgRealTimeBandwidth(uint32_t nodeId) {
 	if(this->flowStats.find(nodeId) == this->flowStats.end()){
 		return 0.0;
 	} else {
@@ -208,7 +208,7 @@ const double FlowEntry::getAvgRealTimeBandwidth() const {
 	double sum = 0.0;
 	int count = 0;
 
-	std::pair<int, FlowStat*> p;
+	std::pair<uint32_t, FlowStat*> p;
 	BOOST_FOREACH(p, this->flowStats){
 		if(p.first == this->fwdNodeId){
 			//sum += p.second->getAvgRealTimeBandwidth();
@@ -238,7 +238,7 @@ std::string FlowEntry::toFormattedFlowInfo() {
 	return ss.str();
 }
 
-bool FlowEntry::isFlowStatExists(int nodeId) {
+bool FlowEntry::isFlowStatExists(uint32_t nodeId) {
 	if(this->flowStats.find(nodeId) == this->flowStats.end()){
 		return false;
 	} else {
@@ -253,7 +253,7 @@ std::string FlowEntry::toString() {
 	std::stringstream ss;
 	ss << std::fixed;
 
-	std::pair<int, FlowStat*> p;
+	std::pair<uint32_t, FlowStat*> p;
 	BOOST_FOREACH(p, this->flowStats){
 		ss << format("\n%26s  %33s  %7d  %7d  %9.2f  %9.2f  %s")
 				% this->flow.toString()

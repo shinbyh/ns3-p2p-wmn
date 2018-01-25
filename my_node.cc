@@ -620,11 +620,40 @@ void MyNode::_selectNodeFromFlowCheck(int seqNo) {
 	FlowCheckRecvTable* table = this->flowCheckRecvMap[seqNo];
 	uint32_t optimalDetour = table->getOptimalDetourNode();
 	if(optimalDetour != NODEID_NOT_FOUND){
-		// TODO:
-		// Perform local repair with the selected optimal nodeID.
 
+#ifdef DEBUG_PRINT
+		NS_LOG_UNCOND(" - optimal detour node: " << optimalDetour);
+#endif
+#ifdef DEBUG_NODE_OUT
+		this->nodeOut << " - optimal detour node: " << optimalDetour << "\n";
+#endif
+		// Insert optimalDetour into the previous source route trace.
+		// e.g. src-...- prevHopToSrc - current - prevNextHop - ... - dst
+		// e.g. src-...- prevHopToSrc - current - [optimalDetour] - prevNextHop - ... - dst
+		vector<uint32_t> newSrcRoute = table->getSrcRoute();
+		int myPosInTrace = 0;
+		for(vector<int>::size_type i=0; i< newSrcRoute.size(); i++){
+			if(this->nodeId == newSrcRoute[i]) myPosInTrace = i;
+		}
+		newSrcRoute.insert(newSrcRoute.begin()+1+myPosInTrace, optimalDetour);
+
+		// Perform local repair with the selected optimal nodeID.
+		performLocalRepair(
+				table->getPrevNextHop(),
+				optimalDetour,
+				table->getNextHopToSrc(),
+				table->getFlow(),
+				newSrcRoute,
+				table->getQosReq(),
+				table->getEndToEndQuality());
 	} else {
 		// Error: optimal node not found
+#ifdef DEBUG_PRINT
+		NS_LOG_UNCOND(" - optimal detour node not found!!");
+#endif
+#ifdef DEBUG_NODE_OUT
+		this->nodeOut << " - optimal detour node not found!!" << "\n";
+#endif
 	}
 
 	// Remove FlowCheck-replies which maps to the seqNo.
@@ -796,9 +825,11 @@ void MyNode::performLocalRepair(uint32_t prevNextHop, uint32_t newNextHop,
 	route->setNextHop(newNextHop);
 
 	// Update flowTable with the new nextHop.
-	flowTable->getFlowEntry(flow)->setFwdNodeId(newNextHop);
-	flowTable->getFlowEntry(flow)->setAllocatedBandwidth(prevNextHop, 0.0);
-	flowTable->getFlowEntry(flow)->setAllocatedBandwidth(newNextHop, rs.getQosReq().getBandwidth());
+	FlowEntry* flowEntry = this->flowTable->getFlowEntry(flow);
+	flowEntry->setFwdNodeId(newNextHop);
+	flowEntry->setAllocatedBandwidth(prevNextHop, 0.0);
+	flowEntry->addFlowStat(newNextHop);
+	flowEntry->setAllocatedBandwidth(newNextHop, qosReq.getBandwidth());
 
 	// Update ncTable for link quality change.
 	this->ncTable->get(prevNextHop)->removeFlow(flow);
@@ -1450,7 +1481,8 @@ void MyNode::handlePathProbe(string str, Ipv4Address clientIP, int ifIdx){
 					if(!selected){
 						selected = candidate;
 					} else {
-						if(selected->getAvgOccupiedBw() < candidate->getAvgOccupiedBw()){
+						if(this->flowTable->getOccupiedBandwidth(selected->getNodeId())
+							< this->flowTable->getOccupiedBandwidth(candidate->getNodeId())){
 							selected = candidate;
 						}
 					}
@@ -1459,10 +1491,10 @@ void MyNode::handlePathProbe(string str, Ipv4Address clientIP, int ifIdx){
 				// Set candidate as a detour node.
 				if(selected){
 #ifdef DEBUG_PRINT
-					NS_LOG_UNCOND(" - detour node selected as: " << selected->getNodeId() << ", avgOccBw=" << selected->getAvgOccupiedBw());
+					NS_LOG_UNCOND(" - detour node selected as: " << selected->getNodeId() << ", avgOccBw=" << this->flowTable->getOccupiedBandwidth(selected->getNodeId()));
 #endif
 #ifdef DEBUG_NODE_OUT
-					this->nodeOut << " - detour node selected as: " << selected->getNodeId() << ", avgOccBw=" << selected->getAvgOccupiedBw() << "\n";
+					this->nodeOut << " - detour node selected as: " << selected->getNodeId() << ", avgOccBw=" << this->flowTable->getOccupiedBandwidth(selected->getNodeId()) << "\n";
 #endif
 					vector<uint32_t> trace = probe.getTrace();
 					int myPosInTrace = 0;
@@ -1495,6 +1527,12 @@ void MyNode::handlePathProbe(string str, Ipv4Address clientIP, int ifIdx){
 			// Generate FlowCheckRecvTable for the seqNo.
 			int seqNo = this->flowCheckSeqNo++;
 			FlowCheckRecvTable* table = new FlowCheckRecvTable();
+			table->setFlow(probe.getFlow());
+			table->setQosReq(probe.getQosReq());
+			table->setNextHopToSrc(clientNodeId);
+			table->setPrevNextHop(nextHop);
+			table->setEndToEndQuality(probe.getLinkQuality());
+			table->setSrcRoute(probe.getTrace());
 			this->flowCheckRecvMap[seqNo] = table;
 
 			// Create and broadcast FlowCheck-request with the seqNo.
@@ -1503,7 +1541,7 @@ void MyNode::handlePathProbe(string str, Ipv4Address clientIP, int ifIdx){
 			sendRoutingPacket(Ipv4Address::GetBroadcast(), flowCheck.serialize());
 
 			// Schedule the selectNodeFromFlowCheck function.
-			Time flowCheckRecvInterval = Seconds(0.5);
+			Time flowCheckRecvInterval = Seconds(0.1);
 			Simulator::Schedule(flowCheckRecvInterval, &MyNode::selectNodeFromFlowCheck, this, seqNo);
 
 		} else if(this->scheme == SCHEME_3){

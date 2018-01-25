@@ -37,12 +37,13 @@ public:
 	std::vector<FlowEntry*> getAllFlowEntries();
 	int getNumOfFlows();
 	std::vector<FlowEntry*> getUnpopularFlows(size_t k);
+	double getOccupiedBandwidth(uint32_t nodeId);
 
 	//vector<FlowEntry> getInactiveFlows();
 	//void deleteFlowEntry(Flow flow);
 	std::string getAllFlowInfo();
 	std::string getFormattedFlowOutput(std::string time);
-	std::string printFlowTable(int nodeId);
+	std::string printFlowTable(uint32_t nodeId);
 };
 
 

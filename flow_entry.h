@@ -25,8 +25,8 @@ private:
 	Flow flow;
 	long startTime;
 	long lastTime;
-	std::map<int, FlowStat*> flowStats; // statistics of all associated links (neighbor IDs)
-	std::vector<int> neighbors;
+	std::map<uint32_t, FlowStat*> flowStats; // statistics of all associated links (neighbor IDs)
+	std::vector<uint32_t> neighbors;
 	std::vector<uint32_t> srcRoute;
 	QoSRequirement qosReq;
 	QoSRequirement hopQosReq;
@@ -36,7 +36,7 @@ private:
 	int routingFlag;
 	bool routeSearching;
 	bool controlFlow;
-	int fwdNodeId; // forwarding node ID
+	uint32_t fwdNodeId; // forwarding node ID
 
 	void initAppReq();
 	//void initFlowStats(std::vector<int> ifIdices);
@@ -44,12 +44,12 @@ private:
 	std::string srcRouteToString();
 
 public:
-	FlowEntry(Flow flow, int nodeId, long startTime);
-	FlowEntry(int nodeId, PacketInfo pktInfo);
+	FlowEntry(Flow flow, uint32_t nodeId, long startTime);
+	FlowEntry(uint32_t nodeId, PacketInfo pktInfo);
 	~FlowEntry();
-	bool isFlowStatExists(int nodeId);
-	void addFlowStat(int nodeId);
-	void addPacketInfo(int nodeId, PacketInfo pktInfo); // packetinfo for a neighbor
+	bool isFlowStatExists(uint32_t nodeId);
+	void addFlowStat(uint32_t nodeId);
+	void addPacketInfo(uint32_t nodeId, PacketInfo pktInfo); // packetinfo for a neighbor
 	bool isActive() const;
 	void setActive(bool active);
 	int getAppReqSeqNo() const;
@@ -69,9 +69,9 @@ public:
 	long getStartTime() const;
 	void setStartTime(long startTime);
 	void resetRealTimeBandwidth();
-	void setAllocatedBandwidth(int nodeId, double allocatedBW);
-	double getAllocatedBandwidth(int nodeId);
-	double getAvgRealTimeBandwidth(int nodeId);
+	void setAllocatedBandwidth(uint32_t nodeId, double allocatedBW);
+	double getAllocatedBandwidth(uint32_t nodeId);
+	double getAvgRealTimeBandwidth(uint32_t nodeId);
 	const double getAvgRealTimeBandwidth() const;
 	QoSRequirement getQosReq() const;
 	void setQosReq(QoSRequirement qosReq);
@@ -82,10 +82,10 @@ public:
 	std::string toFormattedFlowInfo();
 	std::string toString();
 
-	int getFwdNodeId() const {
+	uint32_t getFwdNodeId() const {
 		return fwdNodeId;
 	}
-	void setFwdNodeId(int fwdNodeId) {
+	void setFwdNodeId(uint32_t fwdNodeId) {
 		this->fwdNodeId = fwdNodeId;
 	}
 

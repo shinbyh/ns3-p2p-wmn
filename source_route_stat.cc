@@ -10,6 +10,7 @@
 #include "string_tokenizer.h"
 #include <cstdlib> // strtod
 #include <boost/format.hpp> // format()
+#include <algorithm>
 
 namespace std {
 
@@ -52,6 +53,27 @@ void SourceRouteStat::parse(string str) {
 	this->bandwidth = strtod(tokens[1].c_str(), NULL);
 }
 
+/**
+ * Finds the position of a nodeId specified as a parameter
+ * in the vector of nodeIds.
+ * If the nodeId is not found, minus value is returned.
+ */
+int SourceRouteStat::getNodeIdPosition(uint32_t nodeId) {
+	size_t index = find(this->trace.begin(), this->trace.end(), nodeId) - this->trace.begin();
+	if(index < this->trace.size()){
+		return (int)index;
+	} else {
+		return -1;
+	}
+}
+
+bool SourceRouteStat::containsNodeId(uint32_t nodeId) {
+	if(find(this->trace.begin(), this->trace.end(), nodeId) != this->trace.end()){
+		return true;
+	} else {
+		return false;
+	}
+}
+
+
 } /* namespace std */
-
-

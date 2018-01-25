@@ -167,14 +167,32 @@ std::string FlowTable::getFormattedFlowOutput(std::string time) {
 std::vector<FlowEntry*> FlowTable::getUnpopularFlows(size_t k) {
 	vector<FlowEntry*> flows = getAllFlowEntries();
 
-	// sort flow entires.
+	// sort flow entries in an ascending order of bandwidth.
 	sort(flows.begin(), flows.end());
 
 	if(flows.size() > k) flows.resize(k);
 	return flows;
 }
 
-std::string FlowTable::printFlowTable(int nodeId){
+/**
+ * Returns the occupied bandwidth of a link between
+ * myself and a neighbor node specified by nodeId.
+ */
+double FlowTable::getOccupiedBandwidth(uint32_t nodeId) {
+	double bandwidth = 0.0;
+
+	std::pair<Flow, FlowEntry*> p;
+	BOOST_FOREACH (p, flowTable){
+		FlowEntry* entry = p.second;
+		if(entry->getFwdNodeId() == nodeId){
+			bandwidth += entry->getAvgRealTimeBandwidth(nodeId);
+		}
+	}
+
+	return bandwidth;
+}
+
+std::string FlowTable::printFlowTable(uint32_t nodeId){
 	std::stringstream ss;
 	ss << std::fixed << "[Node "<< nodeId << "] FlowTable (t=" << Simulator::Now().GetSeconds() << ")\n";
 	ss << "         flow                        QoS Requirement               fwd   nodeId     allocBW    avgRTBW    trace\n"
