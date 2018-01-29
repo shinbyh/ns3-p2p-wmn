@@ -46,6 +46,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <fstream> // reading a topology config file
 
 using namespace ns3;
 using namespace std;
@@ -54,37 +55,6 @@ NS_LOG_COMPONENT_DEFINE ("BhshinP2PExample");
 
 std::map<int, MyNode*> myNodes;
 NodeIdMap* nodeIdMap;
-
-/*
- * Creates a point-to-point link between two nodes in a NodeContainer.
- *
- * @param allNodes NodeContainer for making connection
- * @param i the index i of allNodes
- * @param j the index j of allNodes
- * @param ipv4Base the base Ipv4 address for auto assignment (e.g. "10.1.1.0")
- */
-static Ipv4InterfaceContainer makePointToPoint(PointToPointHelper pointToPoint, NodeContainer allNodes, int i, int j, Ipv4Address ipv4Base)
-{
-	NodeContainer p2pNodes;
-	p2pNodes.Add(allNodes.Get(i));
-	p2pNodes.Add(allNodes.Get(j));
-
-	NetDeviceContainer p2pDevices;
-	p2pDevices = pointToPoint.Install (p2pNodes);
-
-	Ipv4AddressHelper address;
-	address.SetBase (ipv4Base, "255.255.255.0"); // e.g. "10.1.2.0"
-
-	Ipv4InterfaceContainer p2pInterfaces;
-	p2pInterfaces = address.Assign (p2pDevices);
-
-	myNodes[i]->addIpv4Address(p2pInterfaces.Get(0).first->GetAddress(p2pInterfaces.Get(0).second, 0).GetLocal());
-	myNodes[j]->addIpv4Address(p2pInterfaces.Get(1).first->GetAddress(p2pInterfaces.Get(1).second, 0).GetLocal());
-	nodeIdMap->addMapping(p2pInterfaces.Get(0).first->GetAddress(p2pInterfaces.Get(0).second, 0).GetLocal(), (uint32_t)i);
-	nodeIdMap->addMapping(p2pInterfaces.Get(1).first->GetAddress(p2pInterfaces.Get(1).second, 0).GetLocal(), (uint32_t)j);
-
-	return p2pInterfaces;
-}
 
 static void ReceiveHello (Ptr<Socket> socket)
 {
@@ -300,6 +270,91 @@ static vector<AppFlowReqPkt> readFlowSettingsFromFile(string filepath) {
 	return appFlowReqPkts;
 }
 
+/*
+ * Creates a point-to-point link between two nodes in a NodeContainer.
+ *
+ * @param allNodes NodeContainer for making connection
+ * @param i the index i of allNodes
+ * @param j the index j of allNodes
+ * @param ipv4Base the base Ipv4 address for auto assignment (e.g. "10.1.1.0")
+ */
+static Ipv4InterfaceContainer makePointToPoint(PointToPointHelper pointToPoint, NodeContainer allNodes, uint32_t i, uint32_t j, Ipv4Address ipv4Base)
+{
+	Ipv4InterfaceContainer p2pInterfaces;
+
+	// Check for error.
+	if(i >= allNodes.GetN() || j >= allNodes.GetN()){
+		NS_LOG_UNCOND("[makePointToPoint] Error: node ID out of bound: " << i << ", " << j);
+		return p2pInterfaces; // return an empty container
+	}
+
+	NodeContainer p2pNodes;
+	p2pNodes.Add(allNodes.Get(i));
+	p2pNodes.Add(allNodes.Get(j));
+
+	NetDeviceContainer p2pDevices;
+	p2pDevices = pointToPoint.Install (p2pNodes);
+	Ipv4AddressHelper address;
+	address.SetBase (ipv4Base, "255.255.255.0"); // e.g. "10.1.2.0"
+	p2pInterfaces = address.Assign (p2pDevices);
+
+	myNodes[i]->addIpv4Address(p2pInterfaces.Get(0).first->GetAddress(p2pInterfaces.Get(0).second, 0).GetLocal());
+	myNodes[j]->addIpv4Address(p2pInterfaces.Get(1).first->GetAddress(p2pInterfaces.Get(1).second, 0).GetLocal());
+	nodeIdMap->addMapping(p2pInterfaces.Get(0).first->GetAddress(p2pInterfaces.Get(0).second, 0).GetLocal(), (uint32_t)i);
+	nodeIdMap->addMapping(p2pInterfaces.Get(1).first->GetAddress(p2pInterfaces.Get(1).second, 0).GetLocal(), (uint32_t)j);
+
+	return p2pInterfaces;
+}
+
+/*
+ * Reads textual configurations of point-to-point network topology.
+ * The config file must be like this:
+ *
+ * 0,1,5Mbps,2ms
+ * 1,2,10Mbps,1ms
+ * 2,3,5Mbps,10ms
+ * ...
+ *
+ * @param filepath The path of a topology configuration file.
+ * @param pointToPoint PointToPointHelper parameter
+ * @param allNodes NodeContainer for making connection
+ * @return a vector of all created interfaces as Ipv4InterfaceContainer
+ */
+static std::vector<Ipv4InterfaceContainer> loadTopologyConfig(string filepath, PointToPointHelper pointToPoint, NodeContainer nodes)
+{
+	std::vector<Ipv4InterfaceContainer> containers;
+
+	std::ifstream inStream(filepath, std::ios::in);
+	std::string temp;
+	int count = 0;
+
+	while(!inStream.eof()){
+		getline(inStream, temp);
+		ltrim(temp);
+		rtrim(temp);
+
+		std::vector<std::string> tokens;
+		tokenizeString(temp, tokens, ",");
+
+		if(tokens.size() >= 4){
+			uint32_t i = atoi(tokens[0].c_str());
+			uint32_t j = atoi(tokens[1].c_str());
+			std::string bandwidth = tokens[2];
+			std::string delay = tokens[3];
+
+			std::stringstream ss;
+			ss << "10.1." << count++ << ".0";
+			Ipv4Address ipv4;
+			ipv4.Set(ss.str().c_str());
+
+			Ipv4InterfaceContainer container = makePointToPoint(pointToPoint, nodes, i, j, ipv4);
+			containers.push_back(container);
+		}
+	}
+
+	inStream.close();
+	return containers;
+}
 
 int main (int argc, char *argv[])
 {
@@ -417,26 +472,12 @@ int main (int argc, char *argv[])
 	/*
 	 * Make point-to-point connections.
 	 */
-	Ipv4InterfaceContainer p2pIfs_0_1 = makePointToPoint(pointToPoint, allNodes, 0, 1, "10.1.1.0");
-	Ipv4InterfaceContainer p2pIfs_1_2 = makePointToPoint(pointToPoint, allNodes, 1, 2, "10.1.2.0");
-	Ipv4InterfaceContainer p2pIfs_2_3 = makePointToPoint(pointToPoint, allNodes, 2, 3, "10.1.3.0");
-	Ipv4InterfaceContainer p2pIfs_1_4 = makePointToPoint(pointToPoint, allNodes, 1, 4, "10.1.4.0");
-	Ipv4InterfaceContainer p2pIfs_4_3 = makePointToPoint(pointToPoint, allNodes, 4, 3, "10.1.5.0");
-	Ipv4InterfaceContainer p2pIfs_3_5 = makePointToPoint(pointToPoint, allNodes, 3, 5, "10.1.6.0");
-	Ipv4InterfaceContainer p2pIfs_6_4 = makePointToPoint(pointToPoint, allNodes, 6, 4, "10.1.7.0");
-	Ipv4InterfaceContainer p2pIfs_4_7 = makePointToPoint(pointToPoint, allNodes, 4, 7, "10.1.8.0");
-	Ipv4InterfaceContainer p2pIfs_3_8 = makePointToPoint(pointToPoint, allNodes, 3, 8, "10.1.9.0");
-	Ipv4InterfaceContainer p2pIfs_2_4 = makePointToPoint(pointToPoint, allNodes, 4, 2, "10.1.10.0");
-	Ipv4InterfaceContainer p2pIfs_9_2 = makePointToPoint(pointToPoint, allNodes, 9, 2, "10.1.11.0");
-	Ipv4InterfaceContainer p2pIfs_3_10 = makePointToPoint(pointToPoint, allNodes, 3, 10, "10.1.12.0");
-	Ipv4InterfaceContainer p2pIfs_2_11 = makePointToPoint(pointToPoint, allNodes, 2, 11, "10.1.13.0");
-	Ipv4InterfaceContainer p2pIfs_11_10 = makePointToPoint(pointToPoint, allNodes, 11, 10, "10.1.14.0");
+	vector<Ipv4InterfaceContainer> p2pIfcs = loadTopologyConfig("topology.config", pointToPoint, allNodes);
 
 	/*
 	 * Common sockets for all nodes
 	 */
 	TypeId tid = TypeId::LookupByName ("ns3::UdpSocketFactory");
-	//Ptr<UniformRandomVariable> x = CreateObject<UniformRandomVariable> ();
 	for(uint32_t i=0; i<allNodes.GetN(); i++){
 		// socket for receiving Hello
 		Ptr<Socket> helloRecvSocket = Socket::CreateSocket(allNodes.Get(i), tid);
@@ -518,12 +559,13 @@ int main (int argc, char *argv[])
 				myNodes[nodeId], appFlowReqPkt.getMyPkt(), appFlowReqPkt.getFlowReq());
 	}
 
+	/*
 	UdpEchoServerHelper echoServer (9);
 	ApplicationContainer serverApps = echoServer.Install (allNodes);
 	serverApps.Start (Seconds (1.0));
 	serverApps.Stop (Seconds (10.0));
 
-	UdpEchoClientHelper echoClient (p2pIfs_0_1.GetAddress(0), 9);
+	UdpEchoClientHelper echoClient (p2pIfcs[0].GetAddress(0), 9);
 	echoClient.SetAttribute ("MaxPackets", UintegerValue (10));
 	echoClient.SetAttribute ("Interval", TimeValue (Seconds (1.0)));
 	echoClient.SetAttribute ("PacketSize", UintegerValue (1024));
@@ -531,27 +573,7 @@ int main (int argc, char *argv[])
 	ApplicationContainer clientApps = echoClient.Install (allNodes.Get(3));
 	clientApps.Start (Seconds (3.0));
 	clientApps.Stop (Seconds (10.0));
-
-
-/*	UdpEchoClientHelper echoClient (p2pInterfaces.GetAddress(0), 9);
-	echoClient.SetAttribute ("MaxPackets", UintegerValue (10));
-	echoClient.SetAttribute ("Interval", TimeValue (Seconds (1.0)));
-	echoClient.SetAttribute ("PacketSize", UintegerValue (1024));
-
-	ApplicationContainer clientApps = echoClient.Install (p2pNodes.Get (1));
-	clientApps.Start (Seconds (2.0));
-	clientApps.Stop (Seconds (10.0));
-
-	// 2
-	UdpEchoClientHelper echoClient2 (p2pInterfaces2.GetAddress(0), 9);
-	echoClient2.SetAttribute ("MaxPackets", UintegerValue (1));
-	echoClient2.SetAttribute ("Interval", TimeValue (Seconds (1.0)));
-	echoClient2.SetAttribute ("PacketSize", UintegerValue (1024));
-
-	ApplicationContainer clientApps2 = echoClient2.Install (allNodes.Get (2));
-	clientApps2.Start (Seconds (2.0));
-	clientApps2.Stop (Seconds (10.0));
-*/
+	*/
 
 	/*
 	 * Net-Anim settings

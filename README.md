@@ -15,7 +15,7 @@ This ns-3 scratch project aims to run an application-aware multi-constrained rou
 
 ## Usage
 * Copy all source code files (.h, .cc) into [NS3-HOME]/scratch/p2p-bhshin. For this, you may want to create a new directory under [NS3-HOME]/scratch/.
-* Copy all configuration text files (sina.config, .txt) and script files (.sh, .py) into [NS-3-HOME]/.
+* Copy all configuration text files (sina.config, topology.config, .txt) and script files (.sh, .py) into [NS-3-HOME]/.
 * Build ns-3 using ./waf.
 ```
 $ ./waf
