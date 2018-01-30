@@ -356,6 +356,38 @@ static std::vector<Ipv4InterfaceContainer> loadTopologyConfig(string filepath, P
 	return containers;
 }
 
+static uint32_t getMaxNumOfNodes(string topologyConfigFile)
+{
+	std::ifstream inStream(topologyConfigFile, std::ios::in);
+	std::string temp;
+	uint32_t maxNodeId = 0;
+
+	while(!inStream.eof()){
+		getline(inStream, temp);
+		ltrim(temp);
+		rtrim(temp);
+
+		std::vector<std::string> tokens;
+		tokenizeString(temp, tokens, ",");
+
+		if(tokens.size() >= 4){
+			uint32_t i = atoi(tokens[0].c_str());
+			uint32_t j = atoi(tokens[1].c_str());
+
+			// Find the maximum nodeID number.
+			if(i > maxNodeId){
+				maxNodeId = i;
+			}
+			if(j > maxNodeId){
+				maxNodeId = j;
+			}
+		}
+	}
+
+	inStream.close();
+	return ++maxNodeId;
+}
+
 int main (int argc, char *argv[])
 {
 	MyConfig::instance().readConfigFromFile("sina.config");
@@ -367,9 +399,10 @@ int main (int argc, char *argv[])
 	bool nullmsg = false; // MPI interface, 171114
 #endif
 	bool verbose = true;
-	int numOfNodes = 12;
+	uint32_t numOfNodes = 0;
 	int scheme = BASELINE; // default: existing work.
-	string appsConfigFile("2apps_10pkts");
+	string appsConfigFile("2apps_10pkts"); // default: read "2apps_10pkts.txt".
+	string topologyFile("topology.config"); // default: read "topology.config".
 	double helloIntervalN = atof(MyConfig::instance().getValue("HelloInterval").c_str()); // seconds
 	double dmIntervalN = atof(MyConfig::instance().getValue("DelayMeasurementInterval").c_str()); // seconds
 	double flowIntervalN = 1.0;
@@ -389,8 +422,8 @@ int main (int argc, char *argv[])
 	cmd.AddValue ("packetSize", "size of application packet sent", packetSize);
 	cmd.AddValue ("numPackets", "number of packets generated", numPackets);
 	cmd.AddValue ("verbose", "turn on all WifiNetDevice log components", verbose);
-	cmd.AddValue ("nodes", "number of nodes (by Byoungheon Shin)", numOfNodes);
 	cmd.AddValue ("apps", "input file for application flows (by Byoungheon Shin)", appsConfigFile);
+	cmd.AddValue ("topology", "input file for network topology (by Byoungheon Shin)", topologyFile);
 	cmd.AddValue ("scheme", "for research, which scheme is selected, 0 or 1 (by Byoungheon Shin)", scheme);
 #ifdef NS3_MPI
 	cmd.AddValue ("nullmsg", "Enable the use of null-message synchronization", nullmsg);
@@ -421,6 +454,7 @@ int main (int argc, char *argv[])
 	 * Create nodes and MyNodes (bhshin).
 	 */
 	NodeContainer allNodes;
+	numOfNodes = getMaxNumOfNodes(topologyFile);
 
 #ifdef NS3_MPI
 	// MPI system ID allocation
@@ -443,7 +477,7 @@ int main (int argc, char *argv[])
 #endif
 
 	// debug
-	NS_LOG_UNCOND("[main] created total " << allNodes.GetN() << " nodes.");
+	NS_LOG_UNCOND("[main] created total " << allNodes.GetN() << " nodes from " << topologyFile);
 
 	for(uint32_t i=0; i<allNodes.GetN(); i++){
 		MyNode* myNode = new MyNode(i, allNodes.Get(i), scheme);
@@ -472,7 +506,7 @@ int main (int argc, char *argv[])
 	/*
 	 * Make point-to-point connections.
 	 */
-	vector<Ipv4InterfaceContainer> p2pIfcs = loadTopologyConfig("topology.config", pointToPoint, allNodes);
+	vector<Ipv4InterfaceContainer> p2pIfcs = loadTopologyConfig(topologyFile, pointToPoint, allNodes);
 
 	/*
 	 * Common sockets for all nodes

@@ -44,7 +44,6 @@ private:
 	std::vector<std::string> meshSubnets;
 	std::vector<std::string> hostapdSubnets;
 	bool meshRouter;
-	//bool proposedScheme;
 	int scheme;
 	int flowUnsatisfactoryThreshold;
 	double maxBandwidth;

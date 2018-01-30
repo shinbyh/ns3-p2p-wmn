@@ -58,8 +58,18 @@ std::string ControlFlowTable::getControlFlowInfo() {
 	std::stringstream ss;
 	ss << std::fixed;
 
+	size_t count = 1;
 	for(int ctrlPort : this->keysTimeOrder){
-		ss << ctrlPort << "\t";
+		if(count < this->keysTimeOrder.size()){
+			ss << ctrlPort << "\t";
+		} else {
+			ss << ctrlPort;
+		}
+		count++;
 	}
 	return ss.str();
+}
+
+int ControlFlowTable::getNumberOfCtrlPorts() {
+	return this->keysTimeOrder.size();
 }

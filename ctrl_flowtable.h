@@ -25,6 +25,7 @@ public:
 	void updateRealTimeBandwidth();
 	std::string getControlOutput(std::string time);
 	std::string getControlFlowInfo();
+	int getNumberOfCtrlPorts();
 };
 
 #endif /* SCRATCH_BHSHIN_CTRL_FLOWTABLE_H_ */

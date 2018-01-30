@@ -33,6 +33,7 @@ MyNode::MyNode(uint32_t nodeId, Ptr<Node> node, int scheme)
 	this->helloSeqNo = 0;
 	this->flowCheckSeqNo = 0;
 	this->numOfFlows = 0;
+	this->numOfCtrlPorts = 0;
 
 	// tables
 	this->ncTable = new NeighborTable(this);
@@ -66,6 +67,7 @@ MyNode::MyNode(uint32_t nodeId, Ptr<Node> node, int scheme)
 	stringstream ssci;
 	ssci << "ovinfo_" << node->GetId() << ".txt";
 	this->ctrlInfoOut.open(ssci.str().c_str(), ofstream::out);
+	this->ctrlInfoOut.close();
 #endif
 
 	// random number generators
@@ -228,8 +230,18 @@ void MyNode::writeFlowLog() {
 		this->numOfFlows = this->flowTable->getNumOfFlows();
 	}
 
+	// CtrlPortInfo
+	if(this->numOfCtrlPorts < this->ctrlFlowTable->getNumberOfCtrlPorts()){
+		stringstream ssfi;
+		ssfi << "ovinfo_" << node->GetId() << ".txt";
+		this->ctrlInfoOut.open(ssfi.str().c_str(), ofstream::out);
+		this->ctrlInfoOut << ctrlFlowTable->getControlFlowInfo();
+		this->ctrlInfoOut.close();
+		this->numOfCtrlPorts = this->ctrlFlowTable->getNumberOfCtrlPorts();
+	}
+
 	//this->flowInfoOut << ss.str() << "\t" << flowTable->getAllFlowInfo() << "\n";
-	this->ctrlInfoOut << ss.str() << "\t" << ctrlFlowTable->getControlFlowInfo() << "\n";
+	//this->ctrlInfoOut << ss.str() << "\t" << ctrlFlowTable->getControlFlowInfo() << "\n";
 #endif
 }
 

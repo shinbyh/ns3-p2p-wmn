@@ -22,11 +22,11 @@ $ ./waf
 ```
 * Change sina.config as you want.
 * Create or change 'Xapps_Xpkts.txt' file for making application traffic flows with multiple constraints.
-* Run the simulation. You can change the argument for selecting a flow configuration file and a routing scheme.
+* Run the simulation. You can change the argument for selecting a flow configuration file, a routing scheme, and a topology configuration file.
 ```
-$ ./waf --run "p2p-bhshin --apps=Xapps_Xpkts --scheme=0"
+$ ./waf --run "p2p-bhshin --apps=Xapps_Xpkts --scheme=0 --topology=topology.config"
 ```
 * If you want to save the screen output (e.g. output.txt), run as follows:
 ```
-$ ./waf --run "p2p-bhshin --apps=Xapps_Xpkts --scheme=0" &> output.txt
+$ ./waf --run "p2p-bhshin --apps=Xapps_Xpkts --scheme=0 --topology=topology.config" &> output.txt
 ```

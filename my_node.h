@@ -63,6 +63,7 @@ private:
 	int flowCheckSeqNo; // Scheme 2.
 	int scheme;
 	int numOfFlows;
+	int numOfCtrlPorts;
 	ns3::Ptr<ns3::UniformRandomVariable> rngDelay; // delay random number generator
 	ns3::Ptr<ns3::UniformRandomVariable> rngMyPkt; // mypacket random number generator
 	ns3::Ptr<ns3::UniformRandomVariable> rngRtPkt; // routingPkt random number generator

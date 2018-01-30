@@ -22,7 +22,6 @@ MyConfig::~MyConfig() {
 
 void MyConfig::init() {
 	this->meshRouter = false;
-	//this->proposedScheme = false;
 	this->scheme = 0;
 	this->flowUnsatisfactoryThreshold = 0;
 	this->maxBandwidth = 2000000.0; // 2Mbps
@@ -125,9 +124,10 @@ void MyConfig::readConfigFromFile(std::string filepath) {
 		}
 	}
 
-
 	// after loading ifToSubnet mappings
 	this->ifaces = getKeySetFrom(this->ifToSubnetMap);
+
+	inStream.close();
 }
 
 std::string MyConfig::getValue(std::string key) {
