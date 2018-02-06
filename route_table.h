@@ -29,9 +29,13 @@ public:
 	std::string getSubnet(ns3::Ipv4Address ip);
 	uint32_t getNextHop(Flow flow);
 	Route* getRoute(Flow flow);
+	Route* getDefaultRoute(uint32_t dst);
 	void addRoute(Route* route);
+	void addDefaultRoute(uint32_t dst, uint32_t nextHop, int hopCount);
 	void updateRoute(Flow flow, uint32_t nextHop, int outgoingIface, double bandwidth);
+	void updateDefaultRoute(uint32_t dst, uint32_t nextHop, int hopCount);
 	void deleteRoute(Flow flow);
+	void deleteDefaultRoute(uint32_t dst);
 	std::string toString();
 };
 

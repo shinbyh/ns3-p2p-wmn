@@ -78,6 +78,47 @@ void RouteTable::deleteRoute(Flow flow) {
 	// TODO: delete traffic shaping (tc)
 }
 
+Route* RouteTable::getDefaultRoute(uint32_t dst) {
+	Flow flow(9999999, 0, dst, 0, FlowType::ANY_TYPE);
+	if(routeTable.find(flow) == routeTable.end()){
+		// not found.
+		// make default flow and return Route* of a default flow
+		return 0;
+	} else {
+		// found next hop
+		return routeTable[flow];
+	}
+}
+
+void RouteTable::addDefaultRoute(uint32_t dst, uint32_t nextHop, int hopCount) {
+	Flow flow(9999999, 0, dst, 0, FlowType::ANY_TYPE);
+	Route* route = new Route(flow, nextHop, hopCount);
+	route->setOutgoingIface(0);
+	this->routeTable[flow] = route;
+}
+
+void RouteTable::updateDefaultRoute(uint32_t dst, uint32_t nextHop,
+		int hopCount) {
+	Flow flow(9999999, 0, dst, 0, FlowType::ANY_TYPE);
+	if(routeTable.find(flow) == routeTable.end()){
+		// not found
+	} else {
+		Route* route = routeTable[flow];
+		route->setNextHop(nextHop);
+		route->setOutgoingIface(0);
+
+		// TODO: change traffic shaping (tc)
+
+		// debug
+		NS_LOG_UNCOND("[RT] updated default route: " << route->toString());
+	}
+}
+
+void RouteTable::deleteDefaultRoute(uint32_t dst) {
+	Flow flow(9999999, 0, dst, 0, FlowType::ANY_TYPE);
+	routeTable.erase(flow);
+}
+
 std::string RouteTable::toString() {
 	std::stringstream ss;
 	ss << std::fixed;
