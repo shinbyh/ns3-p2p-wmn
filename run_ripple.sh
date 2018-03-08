@@ -28,7 +28,7 @@ do
 			for pkt in $PKTS
 			do
 				# Remove previous data files.
-				rm flowinfo_*.txt flowlog_*.txt ovinfo_*.txt ovlog_*.txt nodelog_*.txt temp_*.txt newtemp*.txt res_*.txt nodestat*.txt *.pcap 2> /dev/null
+				rm flowinfo_*.txt flowlog_*.txt ovinfo_*.txt ovlog_*.txt ovstat_*.txt nodelog_*.txt temp_*.txt newtemp*.txt res_*.txt nodestat*.txt *.pcap 2> /dev/null
 
 				# Select an app config file.
 				appConfig=$app'_'$pkt
@@ -42,6 +42,7 @@ do
 
 				# Make statistics and copy to the dedicated location.
 				python stat.py $appConfigFile
+				python stat_ov.py $NODES
 				python avg_thp.py $appConfigFile > nodestat_avg.txt
 				./copy_results2.sh $appConfig $node $EXP_NAME $scheme
 			done
