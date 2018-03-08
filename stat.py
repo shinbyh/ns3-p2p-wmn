@@ -34,7 +34,7 @@ for line in lines:
     items = line.split('\t')
     ac_flow = flow.Flow()
     ac_flow.parse('{} {} {}'.format(items[1], items[2], items[3]))
-    print('analyzing {}'.format(ac_flow.toString()))
+    #print('analyzing {}'.format(ac_flow.toString()))
     #dstId = get_dst_nodeid_from_ipaddr(items[2])
     dstId = get_dst_nodeid_from_dstinfo(items[2])
 

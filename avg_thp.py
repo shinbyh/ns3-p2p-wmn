@@ -4,10 +4,17 @@ import re
 import subprocess
 import flow
 
-
+#
+# Strip directory and extensions and return the name of the configuration file.
+# e.g. "./apps_config/7apps_250pkts-3.txt" returns "7apps_250pkts-3".
+#
 def get_app_config(fileName):
-    items = re.split('[_.]',fileName)
-    return items[1]
+    items = re.split('/',fileName)
+    for item in items:
+        if('txt' in item):
+            iterations = re.split('[.]', item)
+            return iterations[0]
+    return '.'
 
 #
 # Use if the appConfigFile's flow profile uses IPv4 addresses (x.x.x.x).

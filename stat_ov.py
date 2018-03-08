@@ -22,9 +22,18 @@ def print_portBwSumMap(portBwSumMap):
 #
 def write_portBwSum(portBwSumMap):
     f = open('ovstat_sum.txt', 'w')
-    f.write('Port\tBandwidth\n')
+    #f.write('Port\tBandwidth\n')
     for portNum in portBwSumMap.keys():
-        f.write('{}\t{}\n'.format(portNum, portBwSumMap[portNum]))
+        f.write('{}\t'.format(portBwSumMap[portNum]))
+        #f.write('{}\t{}\n'.format(portNum, portBwSumMap[portNum]))
+    f.write('\n')
+    f.close()
+
+def write_portOrder(portBwSumMap):
+    f = open('ovstat_ports.txt', 'w')
+    for portNum in portBwSumMap.keys():
+        f.write('{}\t'.format(portNum))
+    f.write('\n')
     f.close()
 
 #
@@ -67,7 +76,7 @@ if __name__ == "__main__":
     portBwSumMap = {}
 
     # Debug
-    print('numOfNodes = {}'.format(numOfNodes))
+    #print('numOfNodes = {}'.format(numOfNodes))
 
     for i in range(0, numOfNodes):
         try:
@@ -99,6 +108,7 @@ if __name__ == "__main__":
             pass
 
     #print_portBwMap(portBwMap)
-    print_portBwSumMap(portBwSumMap)
+    #print_portBwSumMap(portBwSumMap)
     write_portBwSum(portBwSumMap)
+    write_portOrder(portBwSumMap)
     write_portBwPerNode(portBwMap)
