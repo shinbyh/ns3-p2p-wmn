@@ -14,7 +14,7 @@ using namespace ns3;
 
 ARREQ::ARREQ() {
 	this->seqNo = 0;
-	this->ttl = 10; // default maximum hops
+	this->ttl = atoi(MyConfig::instance().getValue("RouteDiscoveryTTL").c_str());
 }
 
 ARREQ::ARREQ(Flow flow, int seqNo, int ttl, QoSRequirement qosReq) {

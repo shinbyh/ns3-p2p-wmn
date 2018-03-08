@@ -151,6 +151,12 @@ static void ReceiveRoutingMessages (Ptr<Socket> socket)
 	case ROUTE_FLOWCHECK_REPLY:
 		myNode->handleFlowCheck(dataStr, senderAddr.GetIpv4(), 0);
 		break;
+	case ROUTE_FLOW_ACCEPT_REQUEST:
+		myNode->handleFlowAcceptRequest(dataStr, senderAddr.GetIpv4(), 0);
+		break;
+	case ROUTE_FLOW_ACCEPT_REPLY:
+		myNode->handleFlowAcceptReply(dataStr, senderAddr.GetIpv4(), 0);
+		break;
 	default:
 		break;
 	}
@@ -568,6 +574,13 @@ int main (int argc, char *argv[])
 				allNodes.Get(i)->GetId(),
 				Seconds(2.0),
 				&MyNode::checkFlowQoS,
+				myNodes[allNodes.Get(i)->GetId()],
+				flowInterval);
+
+		Simulator::ScheduleWithContext(
+				allNodes.Get(i)->GetId(),
+				Seconds(2.0),
+				&MyNode::checkFlowRandomness,
 				myNodes[allNodes.Get(i)->GetId()],
 				flowInterval);
 	}

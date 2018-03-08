@@ -21,6 +21,7 @@ FlowEntry::FlowEntry(Flow flow, uint32_t nodeId, long startTime) {
 	this->active = true;
 	this->startTime = startTime;
 	this->fwdNodeId = nodeId;
+	this->randomnessActivated = false;
 	initAppReq();
 	addFlowStat(nodeId);
 	//this->ifIdices.push_back(0);
@@ -33,6 +34,7 @@ FlowEntry::FlowEntry(uint32_t nodeId, PacketInfo pktInfo) {
 	this->active = true;
 	this->startTime = pktInfo.getTime();
 	this->fwdNodeId = nodeId;
+	this->randomnessActivated = false;
 	initAppReq();
 	//this->ifIdices.push_back(0);
 	//this->ifIdices.push_back(1);
@@ -289,6 +291,22 @@ const std::vector<uint32_t>& FlowEntry::getSrcRoute() const {
 
 void FlowEntry::setSrcRoute(const std::vector<uint32_t>& srcRoute) {
 	this->srcRoute = srcRoute;
+}
+
+bool FlowEntry::isRandomnessActivated() const {
+	return randomnessActivated;
+}
+
+void FlowEntry::setRandomnessActivated(bool randomnessActivated) {
+	this->randomnessActivated = randomnessActivated;
+}
+
+double FlowEntry::getRandomnessTime() const {
+	return randomnessTime;
+}
+
+void FlowEntry::setRandomnessTime(double randomnessTime) {
+	this->randomnessTime = randomnessTime;
 }
 
 bool FlowEntry::operator <(const FlowEntry& a) const {

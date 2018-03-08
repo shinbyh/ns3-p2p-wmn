@@ -23,7 +23,7 @@ Hello::Hello(){
 	this->isRouter = 0;
 }
 
-Hello::Hello(int nodeId, int seqNo, int numOfFlows, double occBW, double allocBW,
+Hello::Hello(uint32_t nodeId, int seqNo, int numOfFlows, double occBW, double allocBW,
 		bool isRouter) {
 	this->nodeId = nodeId;
 	this->seqNo = seqNo;
@@ -34,10 +34,10 @@ Hello::Hello(int nodeId, int seqNo, int numOfFlows, double occBW, double allocBW
 	this->isRouter = isRouter;
 }
 
-int Hello::getNodeId() const {
+uint32_t Hello::getNodeId() const {
 	return this->nodeId;
 }
-void Hello::setNodeId(int nodeId) {
+void Hello::setNodeId(uint32_t nodeId) {
 	this->nodeId = nodeId;
 }
 
@@ -136,11 +136,11 @@ double Hello::getAvgOccBw() const {
 	return avgOccBW;
 }
 
-const std::vector<int>& Hello::getNeighbors() const {
+const std::vector<uint32_t>& Hello::getNeighbors() const {
 	return neighbors;
 }
 
-void Hello::setNeighbors(const std::vector<int>& neighbors) {
+void Hello::setNeighbors(const std::vector<uint32_t>& neighbors) {
 	this->neighbors = neighbors;
 }
 
@@ -148,6 +148,6 @@ void Hello::setAvgOccBw(double avgOccBw) {
 	this->avgOccBW = avgOccBw;
 }
 
-void Hello::addNeighbor(int nodeId) {
+void Hello::addNeighbor(uint32_t nodeId) {
 	this->neighbors.push_back(nodeId);
 }

@@ -37,6 +37,8 @@ private:
 	bool routeSearching;
 	bool controlFlow;
 	uint32_t fwdNodeId; // forwarding node ID
+	bool randomnessActivated; // for source nodes only (Soft QoS; traffic randomization)
+	double randomnessTime; // for source nodes only (Soft QoS; traffic randomization)
 
 	void initAppReq();
 	//void initFlowStats(std::vector<int> ifIdices);
@@ -79,6 +81,10 @@ public:
 	void setHopQosReq(QoSRequirement& hopQosReq);
 	const std::vector<uint32_t>& getSrcRoute() const;
 	void setSrcRoute(const std::vector<uint32_t>& srcRoute);
+	bool isRandomnessActivated() const;
+	void setRandomnessActivated(bool randomnessActivated);
+	double getRandomnessTime() const;
+	void setRandomnessTime(double randomnessTime);
 	std::string toFormattedFlowInfo();
 	std::string toString();
 

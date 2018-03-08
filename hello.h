@@ -11,10 +11,11 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <stdint.h>
 
 class Hello {
 private:
-	int nodeId;
+	uint32_t nodeId;
 	int seqNo;
 	int numOfFlows;
 	double occBW;
@@ -22,16 +23,16 @@ private:
 	double avgOccBW; // Scheme 1 (2017.11.16)
 	bool isRouter;
 	// std::string[] reachableIPs;
-	std::vector<int> neighbors; // neighbor IDs, 2017.11.16
+	std::vector<uint32_t> neighbors; // neighbor IDs, 2017.11.16
 
 	std::string serializeNeighbors();
 	void parseTrace(std::string str);
 public:
 	Hello();
-	Hello(int nodeId, int seqNo, int numOfFlows, double occBW, double allocBW, bool isRouter);
+	Hello(uint32_t nodeId, int seqNo, int numOfFlows, double occBW, double allocBW, bool isRouter);
 
-	int getNodeId() const;
-	void setNodeId(int nodeId);
+	uint32_t getNodeId() const;
+	void setNodeId(uint32_t nodeId);
 	double getAllocBw() const;
 	void setAllocBw(double allocBw);
 	bool isIsRouter() const;
@@ -46,9 +47,9 @@ public:
 	void parse(std::string line);
 	double getAvgOccBw() const;
 	void setAvgOccBw(double avgOccBw);
-	const std::vector<int>& getNeighbors() const;
-	void setNeighbors(const std::vector<int>& neighbors);
-	void addNeighbor(int nodeId);
+	const std::vector<uint32_t>& getNeighbors() const;
+	void setNeighbors(const std::vector<uint32_t>& neighbors);
+	void addNeighbor(uint32_t nodeId);
 };
 
 

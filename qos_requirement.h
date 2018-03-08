@@ -34,7 +34,8 @@ public:
 	void setLossRate(double lossRate);
 	static QoSRequirement parse(string str);
 	string serialize();
-	bool isSatisfactory(LinkQuality* lq);
+	//bool isSatisfactory(LinkQuality* lq);
+	static bool isSatisfactory(const QoSRequirement& qosReq, const LinkQuality& lq);
 };
 
 #endif /* SCRATCH_BHSHIN_QOS_REQUIREMENT_H_ */

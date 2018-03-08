@@ -146,8 +146,8 @@ const bool NeighborEntry::containsIP(ns3::Ipv4Address ipAddr) const {
 	return false;
 }
 
-const bool NeighborEntry::containsNeighbor(int nodeId) const {
-	for(int neighborId : this->reachableNodeIds){
+const bool NeighborEntry::containsNeighbor(uint32_t nodeId) const {
+	for(uint32_t neighborId : this->reachableNodeIds){
 		if(neighborId == nodeId){
 			return true;
 		}
@@ -245,12 +245,12 @@ const std::string NeighborEntry::toString() const {
 	return ss.str();
 }
 
-const std::vector<int>& NeighborEntry::getReachableNodeIds() const {
+const std::vector<uint32_t>& NeighborEntry::getReachableNodeIds() const {
 	return reachableNodeIds;
 }
 
 void NeighborEntry::setReachableNodeIds(
-		const std::vector<int>& reachableNodeIds) {
+		const std::vector<uint32_t>& reachableNodeIds) {
 	this->reachableNodeIds.resize((int)reachableNodeIds.size());
 	std::copy(reachableNodeIds.begin(), reachableNodeIds.end(), this->reachableNodeIds.begin());
 }

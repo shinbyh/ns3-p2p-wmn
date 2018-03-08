@@ -24,7 +24,7 @@ private:
 	uint32_t nodeId;
 	ns3::Ipv4Address ipAddr;
 	std::vector<ns3::Ipv4Address> reachableIPs;
-	std::vector<int> reachableNodeIds;
+	std::vector<uint32_t> reachableNodeIds;
 	std::set<Flow> flowList;
 	double occupiedBw;
 	double avgOccupiedBw;
@@ -85,7 +85,7 @@ public:
 	void incrementDmSeqNo();
 
 	const bool containsIP(ns3::Ipv4Address ipAddr) const;
-	const bool containsNeighbor(int nodeId) const;
+	const bool containsNeighbor(uint32_t nodeId) const;
 	void addSampleToETX(int sample);
 	void addDelayToMovingAvg(long delay);
 	void addJitterToMovingAvg(long jitter);
@@ -93,8 +93,8 @@ public:
 	const double getAverageJitter() const;
 
 	const std::string toString() const;
-	const std::vector<int>& getReachableNodeIds() const;
-	void setReachableNodeIds(const std::vector<int>& reachableNodeIds);
+	const std::vector<uint32_t>& getReachableNodeIds() const;
+	void setReachableNodeIds(const std::vector<uint32_t>& reachableNodeIds);
 };
 
 

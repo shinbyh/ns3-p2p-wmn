@@ -84,7 +84,7 @@ string QoSRequirement::serialize() {
 	return ss.str();
 }
 
-bool QoSRequirement::isSatisfactory(LinkQuality* lq) {
+/*bool QoSRequirement::isSatisfactory(LinkQuality* lq) {
 	//bool isVerified[4] = {true, };
 
 	if(this->bandwidth > lq->getBandwidth()){
@@ -107,5 +107,14 @@ bool QoSRequirement::isSatisfactory(LinkQuality* lq) {
 	//for(bool verified : isVerified){
 	//	if(!verified) return false;
 	//}
+	return true;
+}*/
+
+bool QoSRequirement::isSatisfactory(const QoSRequirement& qosReq,
+		const LinkQuality& lq) {
+	if(qosReq.getBandwidth() > lq.getBandwidth()){
+		return false;
+	}
+
 	return true;
 }

@@ -65,18 +65,12 @@ void NeighborTable::addAndUpdate(ns3::Ptr<ns3::Node> node, ns3::Ipv4Address ipAd
 	entry->setOccupiedBw(hello.getOccBw());
 	entry->setAllocBw(hello.getAllocBw());
 
-	if(this->myNode->getScheme() == SCHEME_1){
+	if(this->myNode->getScheme() == SCHEME_LOCAL_REPAIR_AVG_BW){
 		/*
-		 * Scheme 1.
+		 * SCHEME_LOCAL_REPAIR_AVG_BW.
 		 * Get average occupied bandwidth of a neighbor.
 		 */
 		entry->setAvgOccupiedBw(hello.getAvgOccBw());
-	} else if(this->myNode->getScheme() == SCHEME_2){
-
-	} else if(this->myNode->getScheme() == SCHEME_3){
-
-	} else {
-		// Error. invalid scheme configuration.
 	}
 
 	entry->setLastUpdateTime(Simulator::Now().GetMilliSeconds());
@@ -240,8 +234,8 @@ const std::string NeighborTable::printNeighborTable(ns3::Ptr<ns3::Node> node) co
 	return ss.str();
 }
 
-std::vector<int> NeighborTable::getNeighborIDs() {
-	vector<int> nodes;
+std::vector<uint32_t> NeighborTable::getNeighborIDs() {
+	vector<uint32_t> nodes;
 
 	pair<uint32_t, NeighborEntry*> p;
 	BOOST_FOREACH (p, this->ncTable){
