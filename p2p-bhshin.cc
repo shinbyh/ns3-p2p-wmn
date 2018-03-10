@@ -398,7 +398,7 @@ int main (int argc, char *argv[])
 {
 	MyConfig::instance().readConfigFromFile("sina.config");
 
-	double totalTime = 39.0;
+	double totalTime = 50.0;
 	uint32_t packetSize = 1000; // bytes
 	uint32_t numPackets = 5;
 #ifdef NS3_MPI

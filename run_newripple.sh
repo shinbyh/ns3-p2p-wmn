@@ -56,6 +56,7 @@ do
 				python stat.py $appConfigFile
 				python stat_ov.py $numOfNodes
 				python avg_thp.py $appConfigFile > nodestat_avg.txt
+				python avg_qos_violation.py $appConfigFile > nodestat_avg_qos_vio.txt
 				./copy_results2.sh $appConfig $numOfNodes $EXP_NAME $scheme
 			done
 		done
@@ -80,6 +81,7 @@ export numOfNodes
 # Integrate statistics.
 ######################################################################
 ./integrate_stat.sh > $DIR_PREFIX/$EXP_NAME/integrated_stat_thp.txt
+./integrate_stat_qos_vio.sh > $DIR_PREFIX/$EXP_NAME/integrated_stat_qos_vio.txt
 ./integrate_ovstat.sh > $DIR_PREFIX/$EXP_NAME/integrated_stat_overhead.txt
 
 ######################################################################
