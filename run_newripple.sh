@@ -2,7 +2,7 @@
 
 BASE_DIR=$(pwd)
 EXP_NAME=$1
-APPS="6apps 7apps"
+APPS="6apps 7apps 8apps"
 PKTS="250pkts"
 FLOWSETS="0 1 2 3 4 5 6 7 8 9"
 
@@ -57,6 +57,7 @@ do
 				python stat_ov.py $numOfNodes
 				python avg_thp.py $appConfigFile > nodestat_avg.txt
 				python avg_qos_violation.py $appConfigFile > nodestat_avg_qos_vio.txt
+				python avg_src_rt.py $appConfigFile > nodestat_rt_dscv_cnt.txt
 				./copy_results2.sh $appConfig $numOfNodes $EXP_NAME $scheme
 			done
 		done
@@ -83,6 +84,7 @@ export numOfNodes
 ./integrate_stat.sh > $DIR_PREFIX/$EXP_NAME/integrated_stat_thp.txt
 ./integrate_stat_qos_vio.sh > $DIR_PREFIX/$EXP_NAME/integrated_stat_qos_vio.txt
 ./integrate_ovstat.sh > $DIR_PREFIX/$EXP_NAME/integrated_stat_overhead.txt
+./integrate_stat_src_rt.sh > $DIR_PREFIX/$EXP_NAME/integrated_stat_rt_dscv_cnt.txt
 
 ######################################################################
 # Notify the end of simulation.

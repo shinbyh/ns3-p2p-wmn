@@ -27,7 +27,7 @@ def get_dst_nodeid_from_ipaddr(addrPort):
 #
 # Use if the appConfigFile's flow profile uses node IDs (int).
 #
-def get_dst_nodeid_from_dstinfo(nodeIdPort):
+def get_nodeid_from_idport(nodeIdPort):
     items = re.split(':', nodeIdPort)
     return int(items[0])
 
@@ -56,9 +56,7 @@ if __name__ == "__main__":
     # Y: packet sending rate (pkts/s)
     appConfigFile = sys.argv[1]
     acf = open(appConfigFile, 'r')
-
     output_str_bw = '{}\t{}'.format(get_app_config(appConfigFile), 'bandwidth')
-    #output_str_qos = '{}\t{}'.format(get_app_config(appConfigFile), 'qos_violation')
 
     # Check the flowLog of each destination node in appConfigFile.
     lines = acf.readlines()
@@ -66,7 +64,7 @@ if __name__ == "__main__":
         items = line.split('\t')
         ac_flow = flow.Flow()
         ac_flow.parse('{} {} {}'.format(items[1], items[2], items[3]))
-        dstId = get_dst_nodeid_from_dstinfo(items[2])
+        dstId = get_nodeid_from_idport(items[2])
         startTime = int(float(items[6])) + 2
         duration = int(float(items[7]))
         bw_requirement = float(int(items[4]) * int(items[5]) * 8)
@@ -87,9 +85,6 @@ if __name__ == "__main__":
             if(ac_flow == fi_flow):
                 avg = get_average('temp_{}_{}.txt'.format(dstId, lineNo), startTime, duration)
                 output_str_bw += '\t{}'.format(avg)
-                #qos_violation_ratio = get_qos_violation_ratio('temp_{}_{}.txt'.format(dstId, lineNo), bw_requirement, startTime, duration)
-                #output_str_qos += '\t{}'.format(qos_violation_ratio)
-                #print('requirement: {}, qos violation ratio: {}'.format(bw_requirement*0.9, qos_violation_ratio))
 
     print(output_str_bw)
     #print(output_str_qos)
