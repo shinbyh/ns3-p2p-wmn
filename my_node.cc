@@ -19,6 +19,7 @@
 #define DEBUG_PRINT
 #define DEBUG_NODE_OUT
 #define DEBUG_FLOW_OUT
+#define DEBUG_SRC_RT_OUT
 #define JITTERED_PKT_TX 0
 
 using namespace ns3;
@@ -34,6 +35,7 @@ MyNode::MyNode(uint32_t nodeId, Ptr<Node> node, int scheme)
 	this->flowCheckSeqNo = 0;
 	this->numOfFlows = 0;
 	this->numOfCtrlPorts = 0;
+	this->srcRtDscvCount = 0;
 
 	// tables
 	this->ncTable = new NeighborTable(this);
@@ -70,6 +72,12 @@ MyNode::MyNode(uint32_t nodeId, Ptr<Node> node, int scheme)
 	this->ctrlInfoOut.close();
 #endif
 
+#ifdef DEBUG_SRC_RT_OUT
+	stringstream ssrt;
+	ssrt << "srcrtlog_" << node->GetId() << ".txt";
+	this->srcRtOut.open(ssrt.str().c_str(), ofstream::out);
+#endif
+
 	// random number generators
 	this->rngDelay = CreateObject<UniformRandomVariable> ();
 	this->rngDelay->SetAttribute ("Min", DoubleValue (0.0));
@@ -92,6 +100,7 @@ MyNode::~MyNode() {
 	// close file pointers
 #ifdef DEBUG_FLOW_OUT
 	this->flowOut.close();
+	this->srcRtOut.close();
 	this->ctrlOut.close();
 	this->ctrlInfoOut.close();
 #endif
@@ -262,6 +271,16 @@ void MyNode::writeFlowLog() {
 
 	//this->flowInfoOut << ss.str() << "\t" << flowTable->getAllFlowInfo() << "\n";
 	//this->ctrlInfoOut << ss.str() << "\t" << ctrlFlowTable->getControlFlowInfo() << "\n";
+#endif
+}
+
+void MyNode::writeSrcRtLog() {
+#ifdef DEBUG_SRC_RT_OUT
+	stringstream ss;
+	ss << Simulator::Now().GetSeconds();
+	ss << "\t" << this->srcRtDscvCount << "\n";
+	this->srcRtOut << ss.str();
+	this->srcRtDscvCount = 0;
 #endif
 }
 
@@ -736,6 +755,9 @@ void MyNode::_schedulePacketsFromFlowRequest(FlowRequest flowReq, string msg) {
 			int seqNo = this->arreqSentTable->getNextSeqNo(flowReq.getFlow());
 			broadcastARREQ(flowReq.getFlow(), seqNo, flowReq);
 			// RouteSetup will callback this function after finding a route.
+
+			// 180313, Increment source's route discovery count
+			this->srcRtDscvCount++;
 		}
 	}
 }
@@ -950,6 +972,9 @@ void MyNode::_doRouting(Ptr<MyNS3Packet> myPkt, FlowRequest flowReq) {
 #endif
 			int seqNo = this->arreqSentTable->getNextSeqNo(flow);
 			broadcastARREQ(flow, seqNo, flowReq);
+
+			// 180313, Increment route discovery count.
+			this->srcRtDscvCount++;
 		}
 	}
 }
@@ -1386,6 +1411,9 @@ void MyNode::handleARERR(string str, Ipv4Address clientIP, int ifIdx) {
 		this->nodeOut << " - delete current route for route re-discovery..." << "\n";
 #endif
 		this->routeTable->deleteRoute(arerr.getFlow());
+
+		// 180313, write ARERR log by source
+		//this->srcRtDscvCount++;
 
 	} else {
 		// intermediate of the flow.

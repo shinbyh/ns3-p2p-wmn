@@ -199,6 +199,7 @@ static void ReceiveMyPacket (Ptr<Socket> socket)
 static void writeFlowStat(Ptr<Node> node, Time flowWriteInterval){
 	MyNode* myNode = myNodes[node->GetId()];
 	myNode->writeFlowLog();
+	myNode->writeSrcRtLog();
 	myNode->getFlowTable()->updateRealTimeBandwidth();
 	myNode->getControlFlowTable()->updateRealTimeBandwidth();
 	myNode->writeNeighborTable();

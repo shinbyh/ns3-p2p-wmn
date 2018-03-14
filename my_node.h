@@ -62,12 +62,14 @@ private:
 	ofstream flowInfoOut;
 	ofstream ctrlOut;
 	ofstream ctrlInfoOut;
+	ofstream srcRtOut; // 180313, route discovery count of each source node
 
 	int helloSeqNo;
 	int flowCheckSeqNo; // Scheme 2.
 	int scheme;
 	int numOfFlows;
 	int numOfCtrlPorts;
+	int srcRtDscvCount; // 180313, source's route discovery count for each second
 	ns3::Ptr<ns3::UniformRandomVariable> rngDelay; // delay random number generator
 	ns3::Ptr<ns3::UniformRandomVariable> rngMyPkt; // mypacket random number generator
 	ns3::Ptr<ns3::UniformRandomVariable> rngRtPkt; // routingPkt random number generator
@@ -95,6 +97,7 @@ public:
 	FlowTable* getFlowTable();
 	ControlFlowTable* getControlFlowTable();
 	void writeFlowLog();
+	void writeSrcRtLog();
 	void writeNeighborTable();
 	void writeRouteTable();
 
