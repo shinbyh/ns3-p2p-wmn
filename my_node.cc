@@ -36,6 +36,7 @@ MyNode::MyNode(uint32_t nodeId, Ptr<Node> node, int scheme)
 	this->numOfFlows = 0;
 	this->numOfCtrlPorts = 0;
 	this->srcRtDscvCount = 0;
+	this->srcRtDscvFailCount = 0;
 
 	// tables
 	this->ncTable = new NeighborTable(this);
@@ -278,9 +279,11 @@ void MyNode::writeSrcRtLog() {
 #ifdef DEBUG_SRC_RT_OUT
 	stringstream ss;
 	ss << Simulator::Now().GetSeconds();
-	ss << "\t" << this->srcRtDscvCount << "\n";
+	ss << "\t" << this->srcRtDscvCount <<
+			"\t"<< this->srcRtDscvFailCount << "\n";
 	this->srcRtOut << ss.str();
 	this->srcRtDscvCount = 0;
+	this->srcRtDscvFailCount = 0;
 #endif
 }
 
@@ -607,6 +610,7 @@ void MyNode::_setupRoute(Flow flow) {
 #ifdef DEBUG_NODE_OUT
 		this->nodeOut << " - No available route found!!" << "\n";
 #endif
+		this->srcRtDscvFailCount++;
 		return;
 	}
 

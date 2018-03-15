@@ -24,21 +24,26 @@ if __name__ == "__main__":
 
     log_file = open('nodestat_src_rt.txt', 'w')
     total_rt_dscv_count = 0
+    total_rt_dscv_fail_count = 0
     for src_id in src_set:
         src_rtlog_file = 'srcrtlog_{}.txt'.format(src_id)
         srf = open(src_rtlog_file, 'r')
         srf_lines = srf.readlines()
 
         rt_dscv_count = 0
+        rt_dscv_fail_count = 0
         for srf_line in srf_lines:
             items = re.split(r'[\t]', srf_line.strip())
             rt_dscv_count += int(items[1])
+            if(len(items) >= 3):
+                rt_dscv_fail_count += int(items[2])
 
         #print('{}\t{}'.format(src_id, rt_dscv_count))
-        log_file.write('{}\t{}\n'.format(src_id, rt_dscv_count))
+        log_file.write('{}\t{}\t{}\n'.format(src_id, rt_dscv_count, rt_dscv_fail_count))
         total_rt_dscv_count += rt_dscv_count
+        total_rt_dscv_fail_count += rt_dscv_fail_count
 
     #print('total\t{}'.format(total_rt_dscv_count))
-    log_file.write('total\t{}\n'.format(total_rt_dscv_count))
+    log_file.write('total\t{}\t{}\n'.format(total_rt_dscv_count, total_rt_dscv_fail_count))
     log_file.close()
-    print('{}\t{}'.format(output_str, total_rt_dscv_count))
+    print('{}\t{}\t{}'.format(output_str, total_rt_dscv_count, total_rt_dscv_fail_count))

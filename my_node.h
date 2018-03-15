@@ -70,6 +70,7 @@ private:
 	int numOfFlows;
 	int numOfCtrlPorts;
 	int srcRtDscvCount; // 180313, source's route discovery count for each second
+	int srcRtDscvFailCount; // 180315, source's route discovery failure count
 	ns3::Ptr<ns3::UniformRandomVariable> rngDelay; // delay random number generator
 	ns3::Ptr<ns3::UniformRandomVariable> rngMyPkt; // mypacket random number generator
 	ns3::Ptr<ns3::UniformRandomVariable> rngRtPkt; // routingPkt random number generator
