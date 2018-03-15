@@ -2,9 +2,10 @@
 
 BASE_DIR=$(pwd)
 EXP_NAME=$1
-APPS="6apps 7apps 8apps"
+APPS="6apps 7apps 8apps 9apps"
 PKTS="250pkts"
-FLOWSETS="0 1 2 3 4 5 6 7 8 9"
+#FLOWSETS="0 1 2 3 4 5 6 7 8 9"
+FLOWSETS="0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29"
 
 #
 # Scheme Numbers
@@ -39,7 +40,7 @@ do
 			for flowset_no in $FLOWSETS
 			do
 				# Remove previous data files.
-				rm flowinfo_*.txt flowlog_*.txt ovinfo_*.txt ovlog_*.txt ovstat_*.txt nodelog_*.txt temp_*.txt newtemp*.txt res_*.txt nodestat*.txt *.pcap 2> /dev/null
+				$BASE_DIR/remove_log_data.sh
 
 				# Select an app config file.
 				appConfig=$app'_'$pkt'-'$flowset_no
@@ -81,12 +82,16 @@ export numOfNodes
 ######################################################################
 # Integrate statistics.
 ######################################################################
-./integrate_stat.sh > $DIR_PREFIX/$EXP_NAME/integrated_stat_thp.txt
-./integrate_stat_qos_vio.sh > $DIR_PREFIX/$EXP_NAME/integrated_stat_qos_vio.txt
-./integrate_ovstat.sh > $DIR_PREFIX/$EXP_NAME/integrated_stat_overhead.txt
-./integrate_stat_src_rt.sh > $DIR_PREFIX/$EXP_NAME/integrated_stat_rt_dscv_cnt.txt
+$BASE_DIR/integrate_stat.sh > $DIR_PREFIX/$EXP_NAME/integrated_stat_thp.txt
+$BASE_DIR/integrate_stat_qos_vio.sh > $DIR_PREFIX/$EXP_NAME/integrated_stat_qos_vio.txt
+$BASE_DIR/integrate_ovstat.sh > $DIR_PREFIX/$EXP_NAME/integrated_stat_overhead.txt
+$BASE_DIR/integrate_stat_src_rt.sh > $DIR_PREFIX/$EXP_NAME/integrated_stat_rt_dscv_cnt.txt
 
 ######################################################################
 # Notify the end of simulation.
 ######################################################################
-$BASE_DIR/slack_webhook.sh 'Your ns-3 simulation has finished: '$EXP_NAME
+HOSTNAME=`hostname`
+$BASE_DIR/slack_webhook.sh 'Your ns-3 simulation has finished: '$EXP_NAME' (host: '$HOSTNAME')'
+
+# Remove previous data files.
+$BASE_DIR/remove_log_data.sh
