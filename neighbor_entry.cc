@@ -8,6 +8,7 @@
 #include "neighbor_entry.h"
 #include <sstream>
 #include <boost/format.hpp>
+#include "my_config.h" // CIRCULAR_BUFFER_SIZE_NC, ETX
 
 using namespace boost;
 
@@ -24,9 +25,9 @@ NeighborEntry::NeighborEntry(uint32_t nodeId, ns3::Ipv4Address ipAddr, bool isMe
 }
 
 void NeighborEntry::initialize() {
-	this->etxSample.set_capacity(CIRCULAR_BUFFER_SIZE);
-	this->avgDelay.set_capacity(CIRCULAR_BUFFER_SIZE);
-	this->avgJitter.set_capacity(CIRCULAR_BUFFER_SIZE);
+	this->etxSample.set_capacity(CIRCULAR_BUFFER_SIZE_ETX);
+	this->avgDelay.set_capacity(CIRCULAR_BUFFER_SIZE_NC);
+	this->avgJitter.set_capacity(CIRCULAR_BUFFER_SIZE_NC);
 	this->dmSeqNo = 0;
 }
 

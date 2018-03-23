@@ -10,6 +10,8 @@
 #include "string_tokenizer.h"
 #include <boost/format.hpp>
 
+#include "ns3/core-module.h"
+
 using namespace boost;
 
 QoSRequirement::QoSRequirement() {
@@ -112,6 +114,10 @@ string QoSRequirement::serialize() {
 
 bool QoSRequirement::isSatisfactory(const QoSRequirement& qosReq,
 		const LinkQuality& lq) {
+
+	// debug
+	NS_LOG_UNCOND("    ---- qosReq: " << qosReq.getBandwidth() << ", lq: " << lq.getBandwidth());
+
 	if(qosReq.getBandwidth() > lq.getBandwidth()){
 		return false;
 	}

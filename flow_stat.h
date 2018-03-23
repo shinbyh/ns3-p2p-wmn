@@ -9,10 +9,7 @@
 #define FLOW_FLOW_STAT_H_
 
 #include "packet_info.h"
-
 #include <boost/circular_buffer.hpp>
-
-#define CIRCULAR_BUFFER_SIZE 10
 
 class FlowStat {
 

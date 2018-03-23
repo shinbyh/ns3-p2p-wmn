@@ -6,7 +6,7 @@
  */
 
 #include "flow_stat.h"
-
+#include "my_config.h" // CIRCULAR_BUFFER_SIZE_FLOWSTAT
 #include <boost/circular_buffer.hpp>
 #include <sstream>
 
@@ -20,7 +20,7 @@ FlowStat::~FlowStat() {
 }
 
 void FlowStat::init() {
-	this->cbd.set_capacity(CIRCULAR_BUFFER_SIZE);
+	this->cbd.set_capacity(CIRCULAR_BUFFER_SIZE_FLOWSTAT);
 	this->totalBytes = 0;
 	this->totalPackets = 0;
 	this->realTimeBandwidth = 0;

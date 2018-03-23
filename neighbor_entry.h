@@ -17,8 +17,6 @@
 #include "ns3/applications-module.h"
 #include "flow.h"
 
-#define CIRCULAR_BUFFER_SIZE 10
-
 class NeighborEntry {
 private:
 	uint32_t nodeId;

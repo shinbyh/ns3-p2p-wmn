@@ -37,6 +37,10 @@
 #define NODEID_NOT_FOUND 999999
 #define NODEID_BROADCAST 255255
 
+#define CIRCULAR_BUFFER_SIZE_ETX 10
+#define CIRCULAR_BUFFER_SIZE_NC 10
+#define CIRCULAR_BUFFER_SIZE_FLOWSTAT 3
+
 class MyConfig {
 private:
 	std::map<std::string, int> controlPortMap;

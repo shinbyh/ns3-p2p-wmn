@@ -196,6 +196,10 @@ static void ReceiveMyPacket (Ptr<Socket> socket)
 	delete(dataBuffer);
 }
 
+/**
+ * Write statistics of flows, neighbors, and routes to files.
+ * Note that flow statistics are reset after writing to files.
+ */
 static void writeFlowStat(Ptr<Node> node, Time flowWriteInterval){
 	MyNode* myNode = myNodes[node->GetId()];
 	myNode->writeFlowLog();
@@ -339,6 +343,11 @@ static std::vector<Ipv4InterfaceContainer> loadTopologyConfig(string filepath, P
 		getline(inStream, temp);
 		ltrim(temp);
 		rtrim(temp);
+
+		// Skip comments
+		if(temp.substr(0, 1) == "#" || temp.substr(0, 2) == "//"){
+			continue;
+		}
 
 		std::vector<std::string> tokens;
 		tokenizeString(temp, tokens, ",");
@@ -601,7 +610,7 @@ int main (int argc, char *argv[])
 		cout << "  -flowReq.startTime = " << appFlowReqPkt.getFlowReq().getStartTime().GetSeconds() << endl;
 
 		int nodeId = appFlowReqPkt.getInitNodeId();
-		jitter = x->GetInteger(100, 100000);
+		jitter = x->GetInteger(10, 10000);
 		Simulator::ScheduleWithContext (nodeId,
 				MicroSeconds(appFlowReqPkt.getFlowReq().getStartTime().GetMicroSeconds() + jitter), &MyNode::doRouting,
 				myNodes[nodeId], appFlowReqPkt.getMyPkt(), appFlowReqPkt.getFlowReq());

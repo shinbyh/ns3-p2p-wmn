@@ -37,6 +37,7 @@ private:
 	bool routeSearching;
 	bool controlFlow;
 	uint32_t fwdNodeId; // forwarding node ID
+	uint32_t prevNodeId; // previous node ID
 	bool randomnessActivated; // for source nodes only (Soft QoS; traffic randomization)
 	double randomnessTime; // for source nodes only (Soft QoS; traffic randomization)
 
@@ -71,9 +72,11 @@ public:
 	long getStartTime() const;
 	void setStartTime(long startTime);
 	void resetRealTimeBandwidth();
+	int getNumberOfRealTimePackets(uint32_t nodeId);
 	void setAllocatedBandwidth(uint32_t nodeId, double allocatedBW);
 	double getAllocatedBandwidth(uint32_t nodeId);
 	double getAvgRealTimeBandwidth(uint32_t nodeId);
+	double getRealTimeBandwidth(uint32_t nodeId);
 	const double getAvgRealTimeBandwidth() const;
 	QoSRequirement getQosReq() const;
 	void setQosReq(QoSRequirement qosReq);
@@ -87,14 +90,10 @@ public:
 	void setRandomnessTime(double randomnessTime);
 	std::string toFormattedFlowInfo();
 	std::string toString();
-
-	uint32_t getFwdNodeId() const {
-		return fwdNodeId;
-	}
-	void setFwdNodeId(uint32_t fwdNodeId) {
-		this->fwdNodeId = fwdNodeId;
-	}
-
+	uint32_t getFwdNodeId() const;
+	void setFwdNodeId(uint32_t fwdNodeId);
+	uint32_t getPrevNodeId() const;
+	void setPrevNodeId(uint32_t prevNodeId);
 	bool operator <(const FlowEntry &a) const;
 };
 

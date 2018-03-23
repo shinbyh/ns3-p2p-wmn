@@ -20,25 +20,21 @@ FlowEntry::FlowEntry(Flow flow, uint32_t nodeId, long startTime) {
 	this->flow = flow;
 	this->active = true;
 	this->startTime = startTime;
-	this->fwdNodeId = nodeId;
+	this->fwdNodeId = NODEID_NOT_FOUND;
+	this->prevNodeId = NODEID_NOT_FOUND;
 	this->randomnessActivated = false;
 	initAppReq();
 	addFlowStat(nodeId);
-	//this->ifIdices.push_back(0);
-	//this->ifIdices.push_back(1);
-	//initFlowStats(this->ifIdices);
 }
 
 FlowEntry::FlowEntry(uint32_t nodeId, PacketInfo pktInfo) {
 	this->flow = pktInfo.getFlow();
 	this->active = true;
 	this->startTime = pktInfo.getTime();
-	this->fwdNodeId = nodeId;
+	this->fwdNodeId = NODEID_NOT_FOUND;
+	this->prevNodeId = NODEID_NOT_FOUND;
 	this->randomnessActivated = false;
 	initAppReq();
-	//this->ifIdices.push_back(0);
-	//this->ifIdices.push_back(1);
-	//initFlowStats(this->ifIdices);
 	addFlowStat(nodeId);
 	addPacketInfo(nodeId, pktInfo);
 }
@@ -67,13 +63,6 @@ void FlowEntry::initAppReq() {
 	routeSearching = false;
 	this->controlFlow = checkControlFlow();
 }
-
-/*void FlowEntry::initFlowStats(std::vector<int> ifIdices) {
-	for(int ifIdx : ifIdices){
-		FlowStat* flowStat = new FlowStat();
-		flowStats[ifIdx] = flowStat;
-	}
-}*/
 
 bool FlowEntry::isActive() const {
 	return active;
@@ -181,6 +170,15 @@ void FlowEntry::resetRealTimeBandwidth() {
 	}
 }
 
+int FlowEntry::getNumberOfRealTimePackets(uint32_t nodeId){
+	if(this->flowStats.find(nodeId) != this->flowStats.end()){
+		return this->flowStats[nodeId]->getRealTimePackets();
+	} else {
+		// error: not found
+		return 0;
+	}
+}
+
 void FlowEntry::setAllocatedBandwidth(uint32_t nodeId, double allocatedBW) {
 	if(this->flowStats.find(nodeId) != this->flowStats.end()){
 		this->flowStats[nodeId]->setAllocatedBandwidth(allocatedBW);
@@ -206,6 +204,19 @@ double FlowEntry::getAvgRealTimeBandwidth(uint32_t nodeId) {
 	}
 }
 
+double FlowEntry::getRealTimeBandwidth(uint32_t nodeId){
+	if(this->flowStats.find(nodeId) == this->flowStats.end()){
+		return 0.0;
+	} else {
+		return this->flowStats[nodeId]->getRealTimeBandwidth();
+	}
+}
+
+/**
+ * Get the average of all links for the flow.
+ * For intermediate nodes, there are both previous and next hops.
+ * This function calculates the average bandwidth of both hops.
+ */
 const double FlowEntry::getAvgRealTimeBandwidth() const {
 	double sum = 0.0;
 	int count = 0;
@@ -307,6 +318,28 @@ double FlowEntry::getRandomnessTime() const {
 
 void FlowEntry::setRandomnessTime(double randomnessTime) {
 	this->randomnessTime = randomnessTime;
+}
+
+uint32_t FlowEntry::getFwdNodeId() const {
+	return fwdNodeId;
+}
+
+void FlowEntry::setFwdNodeId(uint32_t fwdNodeId) {
+	this->fwdNodeId = fwdNodeId;
+	if(this->flowStats.find(fwdNodeId) == this->flowStats.end()){
+		addFlowStat(fwdNodeId);
+	}
+}
+
+uint32_t FlowEntry::getPrevNodeId() const {
+	return prevNodeId;
+}
+
+void FlowEntry::setPrevNodeId(uint32_t prevNodeId) {
+	this->prevNodeId = prevNodeId;
+	if(this->flowStats.find(prevNodeId) == this->flowStats.end()){
+		addFlowStat(prevNodeId);
+	}
 }
 
 bool FlowEntry::operator <(const FlowEntry& a) const {

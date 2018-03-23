@@ -10,6 +10,7 @@
 #include <sstream> // getAllFlowInfo()
 #include <algorithm> // for sorting FlowEntries
 #include "ns3/core-module.h"
+#include "my_config.h" // for NODEID_NOT_FOUND
 
 using namespace ns3;
 
@@ -53,36 +54,106 @@ void FlowTable::updateRealTimeBandwidth() {
 	}
 }
 
-void FlowTable::setQoSReq(Flow flow, int nodeId, QoSRequirement qosReq) {
+void FlowTable::setQoSReqAsSource(Flow flow, uint32_t nextHopNodeId, QoSRequirement qosReq) {
 	if(this->flowTable.find(flow) == this->flowTable.end()){
-		NS_LOG_UNCOND("  [FT][setQoSReq] new FlowEntry!!! (bw=" << qosReq.getBandwidth() << ") (nodeid=" << nodeId << ")");
-		FlowEntry* entry = new FlowEntry(flow, nodeId, ns3::Simulator::Now().GetMilliSeconds());
+		NS_LOG_UNCOND("  [FT][setQoSReq] new FlowEntry as src!!! (bw=" << qosReq.getBandwidth() << ") (next=" << nextHopNodeId << ")");
+		FlowEntry* entry = new FlowEntry(flow, nextHopNodeId, ns3::Simulator::Now().GetMilliSeconds());
 		this->flowTable[flow] = entry;
 		keysTimeOrder.push_back(flow);
 	}
 
 	FlowEntry* entry = this->flowTable[flow];
-	if(!entry->isFlowStatExists(nodeId)){
-		entry->addFlowStat(nodeId);
+	if(!entry->isFlowStatExists(nextHopNodeId)){
+		entry->addFlowStat(nextHopNodeId);
 	}
+
 	entry->setQosReq(qosReq);
-	entry->setFwdNodeId(nodeId);
-	entry->setAllocatedBandwidth(nodeId, qosReq.getBandwidth());
+	entry->setFwdNodeId(nextHopNodeId);
+	entry->setAllocatedBandwidth(nextHopNodeId, qosReq.getBandwidth());
 }
 
-void FlowTable::setHopQoSReq(Flow flow, int nodeId, QoSRequirement qosReq) {
+void FlowTable::setQoSReqAsDestination(Flow flow, uint32_t prevNodeId, QoSRequirement qosReq) {
+	if(this->flowTable.find(flow) == this->flowTable.end()){
+		NS_LOG_UNCOND("  [FT][setQoSReq] new FlowEntry as dst!!! (bw=" << qosReq.getBandwidth() << ") (prev=" << prevNodeId << ")");
+		FlowEntry* entry = new FlowEntry(flow, prevNodeId, ns3::Simulator::Now().GetMilliSeconds());
+		this->flowTable[flow] = entry;
+		keysTimeOrder.push_back(flow);
+	}
+
+	FlowEntry* entry = this->flowTable[flow];
+	if(!entry->isFlowStatExists(prevNodeId)){
+		entry->addFlowStat(prevNodeId);
+	}
+	entry->setQosReq(qosReq);
+	entry->setPrevNodeId(prevNodeId);
+	entry->setAllocatedBandwidth(prevNodeId, qosReq.getBandwidth());
+}
+
+void FlowTable::setQoSReqAsIntermediateNode(Flow flow, uint32_t prevNodeId, uint32_t nextHopNodeId, QoSRequirement qosReq) {
+	if(this->flowTable.find(flow) == this->flowTable.end()){
+		NS_LOG_UNCOND("  [FT][setQoSReq] new FlowEntry as intermediate!!! (bw=" << qosReq.getBandwidth() << ") (prev= "<< prevNodeId << ", next=" << nextHopNodeId << ")");
+		FlowEntry* entry = new FlowEntry(flow, nextHopNodeId, ns3::Simulator::Now().GetMilliSeconds());
+		this->flowTable[flow] = entry;
+		keysTimeOrder.push_back(flow);
+	}
+
+	FlowEntry* entry = this->flowTable[flow];
+	if(!entry->isFlowStatExists(nextHopNodeId)){
+		entry->addFlowStat(nextHopNodeId);
+	}
+	if(!entry->isFlowStatExists(prevNodeId)){
+		entry->addFlowStat(prevNodeId);
+	}
+	entry->setQosReq(qosReq);
+	entry->setFwdNodeId(nextHopNodeId);
+	entry->setPrevNodeId(prevNodeId);
+	entry->setAllocatedBandwidth(nextHopNodeId, qosReq.getBandwidth());
+	entry->setAllocatedBandwidth(prevNodeId, qosReq.getBandwidth());
+}
+
+void FlowTable::setHopQoSReqAsSource(Flow flow, uint32_t nextNodeId, QoSRequirement qosReq) {
 	if(flowTable.find(flow) == flowTable.end()){
-		std::cout << "   [FT][setHopQoSReq] new FlowEntry!!! (bw = " << qosReq.getBandwidth() << ") (nodeid=" << nodeId << ")" << std::endl;
-		FlowEntry* entry = new FlowEntry(flow, nodeId, ns3::Simulator::Now().GetMilliSeconds());
+		std::cout << "   [FT][setHopQoSReq] new FlowEntry!!! (bw = " << qosReq.getBandwidth() << ") (next=" << nextNodeId << ")" << std::endl;
+		FlowEntry* entry = new FlowEntry(flow, nextNodeId, ns3::Simulator::Now().GetMilliSeconds());
 		flowTable[flow] = entry;
 		keysTimeOrder.push_back(flow);
 		entry->setHopQosReq(qosReq);
 	} else {
 		FlowEntry* entry = flowTable[flow];
 		entry->setHopQosReq(qosReq);
-		entry->setFwdNodeId(nodeId);
+		entry->setFwdNodeId(nextNodeId);
 	}
 }
+
+void FlowTable::setHopQoSReqAsDestination(Flow flow, uint32_t prevNodeId, QoSRequirement qosReq) {
+	if(flowTable.find(flow) == flowTable.end()){
+		std::cout << "   [FT][setHopQoSReq] new FlowEntry!!! (bw = " << qosReq.getBandwidth() << ") (prev=" << prevNodeId << ")" << std::endl;
+		FlowEntry* entry = new FlowEntry(flow, prevNodeId, ns3::Simulator::Now().GetMilliSeconds());
+		flowTable[flow] = entry;
+		keysTimeOrder.push_back(flow);
+		entry->setHopQosReq(qosReq);
+	} else {
+		FlowEntry* entry = flowTable[flow];
+		entry->setHopQosReq(qosReq);
+		entry->setPrevNodeId(prevNodeId);
+	}
+}
+
+void FlowTable::setHopQoSReqAsIntermediate(Flow flow, uint32_t prevNodeId, uint32_t nextNodeId, QoSRequirement qosReq) {
+	if(flowTable.find(flow) == flowTable.end()){
+		std::cout << "   [FT][setHopQoSReq] new FlowEntry!!! (bw = " << qosReq.getBandwidth() << ") (prev=" << prevNodeId << ", next="<< nextNodeId << ")" << std::endl;
+		FlowEntry* entry = new FlowEntry(flow, prevNodeId, ns3::Simulator::Now().GetMilliSeconds());
+		flowTable[flow] = entry;
+		keysTimeOrder.push_back(flow);
+		entry->setHopQosReq(qosReq);
+	} else {
+		FlowEntry* entry = flowTable[flow];
+		entry->setHopQosReq(qosReq);
+		entry->setPrevNodeId(prevNodeId);
+		entry->setFwdNodeId(nextNodeId);
+	}
+}
+
 
 FlowEntry* FlowTable::getFlowEntry(Flow flow) {
 	if(flowTable.find(flow) == flowTable.end()){
@@ -154,7 +225,12 @@ std::string FlowTable::getFormattedFlowOutput(std::string time) {
 		if(entry->isControlFlow()) continue;
 
 		if(entry->isActive()){
-			ss << "\t" << entry->getAvgRealTimeBandwidth();
+			//ss << "\t" << entry->getAvgRealTimeBandwidth();
+			if(entry->getPrevNodeId() != NODEID_NOT_FOUND){
+				ss << "\t" << entry->getRealTimeBandwidth(entry->getPrevNodeId());
+			} else {
+				ss << "\t" << entry->getRealTimeBandwidth(entry->getFwdNodeId());
+			}
 		} else {
 			ss << "\t0";
 		}

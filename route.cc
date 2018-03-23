@@ -22,6 +22,9 @@ Route::Route(Flow flow, uint32_t nextHop, int hopCount) {
 	this->rtTableNumber = RT_MARK_NOT_ALLOCATED;
 	this->tcBandwidth = BW_BEST_EFFORT;
 	this->tcClassID = this->markID;
+
+	this->pktsPerSec = 0;
+	this->lastUpdateTime = ns3::Seconds(1.0);
 }
 
 int Route::getHopCount() const {
@@ -92,4 +95,24 @@ const std::string Route::toString() {
 
 const Flow Route::getFlow() const {
 	return this->flow;
+}
+
+int Route::getPktsPerSec() const {
+	return pktsPerSec;
+}
+
+void Route::setPktsPerSec(int pktsPerSec) {
+	this->pktsPerSec = pktsPerSec;
+}
+
+void Route::incrementPktsPerSec() {
+	this->pktsPerSec++;
+}
+
+const ns3::Time& Route::getLastUpdateTime() const {
+	return lastUpdateTime;
+}
+
+void Route::setLastUpdateTime(const ns3::Time& lastUpdateTime) {
+	this->lastUpdateTime = lastUpdateTime;
 }

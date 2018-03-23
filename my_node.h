@@ -129,7 +129,7 @@ public:
 	static void doRouting(MyNode* myNode, ns3::Ptr<MyNS3Packet> myPkt, FlowRequest flowReq);
 	void _doRouting(ns3::Ptr<MyNS3Packet> myPkt, FlowRequest flowReq);
 	void performLocalRepair(uint32_t prevNextHop, uint32_t newNextHop, uint32_t nextHopToSrc, Flow flow, vector<uint32_t> srcRoute, QoSRequirement qosReq, LinkQuality endToEndQuality);
-	void handlePacketInfo(int nodeId, PacketInfo pktInfo);
+	void handlePacketInfo(int senderNodeId, PacketInfo pktInfo);
 	void handleHello(ns3::Ptr<ns3::Node> node, ns3::Ipv4Address ipAddr, Hello hello);
 	void handleDelayMeasurement(ns3::Ptr<ns3::Node> node, ns3::Ptr<ns3::Socket> socket, ns3::Ipv4Address ipAddr, int ifIdx, DelayMeasurement dm);
 	void handleARREQ(string str, ns3::Ipv4Address clientIP, int ifIdx);

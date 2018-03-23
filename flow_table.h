@@ -29,8 +29,12 @@ public:
 
 	void addToFlowEntry(int nodeId, PacketInfo pktInfo);
 	void updateRealTimeBandwidth();
-	void setQoSReq(Flow flow, int ifIdx, QoSRequirement qosReq);
-	void setHopQoSReq(Flow flow, int ifIdx, QoSRequirement qosReq);
+	void setQoSReqAsSource(Flow flow, uint32_t nextHopNodeId, QoSRequirement qosReq);
+	void setQoSReqAsDestination(Flow flow, uint32_t prevNodeId, QoSRequirement qosReq);
+	void setQoSReqAsIntermediateNode(Flow flow, uint32_t prevNodeId, uint32_t nextHopNodeId, QoSRequirement qosReq);
+	void setHopQoSReqAsSource(Flow flow, uint32_t nextNodeId, QoSRequirement qosReq);
+	void setHopQoSReqAsDestination(Flow flow, uint32_t prevNodeId, QoSRequirement qosReq);
+	void setHopQoSReqAsIntermediate(Flow flow, uint32_t prevNodeId, uint32_t nextNodeId, QoSRequirement qosReq);
 	FlowEntry* getFlowEntry(Flow flow);
 	void markInactiveFlows(long from, long threshold);
 	void setFlowInactive(Flow flow);
