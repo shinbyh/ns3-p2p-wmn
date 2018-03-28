@@ -34,7 +34,7 @@ public:
 	virtual ~FlowCheckRecvTable();
 
 	void addFlowCheckReply(uint32_t nodeId, FlowCheck* flowCheck);
-	uint32_t getOptimalDetourNode();
+	uint32_t getOptimalDetourNode(int hopCount);
 	const LinkQuality& getEndToEndQuality() const;
 	void setEndToEndQuality(const LinkQuality& endToEndQuality);
 	const Flow& getFlow() const;

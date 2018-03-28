@@ -124,6 +124,17 @@ uint32_t RouteSetup::getNextHopOfCurrentNode(Ptr<Node> node) {
 	return NODEID_NOT_FOUND;
 }
 
+uint32_t RouteSetup::getPrevHopOfCurrentNode(Ptr<Node> node) {
+	for(size_t i=0; i<this->trace.size(); i++){
+		if(node->GetId() == this->trace[i]){
+			if(i < this->trace.size() && i > 0)
+				return this->trace[i-1];
+			else return NODEID_NOT_FOUND;
+		}
+	}
+	return NODEID_NOT_FOUND;
+}
+
 std::string RouteSetup::serialize() {
 	stringstream ss;
 	ss << std::fixed;

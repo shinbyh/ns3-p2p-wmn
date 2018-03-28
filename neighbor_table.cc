@@ -254,6 +254,8 @@ const std::map<uint32_t, NeighborEntry*> NeighborTable::getMap(){
 /**
  * Find a set of neighbors whose neighbor contains the node ID.
  * This list is used for selecting candidate detour nodes.
+ * @param nodeId A node ID which should be the neighbor of candidate nodes.
+ * @param trace A previous source route. This is used for filtering out candidates already in a path.
  */
 std::vector<NeighborEntry*> NeighborTable::getDetourNodes(uint32_t nodeId, std::vector<uint32_t> trace) {
 	vector<NeighborEntry*> detours;

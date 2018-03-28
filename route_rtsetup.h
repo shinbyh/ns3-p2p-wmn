@@ -45,6 +45,7 @@ public:
 	int getPositionInTrace(ns3::Ptr<ns3::Node> node);
 	uint32_t getNextHop(uint32_t ip);
 	uint32_t getNextHopOfCurrentNode(ns3::Ptr<ns3::Node> node);
+	uint32_t getPrevHopOfCurrentNode(ns3::Ptr<ns3::Node> node);
 	std::string serialize();
 	void parse(std::string str);
 	void parseFromARREP(ARREP arrep);

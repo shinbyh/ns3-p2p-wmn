@@ -39,6 +39,7 @@
 #include "route_flowcheck.h"
 #include "route_flow_accept_request.h"
 #include "route_flow_accept_reply.h"
+#include "route_local_repair_request.h"
 
 
 using namespace std;
@@ -141,6 +142,7 @@ public:
 	void handleFlowCheck(string str, ns3::Ipv4Address clientIP, int ifIdx);
 	void handleFlowAcceptRequest(string str, ns3::Ipv4Address clientIP, int ifIdx);
 	void handleFlowAcceptReply(string str, ns3::Ipv4Address clientIP, int ifIdx);
+	void handleLocalRepairRequest(string str, ns3::Ipv4Address clientIP, int ifIdx);
 	void handleMyPacket(ns3::Ptr<MyNS3Packet> myPkt, int pktSize, FlowType::Type type, ns3::Ipv4Address ipAddr);
 	const bool checkDstOfMyPacket(const MyNS3Packet* myPkt) const;
 	int getAndIncrementHelloSeqNo();

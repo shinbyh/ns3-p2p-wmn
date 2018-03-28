@@ -157,6 +157,9 @@ static void ReceiveRoutingMessages (Ptr<Socket> socket)
 	case ROUTE_FLOW_ACCEPT_REPLY:
 		myNode->handleFlowAcceptReply(dataStr, senderAddr.GetIpv4(), 0);
 		break;
+	case ROUTE_LOCAL_REPAIR_REQUEST:
+		myNode->handleLocalRepairRequest(dataStr, senderAddr.GetIpv4(), 0);
+		break;
 	default:
 		break;
 	}

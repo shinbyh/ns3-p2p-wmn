@@ -78,11 +78,8 @@ bool FlowCheckRecvTable::containsNodeId(uint32_t nodeId) {
 	}
 }
 
-uint32_t FlowCheckRecvTable::getOptimalDetourNode() {
-	if(table.size() == 0){
-		return NODEID_NOT_FOUND;
-	}
-
+uint32_t FlowCheckRecvTable::getOptimalDetourNode(int hopCount) {
+	// debug
 	stringstream ss;
 	for(uint32_t srcId : this->srcRoute){
 		ss << srcId << ",";
@@ -91,64 +88,136 @@ uint32_t FlowCheckRecvTable::getOptimalDetourNode() {
 	NS_LOG_UNCOND(" -flow = " << this->flow.toString());
 	NS_LOG_UNCOND(" -prevNextHop = " << this->prevNextHop);
 
-	uint32_t optimalNode = NODEID_NOT_FOUND;
-	double occupiedBW = 99999999.0;
-	std::pair<uint32_t, FlowCheck*> p;
-	BOOST_FOREACH(p, table){
-		// Discard the information of the previous nextHop.
-		if(p.first == this->prevNextHop) continue;
+	if(table.size() == 0){
+		return NODEID_NOT_FOUND;
+	}
 
-		// Discard the neighbor node which is already in the source route trace.
-		if(containsNodeId(p.first)) continue;
+	if(hopCount == 1){
+		uint32_t optimalNode = NODEID_NOT_FOUND;
+		double occupiedBW = 99999999.0;
+		std::pair<uint32_t, FlowCheck*> p;
+		BOOST_FOREACH(p, table){
+			// Discard the information of the previous nextHop.
+			if(p.first == this->prevNextHop) continue;
 
-		FlowCheck* fc = p.second;
-		for(SourceRouteStat stat : fc->getStats()){
-			int prevNextHopIdx = stat.getNodeIdPosition(this->prevNextHop);
-			vector<uint32_t> trace = stat.getTrace();
+			// Discard the neighbor node which is already in the source route trace.
+			if(containsNodeId(p.first)) continue;
 
-			NS_LOG_UNCOND("  (candidate: " << p.first << ")");
-			NS_LOG_UNCOND("    - prevNextHopIdx: " << prevNextHopIdx);
-			stringstream ss2;
-			int tempCount = 0;
-			for(uint32_t item : trace){
-				if(tempCount == prevNextHopIdx){
-					ss2 << "[" << item << "],";
-				} else {
-					ss2 << item << ",";
-				}
-				tempCount++;
-			}
-			NS_LOG_UNCOND("    - trace: " << ss2.str());
-
-			if(prevNextHopIdx < 0){
-				// prevNextHop not found in the trace.
-			} else if(prevNextHopIdx == 0){
-				if(trace[1] == p.first){
-					// candidate
-					if(stat.getBandwidth() < occupiedBW){
-						optimalNode = p.first;
-						occupiedBW = stat.getBandwidth();
-					}
-				}
-			} else if(prevNextHopIdx == (int)trace.size()-1){
-				if(trace[prevNextHopIdx-1] == p.first){
-					// candidate
-					if(stat.getBandwidth() < occupiedBW){
-						optimalNode = p.first;
-						occupiedBW = stat.getBandwidth();
-					}
-				}
+			FlowCheck* fc = p.second;
+			if(fc->getStats().size() == 0){
+				// The link between candidate and prevNextHop is empty.
+				optimalNode = p.first;
 			} else {
-				if(trace[prevNextHopIdx-1] == p.first || trace[prevNextHopIdx+1] == p.first){
-					// candidate
-					if(stat.getBandwidth() < occupiedBW){
-						optimalNode = p.first;
-						occupiedBW = stat.getBandwidth();
+				for(SourceRouteStat stat : fc->getStats()){
+					int prevNextHopIdx = stat.getNodeIdPosition(this->prevNextHop);
+					vector<uint32_t> trace = stat.getTrace();
+
+					NS_LOG_UNCOND("  (candidate: " << p.first << ")");
+					NS_LOG_UNCOND("    - prevNextHopIdx: " << prevNextHopIdx);
+					stringstream ss2;
+					int tempCount = 0;
+					for(uint32_t item : trace){
+						if(tempCount == prevNextHopIdx){
+							ss2 << "[" << item << "],";
+						} else {
+							ss2 << item << ",";
+						}
+						tempCount++;
+					}
+					NS_LOG_UNCOND("    - trace: " << ss2.str());
+
+					if(prevNextHopIdx < 0){
+						// prevNextHop not found in the trace.
+					} else if(prevNextHopIdx == 0){
+						if(trace[1] == p.first){
+							// candidate
+							if(stat.getBandwidth() < occupiedBW){
+								optimalNode = p.first;
+								occupiedBW = stat.getBandwidth();
+							}
+						}
+					} else if(prevNextHopIdx == (int)trace.size()-1){
+						if(trace[prevNextHopIdx-1] == p.first){
+							// candidate
+							if(stat.getBandwidth() < occupiedBW){
+								optimalNode = p.first;
+								occupiedBW = stat.getBandwidth();
+							}
+						}
+					} else {
+						if(trace[prevNextHopIdx-1] == p.first || trace[prevNextHopIdx+1] == p.first){
+							// candidate
+							if(stat.getBandwidth() < occupiedBW){
+								optimalNode = p.first;
+								occupiedBW = stat.getBandwidth();
+							}
+						}
 					}
 				}
 			}
 		}
-	}
 
-	return optimalNode;
+		return optimalNode;
+	} else {
+		uint32_t optimalNode = NODEID_NOT_FOUND;
+		double occupiedBW = 99999999.0;
+		std::pair<uint32_t, FlowCheck*> p;
+		BOOST_FOREACH(p, table){
+			// Discard the information of the previous nextHop.
+			if(p.first == this->prevNextHop) continue;
+
+			// Discard the neighbor node which is already in the source route trace.
+			if(containsNodeId(p.first)) continue;
+
+			FlowCheck* fc = p.second;
+			for(SourceRouteStat stat : fc->getStats()){
+				int prevNextHopIdx = stat.getNodeIdPosition(this->prevNextHop);
+				vector<uint32_t> trace = stat.getTrace();
+
+				NS_LOG_UNCOND("  (candidate: " << p.first << ")");
+				NS_LOG_UNCOND("    - prevNextHopIdx: " << prevNextHopIdx);
+				stringstream ss2;
+				int tempCount = 0;
+				for(uint32_t item : trace){
+					if(tempCount == prevNextHopIdx){
+						ss2 << "[" << item << "],";
+					} else {
+						ss2 << item << ",";
+					}
+					tempCount++;
+				}
+				NS_LOG_UNCOND("    - trace: " << ss2.str());
+
+				if(prevNextHopIdx < 0){
+					// prevNextHop not found in the trace.
+				} else if(prevNextHopIdx == 0){
+					if(trace[1] == p.first){
+						// candidate
+						if(stat.getBandwidth() < occupiedBW){
+							optimalNode = p.first;
+							occupiedBW = stat.getBandwidth();
+						}
+					}
+				} else if(prevNextHopIdx == (int)trace.size()-1){
+					if(trace[prevNextHopIdx-1] == p.first){
+						// candidate
+						if(stat.getBandwidth() < occupiedBW){
+							optimalNode = p.first;
+							occupiedBW = stat.getBandwidth();
+						}
+					}
+				} else {
+					if(trace[prevNextHopIdx-1] == p.first || trace[prevNextHopIdx+1] == p.first){
+						// candidate
+						if(stat.getBandwidth() < occupiedBW){
+							optimalNode = p.first;
+							occupiedBW = stat.getBandwidth();
+						}
+					}
+				}
+			}
+		}
+
+		return optimalNode;
+	}
 }
