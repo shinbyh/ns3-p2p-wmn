@@ -2,10 +2,12 @@
 
 BASE_DIR=$(pwd)
 EXP_NAME=$1
-APPS="6apps 7apps 8apps 9apps"
+APPS="10apps 11apps 12apps 13apps 14apps" #large30
+#APPS="6apps 7apps 8apps" #large
+#APPS="2apps" # smalltest
 PKTS="250pkts"
-#FLOWSETS="0 1 2 3 4 5 6 7 8 9"
-FLOWSETS="0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29"
+#FLOWSETS=$(seq 0 0) # smalltest
+FLOWSETS=$(seq 0 49) #large
 
 #
 # Scheme Numbers
