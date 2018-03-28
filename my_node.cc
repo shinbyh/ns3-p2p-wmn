@@ -543,6 +543,24 @@ void MyNode::_checkFlowRandomness(Time interval) {
 			continue;
 		}
 
+		//#######################################################################
+		// Debug: test code
+		if(Simulator::Now().GetSeconds() > 45){
+			if(flowEntry->getFlow().getDst() == 8){
+				if(!flowEntry->isRandomnessActivated()){
+					flowEntry->setRandomnessActivated(true);
+					flowEntry->setRandomnessTime(Simulator::Now().GetSeconds());
+#ifdef DEBUG_PRINT
+					NS_LOG_UNCOND("[Node " << this->nodeId << "] _checkFlowRandomness\n - flow randomness start (" << flowEntry->getFlow().toString() << ")");
+#endif
+#ifdef DEBUG_NODE_OUT
+					this->nodeOut << "[Node " << this->nodeId << "] _checkFlowRandomness\n - flow randomness start (" << flowEntry->getFlow().toString() << ")" << "\n";
+#endif
+				}
+			}
+		}
+		//#######################################################################
+
 		// Randomness selection by probability
 		uint32_t rnd = this->flowRandom->GetInteger();
 		if(rnd <= (uint32_t)(100.0 * this->flowRandomProbability)){
@@ -731,10 +749,8 @@ void MyNode::_schedulePacketsFromFlowRequest(FlowRequest flowReq, string msg) {
 			this->flowTable->setFlowInactive(flowReq.getFlow());
 			return;
 		}
-#ifdef DEBUG_PRINT
-		//NS_LOG_UNCOND(" - sending a packet to nexthop " << route->getNextHop() << ", ifIdx=" << route->getOutgoingIface());
-#endif
-		// send a packet
+
+		// Send a packet to the nexthop.
 		Ptr<MyNS3Packet> myPkt = CreateObject<MyNS3Packet>(flowReq.getFlow().getSrc(), flowReq.getFlow().getSrcPort(), flowReq.getFlow().getDst(), flowReq.getFlow().getDstPort(), msg);
 		sendMyPacket(this->ncTable->get(route->getNextHop())->getIp(), myPkt, flowReq.getFlow().getType(), flowReq.getPktSize());
 
@@ -747,7 +763,8 @@ void MyNode::_schedulePacketsFromFlowRequest(FlowRequest flowReq, string msg) {
 				nextTime = Seconds( 1.0 / ((double)flowReq.getSendingRate() * ratio) );
 			}
 		}
-		// schedule the next packet
+
+		// Schedule the next packet
 		Simulator::Schedule(nextTime, &MyNode::schedulePacketsFromFlowRequest, this, flowReq, msg);
 	} else {
 		// find ncTable to check if dst is my neighbor.
@@ -1615,7 +1632,8 @@ void MyNode::handlePathProbe(string str, Ipv4Address clientIP, int ifIdx){
 
 	// 171019, get available bandwidth (Ignore current flow's bandwidth occupation.)
 	//double availableBW = getMyAvailableBandwidth(nextHop) + flowEntry->getAvgRealTimeBandwidth();
-	double availableBW = getMyAvailableBandwidth(this->ncTable->get(clientNodeId)) + flowEntry->getAvgRealTimeBandwidth(clientNodeId);
+	//double availableBW = getMyAvailableBandwidth(this->ncTable->get(clientNodeId)) + flowEntry->getAvgRealTimeBandwidth(clientNodeId);
+	double availableBW = flowEntry->getAvgRealTimeBandwidth(clientNodeId);
 	if(availableBW < 0.0) availableBW = 0.0;
 
 	// debug
