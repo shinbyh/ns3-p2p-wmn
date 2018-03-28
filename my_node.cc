@@ -543,23 +543,23 @@ void MyNode::_checkFlowRandomness(Time interval) {
 			continue;
 		}
 
-		//#######################################################################
-		// Debug: test code
-		if(Simulator::Now().GetSeconds() > 45){
-			if(flowEntry->getFlow().getDst() == 8){
-				if(!flowEntry->isRandomnessActivated()){
-					flowEntry->setRandomnessActivated(true);
-					flowEntry->setRandomnessTime(Simulator::Now().GetSeconds());
-#ifdef DEBUG_PRINT
-					NS_LOG_UNCOND("[Node " << this->nodeId << "] _checkFlowRandomness\n - flow randomness start (" << flowEntry->getFlow().toString() << ")");
-#endif
-#ifdef DEBUG_NODE_OUT
-					this->nodeOut << "[Node " << this->nodeId << "] _checkFlowRandomness\n - flow randomness start (" << flowEntry->getFlow().toString() << ")" << "\n";
-#endif
-				}
-			}
-		}
-		//#######################################################################
+//		//#######################################################################
+//		// Debug: test code
+//		if(Simulator::Now().GetSeconds() > 45){
+//			if(flowEntry->getFlow().getDst() == 8){
+//				if(!flowEntry->isRandomnessActivated()){
+//					flowEntry->setRandomnessActivated(true);
+//					flowEntry->setRandomnessTime(Simulator::Now().GetSeconds());
+//#ifdef DEBUG_PRINT
+//					NS_LOG_UNCOND("[Node " << this->nodeId << "] _checkFlowRandomness\n - flow randomness start (" << flowEntry->getFlow().toString() << ")");
+//#endif
+//#ifdef DEBUG_NODE_OUT
+//					this->nodeOut << "[Node " << this->nodeId << "] _checkFlowRandomness\n - flow randomness start (" << flowEntry->getFlow().toString() << ")" << "\n";
+//#endif
+//				}
+//			}
+//		}
+//		//#######################################################################
 
 		// Randomness selection by probability
 		uint32_t rnd = this->flowRandom->GetInteger();
