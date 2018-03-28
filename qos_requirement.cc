@@ -118,7 +118,7 @@ bool QoSRequirement::isSatisfactory(const QoSRequirement& qosReq,
 	// debug
 	NS_LOG_UNCOND("    ---- qosReq: " << qosReq.getBandwidth() << ", lq: " << lq.getBandwidth());
 
-	if(qosReq.getBandwidth() > lq.getBandwidth()){
+	if(qosReq.getBandwidth() * 0.9 > lq.getBandwidth()){
 		return false;
 	}
 
