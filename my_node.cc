@@ -1070,7 +1070,9 @@ void MyNode::performLocalRepair(uint32_t prevNextHop, uint32_t newNextHop,
 	this->ncTable->get(prevNextHop)->removeFlow(flow);
 	this->ncTable->get(newNextHop)->addFlow(flow);
 
-	if(nextHopToSrc != this->nodeId){
+	if(nextHopToSrc == NODEID_NOT_FOUND || nextHopToSrc == this->nodeId){
+		flowEntry->setSrcRoute(srcRoute);
+	} else {
 		// Send SourceRouteUpdate to the src to modify the source route.
 		SourceRouteUpdate srcRtUpdate(rs.getFlow(), rs.getTrace());
 		sendRoutingPacket(this->ncTable->get(nextHopToSrc)->getIp(), srcRtUpdate.serialize());
@@ -1798,9 +1800,12 @@ void MyNode::handlePathProbe(string str, Ipv4Address clientIP, int ifIdx){
 			vector<uint32_t> probeTrace = probe.getTrace();
 			int nextHopToSrcIdx = -1;
 			for(vector<int>::size_type i=0; i< probeTrace.size(); i++){
-				if(clientNodeId == probeTrace[i]) nextHopToSrcIdx = i;
+				if(clientNodeId == probeTrace[i]){
+					nextHopToSrcIdx = i;
+					break;
+				}
 			}
-			if(nextHopToSrcIdx >= 0){
+			if(nextHopToSrcIdx > 0){
 				lrreq.setNextHopToSrc(probeTrace[nextHopToSrcIdx-1]);
 			} else {
 				lrreq.setNextHopToSrc(NODEID_NOT_FOUND);
@@ -2114,7 +2119,11 @@ void MyNode::handleLocalRepairRequest(string str, ns3::Ipv4Address clientIP, int
 	FlowCheckRecvTable* table = new FlowCheckRecvTable();
 	table->setFlow(lrreq.getFlow());
 	table->setQosReq(lrreq.getQosReq());
-	table->setNextHopToSrc(lrreq.getNextHopToSrc());
+	if(lrreq.getFlow().getSrc() == this->nodeId){
+		table->setNextHopToSrc(NODEID_NOT_FOUND);
+	} else {
+		table->setNextHopToSrc(lrreq.getNextHopToSrc());
+	}
 	table->setPrevNextHop(lrreq.getPreviousNextHop());
 	table->setEndToEndQuality(lrreq.getEndToEndQuality());
 	table->setSrcRoute(lrreq.getSrcRoute());
