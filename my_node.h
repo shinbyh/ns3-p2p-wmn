@@ -83,6 +83,7 @@ private:
 	ns3::Time getDelayDifference(ns3::Ipv4Address ipAddr, ns3::Time current);
 	double getMyAvailableBandwidth(NeighborEntry* entry);
 	void accumulateLinkQuality(LinkQuality* lq, NeighborEntry* entry);
+	void distractLinkQuality(LinkQuality* lq, NeighborEntry* entry);
 	bool isControlPort(int port);
 
 public:

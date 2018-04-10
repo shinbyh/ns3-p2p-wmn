@@ -167,6 +167,12 @@ void MyNode::accumulateLinkQuality(LinkQuality* lq, NeighborEntry* entry) {
 	lq->setLossRate(lossRate);
 }
 
+void MyNode::distractLinkQuality(LinkQuality* lq, NeighborEntry* entry){
+	//double availableBW = getMyAvailableBandwidth(entry);
+
+	// TODO: implement (not yet used)
+}
+
 bool MyNode::isControlPort(int port){
 	vector<int> ctrlPorts = MyConfig::instance().getControlPorts();
 	for(int ctrlPort : ctrlPorts){
@@ -425,44 +431,14 @@ void MyNode::_checkFlowQoS(Time interval){
 					}
 				}
 			} else {
-				// Accumulate link quality of the src~nextHop link.
+				// Multi-hop path.
+				// Make a default link quality value. (will be accumulated in the receiver-side.)
 				LinkQuality lq;
-				accumulateLinkQuality(&lq, nextHopEntry);
-				double availableBW = MyConfig::instance().getMaxBandwidth() - flowEntry->getAvgRealTimeBandwidth();
-				lq.setBandwidth(availableBW);
-
-#ifdef DEBUG_NODE_OUT
-				// debug
-				//this->nodeOut << "  - avg real-time BW = " << flowEntry->getAvgRealTimeBandwidth() << "\n";
-				//this->nodeOut << "  - allocated BW = " << flowEntry->getAllocatedBandwidth(entry->getNodeId()) << "\n";
-#endif
-
-				//TODO: check flow unsatisfactory & threshold
-				// compare current link quality with the hop requirement.
-				/*if(flowEntry->getHopQosReq().isSatisfactory(&lq)){
-					NS_LOG_UNCOND("[Node " << this->nodeId << "][checkFlowHopQoS] hop QoS is satisfactory:");
-	#ifdef DEBUG_NODE_OUT
-					this->nodeOut << "[Node " << this->nodeId << "][checkFlowHopQoS] hop QoS is satisfactory:\n";
-	#endif
-				} else {
-					NS_LOG_UNCOND("[Node " << this->nodeId << "][checkFlowHopQoS] hop QoS is NOT satisfactory:");
-	#ifdef DEBUG_NODE_OUT
-					this->nodeOut << "[Node " << this->nodeId << "][checkFlowHopQoS] hop QoS is NOT satisfactory:\n";
-	#endif
-					// TODO: how to solve?
-
-				}
-
-				NS_LOG_UNCOND(" - flow hop-by-hop QoS: " << flowEntry->getHopQosReq().serialize());
-	#ifdef DEBUG_NODE_OUT
-				this->nodeOut << " - flow hop-by-hop QoS: " << flowEntry->getHopQosReq().serialize() << "\n";
-	#endif
-				// debug
-				NS_LOG_UNCOND(" - sending PathProbe to " << nextHop << ", nodeId=" << nextHopEntry->getNodeId());
-	#ifdef DEBUG_NODE_OUT
-				this->nodeOut << " - sending PathProbe to " << nextHop << ", nodeId=" << nextHopEntry->getNodeId() << "\n";
-	#endif
-				 */
+				lq.setBandwidth(MyConfig::instance().getMaxBandwidth());
+				// Accumulate link quality of the src~nextHop link.
+				//accumulateLinkQuality(&lq, nextHopEntry);
+				//double availableBW = MyConfig::instance().getMaxBandwidth() - flowEntry->getAvgRealTimeBandwidth();
+				//lq.setBandwidth(availableBW);
 
 				// send PathProbe to the nextHop
 				Route* route = this->routeTable->getRoute(flowEntry->getFlow());
@@ -1613,7 +1589,16 @@ void MyNode::handlePathProbe(string str, Ipv4Address clientIP, int ifIdx){
 		return;
 	}
 
-	// Accumulate the QoS values of the next-hop of the flow.
+	LinkQuality tempLq;
+	tempLq.setBandwidth(probe.getLinkQuality()->getBandwidth());
+	tempLq.setDelay(probe.getLinkQuality()->getDelay());
+	tempLq.setJitter(probe.getLinkQuality()->getJitter());
+	tempLq.setLossRate(probe.getLinkQuality()->getLossRate());
+
+	// Accumulate the link quality of the previous-hop link. (receiver-side accumulation)
+	NeighborEntry* prevHop = this->ncTable->get(clientNodeId);
+	accumulateLinkQuality(probe.getLinkQuality(), prevHop);
+
 	uint32_t nextHopId = this->routeTable->getNextHop(probe.getFlow());
 	if(nextHopId == NODEID_NOT_FOUND){
 		// No next-hop found for the flow!!
@@ -1647,11 +1632,16 @@ void MyNode::handlePathProbe(string str, Ipv4Address clientIP, int ifIdx){
 #endif
 
 	// Measure the hop-by-hop link quality.
+	//LinkQuality hopLq(
+	//		availableBW,
+	//		nextHop->getAverageDelay(),
+	//		nextHop->getAverageJitter(),
+	//		nextHop->getLossRate());
 	LinkQuality hopLq(
-			availableBW,
-			nextHop->getAverageDelay(),
-			nextHop->getAverageJitter(),
-			nextHop->getLossRate());
+				availableBW,
+				prevHop->getAverageDelay(),
+				prevHop->getAverageJitter(),
+				prevHop->getLossRate());
 
 	// 170830, check hop-by-hop QoSReq
 	if(QoSRequirement::isSatisfactory(flowEntry->getHopQosReq(), hopLq)){
@@ -1668,7 +1658,7 @@ void MyNode::handlePathProbe(string str, Ipv4Address clientIP, int ifIdx){
 
 		// The partial path is satisfactory.
 		// Accumulate end-to-end link quality and relay the PathProbe to the nexthop.
-		accumulateLinkQuality(probe.getLinkQuality(), nextHop);
+		//accumulateLinkQuality(probe.getLinkQuality(), nextHop);
 		sendRoutingPacket(nextHop->getIp(), probe.serialize());
 		flowEntry->setUnsatisfactoryCount(0);
 
@@ -1677,7 +1667,7 @@ void MyNode::handlePathProbe(string str, Ipv4Address clientIP, int ifIdx){
 		int flowUnsatisfactoryCount = flowEntry->getUnsatisfactoryCount();
 		if(flowUnsatisfactoryCount < MyConfig::instance().getFlowUnsatisThreshold()){
 			flowEntry->setUnsatisfactoryCount(++flowUnsatisfactoryCount);
-			accumulateLinkQuality(probe.getLinkQuality(), nextHop);
+			//accumulateLinkQuality(probe.getLinkQuality(), nextHop);
 			sendRoutingPacket(nextHop->getIp(), probe.serialize());
 			return;
 		}
@@ -1779,9 +1769,11 @@ void MyNode::handlePathProbe(string str, Ipv4Address clientIP, int ifIdx){
 			}
 			break;
 		}
-		case SCHEME_LOCAL_REPAIR_1HOP:{
+		case SCHEME_LOCAL_REPAIR_1HOP:
+		case SCHEME_LOCAL_REPAIR_2HOPS:
+		{
 			/*
-			 * Scheme 2.
+			 * Scheme 2 and 3.
 			 * Send my previous hop to find detour nodes.
 			 * Get top-K unpopular flows of candidate nexthop neighbors, and select one.
 			 */
@@ -1796,7 +1788,7 @@ void MyNode::handlePathProbe(string str, Ipv4Address clientIP, int ifIdx){
 			LocalRepairRequest lrreq;
 			lrreq.setFlow(probe.getFlow());
 			lrreq.setQosReq(probe.getQosReq());
-			lrreq.setEndToEndQuality(probe.getLinkQuality()); // LQ of this node is not included.
+			lrreq.setEndToEndQuality(&tempLq); // LQ of this node should not be included.
 			vector<uint32_t> probeTrace = probe.getTrace();
 			int nextHopToSrcIdx = -1;
 			for(vector<int>::size_type i=0; i< probeTrace.size(); i++){
@@ -1813,32 +1805,6 @@ void MyNode::handlePathProbe(string str, Ipv4Address clientIP, int ifIdx){
 			lrreq.setPreviousNextHop(this->nodeId);
 			lrreq.setSrcRoute(probe.getTrace()); // The trace is a full source route.
 			sendRoutingPacket(clientIP, lrreq.serialize());
-			break;
-		}
-		case SCHEME_LOCAL_REPAIR_2HOPS:{
-			// Modified Scheme 2
-			// FlowAcceptRequest
-
-			// Create a new FlowAcceptRequestSentTable.
-			int seqNo = this->flowCheckSeqNo++;
-			FlowAcceptRequestSentTable* table = new FlowAcceptRequestSentTable();
-			table->setFlow(probe.getFlow());
-			table->setQosReq(probe.getQosReq());
-			table->setNextHopToSrc(clientNodeId);
-			table->setPrevNextHop(nextHopId);
-			table->setEndToEndQuality(probe.getLinkQuality());
-			table->setSrcRoute(probe.getTrace());
-			this->flowAcceptReqMap[seqNo] = table;
-
-			// Create and send a FlowAcceptRequest.
-			pair<uint32_t, NeighborEntry*> p;
-			BOOST_FOREACH(p, this->ncTable->getMap()){
-				NeighborEntry* neighbor = p.second;
-				if(neighbor->containsNeighbor(nextHopId)){
-					FlowAcceptRequest req(probe.getFlow(), seqNo, this->nodeId, nextHopId, 2);
-					sendRoutingPacket(neighbor->getIp(), req.serialize());
-				}
-			}
 			break;
 		}
 		case SCHEME_LOCAL_REPAIR_AVG_BW:{
@@ -2045,6 +2011,16 @@ void MyNode::handleFlowAcceptRequest(string str, ns3::Ipv4Address clientIP, int 
 	FlowAcceptRequest request = FlowAcceptRequest::parse(str);
 	request.decrementTtl();
 
+#ifdef DEBUG_PRINT
+	// debug
+	NS_LOG_UNCOND("[Node "<< this->nodeId <<"] handleFlowAcceptRequest (from "<< clientNodeId << ") t=" << Simulator::Now().GetMilliSeconds());
+	NS_LOG_UNCOND(" - " << str);
+#endif
+#ifdef DEBUG_NODE_OUT
+	this->nodeOut << "[Node "<< this->nodeId <<"] handleFlowAcceptRequest (from "<< clientNodeId << ") t=" << Simulator::Now().GetMilliSeconds() << "\n";
+	this->nodeOut << " - " << str << "\n";
+#endif
+
 	// Check if this node has connectivity to the nextHop.
 	NeighborEntry* ncEntryNextHop = this->ncTable->get(request.getNextHop());
 	if(!ncEntryNextHop){
@@ -2106,43 +2082,86 @@ void MyNode::handleLocalRepairRequest(string str, ns3::Ipv4Address clientIP, int
 	this->nodeOut << " - " << str << "\n";
 #endif
 
+	switch(this->scheme){
+	case SCHEME_LOCAL_REPAIR_1HOP:{
 #ifdef DEBUG_PRINT
-	//debug
-	NS_LOG_UNCOND(" - LOCAL REPAIR-1HOP: find detour based on average occupied BW.");
+		//debug
+		NS_LOG_UNCOND(" - LOCAL REPAIR-1HOP: find detour based on average occupied BW.");
 #endif
 #ifdef DEBUG_NODE_OUT
-	this->nodeOut << " - LOCAL REPAIR-1HOP: find detour based on average occupied BW." << "\n";
+		this->nodeOut << " - LOCAL REPAIR-1HOP: find detour based on average occupied BW." << "\n";
 #endif
-	// Get a seqNo for the new FlowCheck-replies.
-	// Generate FlowCheckRecvTable for the seqNo.
-	int seqNo = this->flowCheckSeqNo++;
-	FlowCheckRecvTable* table = new FlowCheckRecvTable();
-	table->setFlow(lrreq.getFlow());
-	table->setQosReq(lrreq.getQosReq());
-	if(lrreq.getFlow().getSrc() == this->nodeId){
-		table->setNextHopToSrc(NODEID_NOT_FOUND);
-	} else {
-		table->setNextHopToSrc(lrreq.getNextHopToSrc());
-	}
-	table->setPrevNextHop(lrreq.getPreviousNextHop());
-	table->setEndToEndQuality(lrreq.getEndToEndQuality());
-	table->setSrcRoute(lrreq.getSrcRoute());
-	this->flowCheckRecvMap[seqNo] = table;
+		// Get a seqNo for the new FlowCheck-replies.
+		// Generate FlowCheckRecvTable for the seqNo.
+		int seqNo = this->flowCheckSeqNo++;
+		FlowCheckRecvTable* table = new FlowCheckRecvTable();
+		table->setFlow(lrreq.getFlow());
+		table->setQosReq(lrreq.getQosReq());
+		if(lrreq.getFlow().getSrc() == this->nodeId){
+			table->setNextHopToSrc(NODEID_NOT_FOUND);
+		} else {
+			table->setNextHopToSrc(lrreq.getNextHopToSrc());
+		}
+		table->setPrevNextHop(lrreq.getPreviousNextHop());
+		table->setEndToEndQuality(lrreq.getEndToEndQuality());
+		table->setSrcRoute(lrreq.getSrcRoute());
+		this->flowCheckRecvMap[seqNo] = table;
 
-	// Find neighbors which knows the previous nexthop as its neighbor.
-	vector<NeighborEntry*> candidates = this->ncTable->getDetourNodes(lrreq.getPreviousNextHop(), lrreq.getSrcRoute());
-	for(NeighborEntry* candidate : candidates){
-		// Create and send FlowCheck-request with the seqNo.
-		int ttl = atoi(MyConfig::instance().getValue("Scheme2FlowCheckTTL").c_str());
-		FlowCheck flowCheck(ROUTE_FLOWCHECK_REQUEST, ttl);
-		flowCheck.setNodeId(this->nodeId);
-		flowCheck.setSeqNo(seqNo);
-		sendRoutingPacket(candidate->getIp(), flowCheck.serialize());
+		// Find neighbors which knows the previous nexthop as its neighbor.
+		vector<NeighborEntry*> candidates = this->ncTable->getDetourNodes(lrreq.getPreviousNextHop(), lrreq.getSrcRoute());
+		for(NeighborEntry* candidate : candidates){
+			// Create and send FlowCheck-request with the seqNo.
+			int ttl = atoi(MyConfig::instance().getValue("Scheme2FlowCheckTTL").c_str());
+			FlowCheck flowCheck(ROUTE_FLOWCHECK_REQUEST, ttl);
+			flowCheck.setNodeId(this->nodeId);
+			flowCheck.setSeqNo(seqNo);
+			sendRoutingPacket(candidate->getIp(), flowCheck.serialize());
+		}
+
+		// Schedule the selectNodeFromFlowCheck function.
+		Time flowCheckRecvInterval = Seconds(0.1);
+		Simulator::Schedule(flowCheckRecvInterval, &MyNode::selectNodeFromFlowCheck, this, seqNo);
+		break;
+	}
+	case SCHEME_LOCAL_REPAIR_2HOPS:{
+		// Modified Scheme 2
+		// FlowAcceptRequest
+#ifdef DEBUG_PRINT
+		//debug
+		NS_LOG_UNCOND(" - LOCAL REPAIR-2HOP: find detour based on average occupied BW.");
+#endif
+#ifdef DEBUG_NODE_OUT
+		this->nodeOut << " - LOCAL REPAIR-2HOP: find detour based on average occupied BW." << "\n";
+#endif
+		// Create a new FlowAcceptRequestSentTable.
+		int seqNo = this->flowCheckSeqNo++;
+		FlowAcceptRequestSentTable* table = new FlowAcceptRequestSentTable();
+		table->setFlow(lrreq.getFlow());
+		table->setQosReq(lrreq.getQosReq());
+		if(lrreq.getFlow().getSrc() == this->nodeId){
+			table->setNextHopToSrc(NODEID_NOT_FOUND);
+		} else {
+			table->setNextHopToSrc(lrreq.getNextHopToSrc());
+		}
+		table->setPrevNextHop(lrreq.getPreviousNextHop());
+		table->setEndToEndQuality(lrreq.getEndToEndQuality());
+		table->setSrcRoute(lrreq.getSrcRoute());
+		this->flowAcceptReqMap[seqNo] = table;
+
+		// Create and send a FlowAcceptRequest.
+		pair<uint32_t, NeighborEntry*> p;
+		BOOST_FOREACH(p, this->ncTable->getMap()){
+			NeighborEntry* neighbor = p.second;
+			if(neighbor->containsNeighbor(lrreq.getPreviousNextHop())){
+				FlowAcceptRequest req(lrreq.getFlow(), seqNo, this->nodeId, lrreq.getPreviousNextHop(), 2);
+				sendRoutingPacket(neighbor->getIp(), req.serialize());
+			}
+		}
+		break;
 	}
 
-	// Schedule the selectNodeFromFlowCheck function.
-	Time flowCheckRecvInterval = Seconds(0.1);
-	Simulator::Schedule(flowCheckRecvInterval, &MyNode::selectNodeFromFlowCheck, this, seqNo);
+	default: break;
+	}
 }
 
 
