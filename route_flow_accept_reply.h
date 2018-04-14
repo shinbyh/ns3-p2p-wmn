@@ -20,15 +20,14 @@ private:
 	int seqNo;
 	uint32_t senderId;
 	uint32_t nextHop;
-	int hopCount; // length (hop) of a detour subpath
 	vector<uint32_t> detourIDs; // a detour subpath
 	LinkQuality detourLinkQuality; // link quality of a detour subpath
 
 	const string serializeTrace();
-	//void parseTrace(string str);
 
 public:
-	FlowAcceptReply(Flow flow, int seqNo, uint32_t senderId, uint32_t nextHop, int hopCount);
+	FlowAcceptReply();
+	FlowAcceptReply(Flow flow, int seqNo, uint32_t senderId, uint32_t nextHop);
 	virtual ~FlowAcceptReply();
 	const vector<uint32_t>& getDetourIDs() const;
 	void setDetourIDs(const vector<uint32_t>& detourIDs);
@@ -42,8 +41,7 @@ public:
 	void setSenderId(uint32_t senderId);
 	int getSeqNo() const;
 	void setSeqNo(int seqNo);
-	int getHopCount() const;
-	void setHopCount(int hopCount);
+	void addDetourID(uint32_t detourID);
 	const string serialize();
 	static vector<uint32_t> parseDetourIDs(std::string str);
 	static FlowAcceptReply parse(string str);

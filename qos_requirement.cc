@@ -86,32 +86,6 @@ string QoSRequirement::serialize() {
 	return ss.str();
 }
 
-/*bool QoSRequirement::isSatisfactory(LinkQuality* lq) {
-	//bool isVerified[4] = {true, };
-
-	if(this->bandwidth > lq->getBandwidth()){
-		//isVerified[0] = false;
-		return false;
-	}
-//	if(this->delay < lq->getDelay()){
-//		//isVerified[1] = false;
-//		return false;
-//	}
-//	if(this->jitter < lq->getJitter()){
-//		//isVerified[2] = false;
-//		return false;
-//	}
-//	if(this->lossRate < lq->getLossRate()){
-//		//isVerified[3] = false;
-//		return false;
-//	}
-
-	//for(bool verified : isVerified){
-	//	if(!verified) return false;
-	//}
-	return true;
-}*/
-
 bool QoSRequirement::isSatisfactory(const QoSRequirement& qosReq,
 		const LinkQuality& lq) {
 

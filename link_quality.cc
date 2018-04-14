@@ -69,20 +69,27 @@ void LinkQuality::setLossRate(double lossRate) {
 LinkQuality::~LinkQuality() {
 }
 
+/**
+ * Compares this link quality with the target.
+ * If this one has "better" metric value than the target,
+ * the return value is positive (>0). Otherwise, the
+ * return value is negative (<0).
+ * The exactly same metric values will return zero.
+ */
 int LinkQuality::compare(const LinkQuality target) const {
 	int flag = 0;
 
 	if(this->bandwidth > target.getBandwidth()){
 		flag++;
-	} else {
+	} else if(this->bandwidth < target.getBandwidth()) {
 		flag--;
 	}
 
-	if(this->delay < target.getDelay()){
-		flag++;
-	} else {
-		flag--;
-	}
+//	if(this->delay < target.getDelay()){
+//		flag++;
+//	} else {
+//		flag--;
+//	}
 
 	return flag;
 }

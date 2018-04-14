@@ -37,12 +37,12 @@ void FlowAcceptRequest::setFlow(const Flow& flow) {
 	this->flow = flow;
 }
 
-const QoSRequirement& FlowAcceptRequest::getHopQosReq() const {
-	return hopQosReq;
+const QoSRequirement& FlowAcceptRequest::getQosReq() const {
+	return qosReq;
 }
 
-void FlowAcceptRequest::setHopQosReq(const QoSRequirement& hopQosReq) {
-	this->hopQosReq = hopQosReq;
+void FlowAcceptRequest::setQosReq(const QoSRequirement& qosReq) {
+	this->qosReq = qosReq;
 }
 
 uint32_t FlowAcceptRequest::getSenderId() const {
@@ -61,6 +61,21 @@ void FlowAcceptRequest::setTtl(int ttl) {
 	TTL = ttl;
 }
 
+string FlowAcceptRequest::serializeTrace() {
+	if(this->detourTrace.size() == 0){
+		return "--";
+	} else {
+		stringstream ss;
+		for(size_t i=0; i<this->detourTrace.size(); i++){
+			if(i + 1 < this->detourTrace.size())
+				ss << this->detourTrace[i] << ",";
+			else
+				ss << this->detourTrace[i];
+		}
+		return ss.str();
+	}
+}
+
 const string FlowAcceptRequest::serialize() {
 	stringstream ss;
 	ss << std::fixed;
@@ -74,7 +89,9 @@ const string FlowAcceptRequest::serialize() {
 			this->senderId << "@" <<
 			this->nextHop << "@" <<
 			this->TTL << "@" <<
-			this->hopQosReq.serialize();
+			this->qosReq.serialize() << "@" <<
+			this->linkQuality.serialize() << "@" <<
+			serializeTrace();
 	return ss.str();
 }
 
@@ -112,14 +129,48 @@ FlowAcceptRequest FlowAcceptRequest::parse(string str) {
 	uint32_t nextHop = atoi(tokens[8].c_str());
 	int TTL = atoi(tokens[9].c_str());
 	QoSRequirement qosReq = QoSRequirement::parse(tokens[10]);
-	//this->setHopQosReq(qosReq);
+	LinkQuality lq = LinkQuality::parse(tokens[11]);
+	vector<uint32_t> detourTrace = FlowAcceptRequest::parseDetourIDs(tokens[12]);
 
 	FlowAcceptRequest request(flow, seqNo, senderId, nextHop, TTL);
-	request.setHopQosReq(qosReq);
-	request.setHopQosReq(qosReq);
+	request.setQosReq(qosReq);
+	request.setLinkQuality(lq);
+	request.setDetourTrace(detourTrace);
 	return request;
+}
+
+vector<uint32_t> FlowAcceptRequest::parseDetourIDs(std::string str){
+	vector<uint32_t> ids;
+	if(str == "--") return ids;
+
+	std::vector<std::string> tokens;
+	tokenizeString(str, tokens, ",");
+	for(std::string addr : tokens){
+		ids.push_back(atoi(addr.c_str()));
+	}
+	return ids;
 }
 
 void FlowAcceptRequest::decrementTtl() {
 	if(this->TTL > 0) this->TTL--;
+}
+
+LinkQuality* FlowAcceptRequest::getLinkQuality() {
+	return &linkQuality;
+}
+
+void FlowAcceptRequest::setLinkQuality(const LinkQuality& linkQuality) {
+	this->linkQuality = linkQuality;
+}
+
+const vector<uint32_t>& FlowAcceptRequest::getDetourTrace() const {
+	return detourTrace;
+}
+
+void FlowAcceptRequest::addDetourTrace(uint32_t nodeId) {
+	this->detourTrace.push_back(nodeId);
+}
+
+void FlowAcceptRequest::setDetourTrace(const vector<uint32_t>& detourTrace) {
+	this->detourTrace = detourTrace;
 }

@@ -11,20 +11,18 @@
 #include "my_config.h"
 
 
-/*FlowAcceptReply::FlowAcceptReply() {
+FlowAcceptReply::FlowAcceptReply() {
 	this->seqNo = 0;
-	this->senderId = 9999999;
-	this->nextHop = 9999999;
-	this->hopCount = 0;
-}*/
+	this->senderId = NODEID_NOT_FOUND;
+	this->nextHop = NODEID_NOT_FOUND;
+}
 
 FlowAcceptReply::FlowAcceptReply(Flow flow, int seqNo, uint32_t senderId,
-		uint32_t nextHop, int hopCount) {
+		uint32_t nextHop) {
 	this->flow = flow;
 	this->seqNo = seqNo;
 	this->senderId = senderId;
 	this->nextHop = nextHop;
-	this->hopCount = hopCount;
 }
 
 const vector<uint32_t>& FlowAcceptReply::getDetourIDs() const {
@@ -76,14 +74,6 @@ void FlowAcceptReply::setSeqNo(int seqNo) {
 	this->seqNo = seqNo;
 }
 
-int FlowAcceptReply::getHopCount() const {
-	return hopCount;
-}
-
-void FlowAcceptReply::setHopCount(int hopCount) {
-	this->hopCount = hopCount;
-}
-
 FlowAcceptReply::~FlowAcceptReply() {
 }
 
@@ -110,19 +100,10 @@ const string FlowAcceptReply::serialize() {
 			this->seqNo << "@" <<
 			this->senderId << "@" <<
 			this->nextHop << "@" <<
-			this->hopCount << "@" <<
 			this->detourLinkQuality.serialize() << "@" <<
 			serializeTrace();
 	return ss.str();
 }
-
-/*void FlowAcceptReply::parseTrace(std::string str){
-	std::vector<std::string> tokens;
-	tokenizeString(str, tokens, ",");
-	for(std::string addr : tokens){
-		this->detourIDs.push_back(atoi(addr.c_str()));
-	}
-}*/
 
 vector<uint32_t> FlowAcceptReply::parseDetourIDs(std::string str){
 	vector<uint32_t> ids;
@@ -145,19 +126,19 @@ FlowAcceptReply FlowAcceptReply::parse(string str) {
 	int dstPort = atoi(tokens[4].c_str());
 	FlowType::Type type = checkType(tokens[5]);
 	Flow flow(src, srcPort, dst, dstPort, type);
-	//this->setFlow(flow);
 
 	int seqNo = atoi(tokens[6].c_str());
 	uint32_t senderId = atoi(tokens[7].c_str());
 	uint32_t nextHop = atoi(tokens[8].c_str());
-	int hopCount = atoi(tokens[9].c_str());
-	LinkQuality detourLinkQuality = LinkQuality::parse(tokens[10]);
-	//parseTrace(tokens[11]);
-	vector<uint32_t> ids = FlowAcceptReply::parseDetourIDs(tokens[11]);
+	LinkQuality detourLinkQuality = LinkQuality::parse(tokens[9]);
+	vector<uint32_t> ids = FlowAcceptReply::parseDetourIDs(tokens[10]);
 
-	FlowAcceptReply reply(flow, seqNo, senderId, nextHop, hopCount);
+	FlowAcceptReply reply(flow, seqNo, senderId, nextHop);
 	reply.setDetourLinkQuality(detourLinkQuality);
 	reply.setDetourIDs(ids);
 	return reply;
 }
 
+void FlowAcceptReply::addDetourID(uint32_t detourID) {
+	this->detourIDs.push_back(detourID);
+}

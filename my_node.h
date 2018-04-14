@@ -26,7 +26,7 @@
 #include "route_arreqtable.h"
 #include "route_arreptable.h"
 #include "route_flowcheck_recv_table.h"
-#include "route_flow_accept_req_table.h"
+#include "route_flow_accept_rep_table.h"
 #include "my_ns3_packet.h"
 #include "flow_request.h"
 #include "route_arreq.h"
@@ -56,7 +56,7 @@ private:
 	ARREPRecvTable* arrepRecvTable;
 	ARREQSentTable* arreqSentTable;
 	map<int, FlowCheckRecvTable*> flowCheckRecvMap; // map of FlowCheck-reply tables.
-	map<int, FlowAcceptRequestSentTable*> flowAcceptReqMap; // map of FlowCheck-reply tables.
+	map<int, FlowAcceptReplyRecvTable*> flowAccRepRecvMap; // map of FlowCheck-reply tables.
 
 	ofstream nodeOut;
 	ofstream flowOut;
@@ -121,6 +121,8 @@ public:
 	void _schedulePacketsFromFlowRequest(FlowRequest flowReq, string msg);
 	static void selectNodeFromFlowCheck(MyNode* myNode, int seqNo);
 	void _selectNodeFromFlowCheck(int seqNo);
+	static void selectNodeFromFlowAcceptReply(MyNode* myNode, int seqNo);
+	void _selectNodeFromFlowAcceptReply(int seqNo);
 	void sendMyPacket(ns3::Ipv4Address target, ns3::Ptr<MyNS3Packet> myPkt, FlowType::Type type, int pktSize);
 
 	// functions for routing
@@ -131,6 +133,7 @@ public:
 	static void doRouting(MyNode* myNode, ns3::Ptr<MyNS3Packet> myPkt, FlowRequest flowReq);
 	void _doRouting(ns3::Ptr<MyNS3Packet> myPkt, FlowRequest flowReq);
 	void performLocalRepair(uint32_t prevNextHop, uint32_t newNextHop, uint32_t nextHopToSrc, Flow flow, vector<uint32_t> srcRoute, QoSRequirement qosReq, LinkQuality endToEndQuality);
+	void performLocalRepairMultiHop(uint32_t prevNextHop, vector<uint32_t> newNextHopIds, uint32_t nextHopToSrc, Flow flow, vector<uint32_t> srcRoute, QoSRequirement qosReq, LinkQuality endToEndQuality);
 	void handlePacketInfo(int senderNodeId, PacketInfo pktInfo);
 	void handleHello(ns3::Ptr<ns3::Node> node, ns3::Ipv4Address ipAddr, Hello hello);
 	void handleDelayMeasurement(ns3::Ptr<ns3::Node> node, ns3::Ptr<ns3::Socket> socket, ns3::Ipv4Address ipAddr, int ifIdx, DelayMeasurement dm);
