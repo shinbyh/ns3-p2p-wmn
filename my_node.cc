@@ -849,11 +849,15 @@ void MyNode::_selectNodeFromFlowAcceptReply(int seqNo) {
 	FlowAcceptReplyRecvTable* table = this->flowAccRepRecvMap[seqNo];
 	FlowAcceptReply* optimalReply = table->getOptimalFlowAcceptReply();
 	if(optimalReply){
+		stringstream ssdt;
+		for(uint32_t temp : optimalReply->getDetourIDs()){
+			ssdt << " " << temp;
+		}
 #ifdef DEBUG_PRINT
-		NS_LOG_UNCOND(" - optimal detour subpath: ");
+		NS_LOG_UNCOND(" - optimal detour subpath: " << ssdt.str());
 #endif
 #ifdef DEBUG_NODE_OUT
-		this->nodeOut << " - optimal detour subpath: " << "\n";
+		this->nodeOut << " - optimal detour subpath: " << ssdt.str() << "\n";
 #endif
 		vector<uint32_t> subpath = optimalReply->getDetourIDs();
 		vector<uint32_t> newSrcRoute = table->getSrcRoute();
@@ -2338,7 +2342,7 @@ void MyNode::handleLocalRepairRequest(string str, ns3::Ipv4Address clientIP, int
 		if(candidates.size() > 0){
 			for(NeighborEntry* candidate : candidates){
 				// Create and send FlowCheck-request with the seqNo.
-				int ttl = atoi(MyConfig::instance().getValue("Scheme2FlowCheckTTL").c_str());
+				int ttl = atoi(MyConfig::instance().getValue("Scheme3FlowAcceptTTL").c_str());
 				FlowAcceptRequest req(lrreq.getFlow(), seqNo, this->nodeId, lrreq.getPreviousNextHop(), ttl);
 				req.setQosReq(lrreq.getQosReq());
 				req.setLinkQuality(lrreq.getEndToEndQuality());
