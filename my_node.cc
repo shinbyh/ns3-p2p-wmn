@@ -2311,8 +2311,12 @@ void MyNode::handleLocalRepairRequest(string str, ns3::Ipv4Address clientIP, int
 			Simulator::Schedule(flowCheckRecvInterval, &MyNode::selectNodeFromFlowCheck, this, seqNo);
 		} else {
 			// No detour node exists!! Treat it as Route Error.
-			ARERR arerr(lrreq.getFlow(), this->nodeId, lrreq.getQosReq());
-			sendRoutingPacket(this->ncTable->get(lrreq.getNextHopToSrc())->getIp(), arerr.serialize());
+			if(lrreq.getFlow().getSrc() == this->nodeId){
+				this->routeTable->deleteRoute(lrreq.getFlow());
+			} else {
+				ARERR arerr(lrreq.getFlow(), this->nodeId, lrreq.getQosReq());
+				sendRoutingPacket(this->ncTable->get(lrreq.getNextHopToSrc())->getIp(), arerr.serialize());
+			}
 		}
 		break;
 	}
@@ -2358,8 +2362,12 @@ void MyNode::handleLocalRepairRequest(string str, ns3::Ipv4Address clientIP, int
 			Simulator::Schedule(flowAccRepRecvInterval, &MyNode::selectNodeFromFlowAcceptReply, this, seqNo);
 		} else {
 			// No detour node exists!! Treat it as Route Error.
-			ARERR arerr(lrreq.getFlow(), this->nodeId, lrreq.getQosReq());
-			sendRoutingPacket(this->ncTable->get(lrreq.getNextHopToSrc())->getIp(), arerr.serialize());
+			if(lrreq.getFlow().getSrc() == this->nodeId){
+				this->routeTable->deleteRoute(lrreq.getFlow());
+			} else {
+				ARERR arerr(lrreq.getFlow(), this->nodeId, lrreq.getQosReq());
+				sendRoutingPacket(this->ncTable->get(lrreq.getNextHopToSrc())->getIp(), arerr.serialize());
+			}
 		}
 		break;
 	}
