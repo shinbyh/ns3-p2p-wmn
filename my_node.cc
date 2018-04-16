@@ -2192,6 +2192,9 @@ void MyNode::handleFlowAcceptRequest(string str, ns3::Ipv4Address clientIP, int 
 	if(QoSRequirement::isSatisfactory(request.getQosReq(), testLq)){
 		// Send FlowAcceptReply to the sender.
 		FlowAcceptReply reply(request.getFlow(), request.getSeqNo(), request.getSenderId(), request.getNextHop());
+		if(request.getDetourTrace().size() > 0){
+			reply.setDetourIDs(request.getDetourTrace());
+		}
 		reply.addDetourID(this->nodeId);
 		reply.setDetourLinkQuality(testLq);
 		sendRoutingPacket(clientIP, reply.serialize());
@@ -2209,6 +2212,7 @@ void MyNode::handleFlowAcceptRequest(string str, ns3::Ipv4Address clientIP, int 
 						// Need to remember which request has been active: FlowAcceptSentTable.
 						// Forward FlowAcceptRequest to this neighbor.
 						accumulateLinkQuality(request.getLinkQuality(), ncEntryPrevHop);
+						request.addDetourTrace(this->nodeId);
 						sendRoutingPacket(temp->getIp(), request.serialize());
 					}
 				}
