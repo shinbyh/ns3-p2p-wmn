@@ -38,6 +38,7 @@ private:
 	bool controlFlow;
 	uint32_t fwdNodeId; // forwarding node ID
 	uint32_t prevNodeId; // previous node ID
+	int packetSeqNo; // for source nodes only (app-layer performance measurement)
 	bool randomnessActivated; // for source nodes only (Soft QoS; traffic randomization)
 	double randomnessTime; // for source nodes only (Soft QoS; traffic randomization)
 
@@ -95,6 +96,9 @@ public:
 	uint32_t getPrevNodeId() const;
 	void setPrevNodeId(uint32_t prevNodeId);
 	bool operator <(const FlowEntry &a) const;
+	int getPacketSeqNo() const;
+	void setPacketSeqNo(int packetSeqNo);
+	void incrementPacketSeNo();
 };
 
 

@@ -17,6 +17,7 @@ private:
 	int appSrcPort;
 	uint32_t dst;
 	int appDstPort;
+	int seqNo;
 	std::string msg;
 
 public:
@@ -36,6 +37,9 @@ public:
 	const int getAppSrcPort() const;
 	void setAppSrcPort(int appSrcPort);
 	const int getPktSize() const;
+	int getSeqNo() const;
+	void setSeqNo(int seqNo);
+	const size_t getDataSize() const;
 };
 
 

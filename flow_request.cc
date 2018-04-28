@@ -15,13 +15,14 @@ FlowRequest::FlowRequest() {
 }
 
 FlowRequest::FlowRequest(Flow flow, QoSRequirement qosReq, int pktSize,
-		int sendingRate, Time startTime, Time duration) {
+		int sendingRate, Time startTime, Time duration, string name) {
 	this->flow = flow;
 	this->qosReq = qosReq;
 	this->pktSize = pktSize;
 	this->sendingRate = sendingRate;
 	this->startTime = startTime;
 	this->duration = duration;
+	this->name = name;
 }
 
 FlowRequest::~FlowRequest() {
@@ -33,6 +34,10 @@ const Time& FlowRequest::getDuration() const {
 
 void FlowRequest::setDuration(const Time& duration) {
 	this->duration = duration;
+}
+
+const ns3::Time FlowRequest::getEndTime() const {
+	return (this->startTime + this->duration);
 }
 
 const Flow& FlowRequest::getFlow() const {
@@ -73,4 +78,12 @@ const Time& FlowRequest::getStartTime() const {
 
 void FlowRequest::setStartTime(const Time& startTime) {
 	this->startTime = startTime;
+}
+
+const std::string& FlowRequest::getName() const {
+	return name;
+}
+
+void FlowRequest::setName(const std::string& name) {
+	this->name = name;
 }

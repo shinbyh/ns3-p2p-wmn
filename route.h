@@ -29,12 +29,6 @@ private:
 	int tcClassID;
 	double tcBandwidth;
 
-	/*
-	 * 180321, test variables for statistics
-	 */
-	int pktsPerSec; // number of packets sent for each second
-	ns3::Time lastUpdateTime;
-
 public:
 	Route(Flow flow, uint32_t nextHop, int hopCount);
 	~Route();
@@ -52,11 +46,6 @@ public:
 	void setTcBandwidth(double tcBandwidth);
 	int getTcClassId() const;
 	const std::string toString();
-	int getPktsPerSec() const;
-	void setPktsPerSec(int pktsPerSec);
-	void incrementPktsPerSec();
-	const ns3::Time& getLastUpdateTime() const;
-	void setLastUpdateTime(const ns3::Time& lastUpdateTime);
 };
 
 #endif /* ROUTING_ROUTE_H_ */

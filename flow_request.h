@@ -20,13 +20,15 @@ private:
 	int sendingRate;
 	ns3::Time startTime;
 	ns3::Time duration;
+	std::string name;
 
 public:
 	FlowRequest();
-	FlowRequest(Flow flow, QoSRequirement qosReq, int pktSize, int sendingRate, ns3::Time startTime, ns3::Time duration);
+	FlowRequest(Flow flow, QoSRequirement qosReq, int pktSize, int sendingRate, ns3::Time startTime, ns3::Time duration, string name);
 	virtual ~FlowRequest();
 	const ns3::Time& getDuration() const;
 	void setDuration(const ns3::Time& duration);
+	const ns3::Time getEndTime() const;
 	const Flow& getFlow() const;
 	void setFlow(const Flow& flow);
 	int getPktSize() const;
@@ -37,6 +39,8 @@ public:
 	void setQosReq(const QoSRequirement& qosReq);
 	const ns3::Time& getStartTime() const;
 	void setStartTime(const ns3::Time& startTime);
+	const std::string& getName() const;
+	void setName(const std::string& name);
 };
 
 #endif /* SCRATCH_BHSHIN_FLOW_REQUEST_H_ */

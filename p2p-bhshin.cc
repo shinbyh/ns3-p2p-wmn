@@ -42,6 +42,7 @@
 #include "hello.h"
 #include "app_flowreq_pkt.h"
 #include "string_tokenizer.h"
+#include "my_application.h"
 
 #include <iostream>
 #include <string>
@@ -53,7 +54,7 @@ using namespace std;
 
 NS_LOG_COMPONENT_DEFINE ("BhshinP2PExample");
 
-std::map<int, MyNode*> myNodes;
+std::map<uint32_t, MyNode*> myNodes;
 NodeIdMap* nodeIdMap;
 
 static void ReceiveHello (Ptr<Socket> socket)
@@ -270,12 +271,14 @@ static vector<AppFlowReqPkt> readFlowSettingsFromFile(string filepath) {
 		double delayReq = atof(tokens[8].c_str());
 		double jitterReq = atof(tokens[9].c_str());
 		double lossRateReq = atof(tokens[10].c_str());
+		string name = "default";
+		if(tokens.size() > 11) name = tokens[11].c_str();
 
 		Flow flow(src, sport, dst, dport, type);
 		string data(pktSize, 'a');
 		Ptr<MyNS3Packet> myPkt = CreateObject<MyNS3Packet>(flow.getSrc(), flow.getSrcPort(), flow.getDst(), flow.getDstPort(), data);
 		QoSRequirement qosReq(bwReq, delayReq, jitterReq, lossRateReq);
-		FlowRequest flowReq(flow, qosReq, pktSize, sendingRate, startTime, duration);
+		FlowRequest flowReq(flow, qosReq, pktSize, sendingRate, startTime, duration, name);
 
 		AppFlowReqPkt appFlowReqPkt(initNodeId, flowReq, myPkt);
 		appFlowReqPkts.push_back(appFlowReqPkt);
@@ -602,21 +605,28 @@ int main (int argc, char *argv[])
 	 * Application flows Configuration from a file
 	 */
 	Ptr<UniformRandomVariable> x = CreateObject<UniformRandomVariable> ();
-	uint32_t jitter = x->GetInteger(1, 10000);
-
-	stringstream ss;
+	//stringstream ss;
 	vector<AppFlowReqPkt> appFlowReqPkts = readFlowSettingsFromFile(MyConfig::instance().getValue("AppsConfigDirectory") + "/" + appsConfigFile + ".txt");
 	for(AppFlowReqPkt appFlowReqPkt : appFlowReqPkts){
 		// debug
-		cout << "*AppFlowReqPkt\n  -nodeId = " << appFlowReqPkt.getInitNodeId() << endl;
-		cout << "  -flowReq.flow = " << appFlowReqPkt.getFlowReq().getFlow().toString() << endl;
-		cout << "  -flowReq.startTime = " << appFlowReqPkt.getFlowReq().getStartTime().GetSeconds() << endl;
+		//cout << "*AppFlowReqPkt\n  -nodeId = " << appFlowReqPkt.getInitNodeId() << endl;
+		//cout << "  -flowReq.flow = " << appFlowReqPkt.getFlowReq().getFlow().toString() << endl;
+		//cout << "  -flowReq.startTime = " << appFlowReqPkt.getFlowReq().getStartTime().GetSeconds() << endl;
 
-		int nodeId = appFlowReqPkt.getInitNodeId();
-		jitter = x->GetInteger(10, 10000);
+		uint32_t nodeId = appFlowReqPkt.getInitNodeId();
+		Ptr<MyNS3Packet> myPkt = appFlowReqPkt.getMyPkt();
+		FlowRequest flowReq = appFlowReqPkt.getFlowReq();
+
+		// Schedule routing for the data packet.
+		uint32_t jitter = x->GetInteger(1, 1000);
 		Simulator::ScheduleWithContext (nodeId,
-				MicroSeconds(appFlowReqPkt.getFlowReq().getStartTime().GetMicroSeconds() + jitter), &MyNode::doRouting,
-				myNodes[nodeId], appFlowReqPkt.getMyPkt(), appFlowReqPkt.getFlowReq());
+				MicroSeconds(flowReq.getStartTime().GetMicroSeconds() + jitter), &MyNode::doRouting,
+				myNodes[nodeId], myPkt, flowReq);
+
+		// Add an application to the destination node for statistics.
+		uint32_t dstNodeId = appFlowReqPkt.getFlowReq().getFlow().getDst();
+		MyApplication* myApp = new MyApplication(flowReq.getName(), flowReq);
+		myNodes[dstNodeId]->addMyApplication(myApp);
 	}
 
 	/*

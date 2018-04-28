@@ -17,6 +17,7 @@ MyNS3Packet::MyNS3Packet(uint32_t src, int appSrcPort, uint32_t dst, int appDstP
 	this->dst = dst;
 	this->appDstPort = appDstPort;
 	this->msg = msg;
+	this->seqNo = 0;
 }
 
 MyNS3Packet::MyNS3Packet() {
@@ -24,6 +25,7 @@ MyNS3Packet::MyNS3Packet() {
 	this->appDstPort = 0;
 	this->src = 0;
 	this->dst = 0;
+	this->seqNo = 0;
 }
 
 const uint32_t MyNS3Packet::getDst() const {
@@ -56,6 +58,7 @@ const std::string MyNS3Packet::serialize() {
 			this->appSrcPort << "|" <<
 			this->dst << "|" <<
 			this->appDstPort << "|" <<
+			this->seqNo << "|" <<
 			this->msg;
 
 	return ss.str();
@@ -70,7 +73,8 @@ Ptr<MyNS3Packet> MyNS3Packet::parse(std::string str) {
 	myPkt->setAppSrcPort(atoi(tokens[1].c_str()));
 	myPkt->setDst(atoi(tokens[2].c_str()));
 	myPkt->setAppDstPort(atoi(tokens[3].c_str()));
-	myPkt->setMsg(tokens[4]);
+	myPkt->setSeqNo(atoi(tokens[4].c_str()));
+	myPkt->setMsg(tokens[5]);
 
 	return myPkt;
 }
@@ -103,4 +107,16 @@ const int MyNS3Packet::getPktSize() const {
 			this->msg;
 
 	return ss.str().length() + 10;
+}
+
+int MyNS3Packet::getSeqNo() const {
+	return seqNo;
+}
+
+void MyNS3Packet::setSeqNo(int seqNo) {
+	this->seqNo = seqNo;
+}
+
+const size_t MyNS3Packet::getDataSize() const {
+	return this->msg.size();
 }

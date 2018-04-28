@@ -58,6 +58,7 @@ FlowEntry::~FlowEntry() {
 void FlowEntry::initAppReq() {
 	//this->qosReq initialize?
 	appReqSeqNo = 0;
+	packetSeqNo = 0;
 	unsatisfactoryCount = 0;
 	routingFlag = FLOW_NO_ROUTE;
 	routeSearching = false;
@@ -340,6 +341,18 @@ void FlowEntry::setPrevNodeId(uint32_t prevNodeId) {
 	if(this->flowStats.find(prevNodeId) == this->flowStats.end()){
 		addFlowStat(prevNodeId);
 	}
+}
+
+int FlowEntry::getPacketSeqNo() const {
+	return packetSeqNo;
+}
+
+void FlowEntry::setPacketSeqNo(int packetSeqNo) {
+	this->packetSeqNo = packetSeqNo;
+}
+
+void FlowEntry::incrementPacketSeNo(){
+	this->packetSeqNo++;
 }
 
 bool FlowEntry::operator <(const FlowEntry& a) const {

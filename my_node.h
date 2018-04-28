@@ -28,6 +28,7 @@
 #include "route_flowcheck_recv_table.h"
 #include "route_flow_accept_rep_table.h"
 #include "my_ns3_packet.h"
+#include "my_application.h"
 #include "flow_request.h"
 #include "route_arreq.h"
 #include "route_arrep.h"
@@ -57,6 +58,7 @@ private:
 	ARREQSentTable* arreqSentTable;
 	map<int, FlowCheckRecvTable*> flowCheckRecvMap; // map of FlowCheck-reply tables.
 	map<int, FlowAcceptReplyRecvTable*> flowAccRepRecvMap; // map of FlowCheck-reply tables.
+	map<Flow, MyApplication*> myAppMap; // map of MyApplications
 
 	ofstream nodeOut;
 	ofstream flowOut;
@@ -89,9 +91,6 @@ private:
 public:
 	MyNode(uint32_t nodeId, ns3::Ptr<ns3::Node> node, int scheme);
 	virtual ~MyNode();
-	static void sendPacket(MyNode* myNode, ns3::Ptr<ns3::Socket> socket, ns3::Ptr<ns3::Packet> pkt);
-	void _sendPacket(ns3::Ptr<ns3::Socket> socket, ns3::Ptr<ns3::Packet> pkt);
-	void sendRoutingPacket(ns3::Ipv4Address target, string rtMsg);
 
 	const int getScheme() const;
 	void addIpv4Address(ns3::Ipv4Address addr);
@@ -113,8 +112,6 @@ public:
 	void _checkBroadcastHello(ns3::Time interval);
 	static void checkFlowRandomness(MyNode* myNode, ns3::Time interval);
 	void _checkFlowRandomness(ns3::Time interval);
-	Hello* generateHello();
-	void sendDelayMeasurement(ns3::Ipv4Address target, DelayMeasurement dm, int pktSize);
 	static void setupRoute(MyNode* myNode, Flow flow);
 	void _setupRoute(Flow flow);
 	static void schedulePacketsFromFlowRequest(MyNode* myNode, FlowRequest flowReq, string msg);
@@ -123,9 +120,16 @@ public:
 	void _selectNodeFromFlowCheck(int seqNo);
 	static void selectNodeFromFlowAcceptReply(MyNode* myNode, int seqNo);
 	void _selectNodeFromFlowAcceptReply(int seqNo);
-	void sendMyPacket(ns3::Ipv4Address target, ns3::Ptr<MyNS3Packet> myPkt, FlowType::Type type, int pktSize);
+	static void checkMyApplicationStatistics(MyNode* myNode, Flow flow);
+	void _checkMyApplicationStatistics(Flow flow);
 
 	// functions for routing
+	Hello* generateHello();
+	static void sendPacket(MyNode* myNode, ns3::Ptr<ns3::Socket> socket, ns3::Ptr<ns3::Packet> pkt);
+	void _sendPacket(ns3::Ptr<ns3::Socket> socket, ns3::Ptr<ns3::Packet> pkt);
+	void sendRoutingPacket(ns3::Ipv4Address target, string rtMsg);
+	void sendDelayMeasurement(ns3::Ipv4Address target, DelayMeasurement dm, int pktSize);
+	void sendMyPacket(ns3::Ipv4Address target, ns3::Ptr<MyNS3Packet> myPkt, FlowType::Type type, int pktSize);
 	void broadcastARREQ(Flow flow, int seqNo, FlowRequest flowReq);
 	ARREP getOptimalARREP(vector<ARREP> arrepList);
 
@@ -151,6 +155,9 @@ public:
 	const bool checkDstOfMyPacket(const MyNS3Packet* myPkt) const;
 	int getAndIncrementHelloSeqNo();
 	const double getAvgResidualBW();
+
+	// my application layer functions
+	void addMyApplication(MyApplication* myApp);
 
 	// static utility functions
 	static const bool isMyAddress(ns3::Ptr<ns3::Node> node, const ns3::Ipv4Address addr);

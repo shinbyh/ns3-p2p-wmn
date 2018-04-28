@@ -126,6 +126,11 @@ MyNode::~MyNode() {
 	BOOST_FOREACH(p2, this->flowAccRepRecvMap){
 		delete p2.second;
 	}
+
+	pair<Flow, MyApplication*> p3;
+	BOOST_FOREACH(p3, this->myAppMap){
+		delete p3.second;
+	}
 }
 
 
@@ -315,14 +320,16 @@ void MyNode::checkFlowQoS(MyNode* myNode, Time interval){
  * Handle all flows as a source node.
  */
 void MyNode::_checkFlowQoS(Time interval){
+	vector<FlowEntry*> flowEntries = flowTable->getAllFlowEntries();
+	if(flowEntries.size() > 0){
 #ifdef DEBUG_PRINT
-	NS_LOG_UNCOND("[Node "<< this->nodeId <<"] _checkFlowQoS (t=" << Simulator::Now().GetSeconds() << ")");
+		NS_LOG_UNCOND("[Node "<< this->nodeId <<"] _checkFlowQoS (t=" << Simulator::Now().GetSeconds() << ")");
 #endif
 #ifdef DEBUG_NODE_OUT
-	this->nodeOut << "[Node "<< this->nodeId <<"] _checkFlowQoS (t=" << Simulator::Now().GetSeconds() << ")\n";
+		this->nodeOut << "[Node "<< this->nodeId <<"] _checkFlowQoS (t=" << Simulator::Now().GetSeconds() << ")\n";
 #endif
+	}
 
-	vector<FlowEntry*> flowEntries = flowTable->getAllFlowEntries();
 	for(FlowEntry* flowEntry : flowEntries) {
 #ifdef DEBUG_PRINT
 		NS_LOG_UNCOND(" -flow: " << flowEntry->getFlow().toString());
@@ -706,10 +713,6 @@ void MyNode::schedulePacketsFromFlowRequest(MyNode* myNode, FlowRequest flowReq,
 void MyNode::_schedulePacketsFromFlowRequest(FlowRequest flowReq, string msg) {
 	Route* route = this->routeTable->getRoute(flowReq.getFlow());
 	Time now = Simulator::Now();
-#ifdef DEBUG_PRINT
-	//NS_LOG_UNCOND("[Node " << this->nodeId << "] schedulePkt, t=" << now.GetMilliSeconds());
-	//NS_LOG_UNCOND(" - flowReq = " << flowReq.getFlow().toString());
-#endif
 
 	if(route){
 		if(flowReq.getStartTime() + flowReq.getDuration() < now){
@@ -728,17 +731,17 @@ void MyNode::_schedulePacketsFromFlowRequest(FlowRequest flowReq, string msg) {
 
 		// Send a packet to the nexthop.
 		Ptr<MyNS3Packet> myPkt = CreateObject<MyNS3Packet>(flowReq.getFlow().getSrc(), flowReq.getFlow().getSrcPort(), flowReq.getFlow().getDst(), flowReq.getFlow().getDstPort(), msg);
-		sendMyPacket(this->ncTable->get(route->getNextHop())->getIp(), myPkt, flowReq.getFlow().getType(), flowReq.getPktSize());
-
 		Time nextTime = Seconds(1.0/(double)flowReq.getSendingRate());
-		// Apply randomness to the flow scheduling interval.
 		FlowEntry* flowEntry = this->flowTable->getFlowEntry(flowReq.getFlow());
 		if(flowEntry){
+			myPkt->setSeqNo(flowEntry->getPacketSeqNo());
+			flowEntry->incrementPacketSeNo();
 			if(flowEntry->isRandomnessActivated()){
 				double ratio = atof(MyConfig::instance().getValue("FlowRandomness").c_str());
 				nextTime = Seconds( 1.0 / ((double)flowReq.getSendingRate() * ratio) );
 			}
 		}
+		sendMyPacket(this->ncTable->get(route->getNextHop())->getIp(), myPkt, flowReq.getFlow().getType(), flowReq.getPktSize());
 
 		// Schedule the next packet
 		Simulator::Schedule(nextTime, &MyNode::schedulePacketsFromFlowRequest, this, flowReq, msg);
@@ -746,20 +749,21 @@ void MyNode::_schedulePacketsFromFlowRequest(FlowRequest flowReq, string msg) {
 		// find ncTable to check if dst is my neighbor.
 		NeighborEntry* entry = this->ncTable->get(flowReq.getFlow().getDst());
 		if(entry){
-			// one-hop. send a packet
+			// One-hop. Send a packet to the neighbor.
 			Ptr<MyNS3Packet> myPkt = CreateObject<MyNS3Packet>(flowReq.getFlow().getSrc(), flowReq.getFlow().getSrcPort(), flowReq.getFlow().getDst(), flowReq.getFlow().getDstPort(), msg);
-			sendMyPacket(entry->getIp(), myPkt, flowReq.getFlow().getType(), flowReq.getPktSize());
-
-			// schedule the next packet
 			Time nextTime = Seconds(1.0/(double)flowReq.getSendingRate());
-			// Apply randomness to the flow scheduling interval.
 			FlowEntry* flowEntry = this->flowTable->getFlowEntry(flowReq.getFlow());
 			if(flowEntry){
+				myPkt->setSeqNo(flowEntry->getPacketSeqNo());
+				flowEntry->incrementPacketSeNo();
 				if(flowEntry->isRandomnessActivated()){
 					double ratio = atof(MyConfig::instance().getValue("FlowRandomness").c_str());
 					nextTime = Seconds( 1.0 / ((double)flowReq.getSendingRate() * ratio) );
 				}
 			}
+			sendMyPacket(entry->getIp(), myPkt, flowReq.getFlow().getType(), flowReq.getPktSize());
+
+			// schedule the next packet
 			Simulator::Schedule(nextTime, &MyNode::schedulePacketsFromFlowRequest, this, flowReq, msg);
 		} else {
 #ifdef DEBUG_PRINT
@@ -958,6 +962,31 @@ void MyNode::sendMyPacket(Ipv4Address target, Ptr<MyNS3Packet> myPkt, FlowType::
 	PacketInfo pktInfo((long)(now.GetMilliSeconds()), flow, 0, myPkt->getPktSize());
 	handlePacketInfo(nodeIdMap->getNodeId(target), pktInfo);
 }
+
+void MyNode::checkMyApplicationStatistics(MyNode* myNode, Flow flow) {
+	myNode->_checkMyApplicationStatistics(flow);
+}
+
+void MyNode::_checkMyApplicationStatistics(Flow flow) {
+#ifdef DEBUG_PRINT
+	NS_LOG_UNCOND("[Node " << this->nodeId << "] _checkMyApplicationStatistics " << flow.toString());
+#endif
+#ifdef DEBUG_NODE_OUT
+	this->nodeOut << "[Node " << this->nodeId << "] _checkMyApplicationStatistics " << flow.toString() << "\n";
+#endif
+
+	MyApplication* myApp = this->myAppMap[flow];
+	myApp->updateStatistics();
+	//myApp->consumeDataPackets();
+
+	// If the flow lifetime still remains,
+	// reschedule the next checkpoint of update.
+	if(myApp->getFlowReq().getEndTime() > Simulator::Now()){
+		Time nextTime = Seconds(1.0);
+		Simulator::Schedule(nextTime, &MyNode::checkMyApplicationStatistics, this, flow);
+	}
+}
+
 
 void MyNode::broadcastARREQ(Flow flow, int seqNo, FlowRequest flowReq){
 	// debug
@@ -2375,14 +2404,31 @@ void MyNode::handleLocalRepairRequest(string str, ns3::Ipv4Address clientIP, int
 	}
 }
 
-
+/**
+ * Handle data packet (MyNS3Packet) for an application layer.
+ */
 void MyNode::handleMyPacket(Ptr<MyNS3Packet> myPkt, int pktSize, FlowType::Type type, Ipv4Address ipAddr) {
 	Time now = Simulator::Now();
+	//uint32_t clientNodeId = nodeIdMap->getNodeId(ipAddr);
 
 	// check and do routing
 	if(checkDstOfMyPacket(GetPointer(myPkt))){
 		// Destination is myself.
-		// Optional: report data to the application layer(?).
+		// Debug (180418)
+		//this->nodeOut << "[Node " << this->nodeId << "] handleMyPacket " << now.GetMilliSeconds() << "\n";
+		//this->nodeOut << " - from: " << clientNodeId << "\n";
+		//this->nodeOut << " - pkt seqNo = " << myPkt->getSeqNo() << "\n";
+		Flow myFlow(myPkt->getSrc(), myPkt->getAppSrcPort(), myPkt->getDst(), myPkt->getAppDstPort(), type);
+		MyApplication* myApp = this->myAppMap[myFlow];
+
+		if(myApp->getTotalNumberOfPkts() == 0){
+			// If the totalNumberOfPkts is zero,
+			// schedule the checkpoint of updating statistics.
+			Time nextTime = Seconds(1.0);
+			Simulator::Schedule(nextTime, &MyNode::checkMyApplicationStatistics, this, myFlow);
+		}
+
+		myApp->handleApplicationPacket(myPkt);
 	} else {
 		// forward the packet to the destination.
 		Flow flow(myPkt->getSrc(), myPkt->getAppSrcPort(), myPkt->getDst(), myPkt->getAppDstPort(), type);
@@ -2391,14 +2437,6 @@ void MyNode::handleMyPacket(Ptr<MyNS3Packet> myPkt, int pktSize, FlowType::Type 
 		if(route){
 			NeighborEntry* nextHopEntry = this->ncTable->get(route->getNextHop());
 			sendMyPacket(nextHopEntry->getIp(), myPkt, type, pktSize);
-
-			if(Simulator::Now() > route->getLastUpdateTime() + Seconds(1.0)){
-				this->nodeOut << "*** " << route->getPktsPerSec() << " pkts/s --> " << nextHopEntry->getNodeId() << " ("<< Simulator::Now().GetMilliSeconds() <<")\n";
-				route->setLastUpdateTime(Simulator::Now());
-				route->setPktsPerSec(0);
-			} else {
-				route->incrementPktsPerSec(); // 180321, test flow statistics
-			}
 		} else {
 #ifdef DEBUG_PRINT
 			NS_LOG_UNCOND("[Node " << this->nodeId << "][handleMyPkt] Error: No Route Exists!!");
@@ -2492,6 +2530,22 @@ uint8_t* MyNode::getPacketDataBuffer(Ptr<Packet> packet) {
 	uint8_t *buffer = new uint8_t[packet->GetSize()];
 	packet->CopyData(buffer, packet->GetSize());
 	return buffer;
+}
+
+void MyNode::addMyApplication(MyApplication* myApp) {
+#ifdef DEBUG_PRINT
+	NS_LOG_UNCOND("[Node "<< this->nodeId <<"] addMyApplication, t=" << Simulator::Now().GetMilliSeconds());
+	NS_LOG_UNCOND(" -name: " << myApp->getName());
+	NS_LOG_UNCOND(" -flow: " << myApp->getFlowReq().getFlow().toString());
+#endif
+#ifdef DEBUG_NODE_OUT
+	this->nodeOut << "[Node "<< this->nodeId <<"] addMyApplication, t=" << Simulator::Now().GetMilliSeconds() << "\n";
+	this->nodeOut << " -name: " << myApp->getName() << "\n";
+	this->nodeOut << " -flow: " << myApp->getFlowReq().getFlow().toString() << "\n";
+#endif
+
+	Flow flow = myApp->getFlowReq().getFlow();
+	this->myAppMap[flow] = myApp;
 }
 
 const int MyNode::checkRoutingMessageType(const string msg) {
