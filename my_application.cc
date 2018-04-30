@@ -20,6 +20,7 @@ MyApplication::MyApplication(std::string name, FlowRequest flowReq) {
 	this->videoBuffer = 0;
 	this->minBufSizeToPlay = this->dataRateBytes * atoi(MyConfig::instance().getValue("AppMinimumBufferingTime").c_str());
 	this->buffering = true;
+	this->pktConsumptionStarted = false;
 
 	stringstream ss;
 	ss << "applog_" << flowReq.getFlow().getDst() << "-" << flowReq.getFlow().getDstPort() << ".txt";
@@ -119,11 +120,13 @@ void MyApplication::handleApplicationPacket(Ptr<MyNS3Packet> myPkt) {
 	this->totalRecvBytes += myPkt->getDataSize();
 	this->tempNumberOfPkts++;
 	this->tempRecvBytes += myPkt->getDataSize();
-
 	this->videoBuffer += myPkt->getDataSize();
-	if(this->buffering){
+
+	// The first triggering point of packet consumption.
+	if(this->buffering && !this->pktConsumptionStarted){
 		if(this->videoBuffer >= this->minBufSizeToPlay){
 			this->buffering = false;
+			this->pktConsumptionStarted = true;
 			_consumeDataPackets();
 		}
 	}

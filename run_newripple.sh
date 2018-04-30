@@ -2,9 +2,10 @@
 
 BASE_DIR=$(pwd)
 EXP_NAME=$1
-APPS="10apps 11apps 12apps 13apps 14apps" #large30
+APPS="10apps 11apps 12apps 13apps 14apps 15apps 16apps 17apps 18apps 19apps 20apps" #large30
 #APPS="6apps 7apps 8apps" #large
 #APPS="2apps" # smalltest
+#APPS="20apps" # special case
 PKTS="250pkts"
 #FLOWSETS=$(seq 0 0) # smalltest
 FLOWSETS=$(seq 0 49) #large
@@ -17,7 +18,7 @@ FLOWSETS=$(seq 0 49) #large
 # 3: local repair with 2-hop detours
 # 4: local repair with average bandwidth
 #
-SCHEMES="0 2"
+SCHEMES="3 0"
 
 DIR_PREFIX=$HOME"/exp/ns-3"
 APPCONFIG_DIR="./apps_config"
@@ -41,21 +42,18 @@ do
 		do
 			for flowset_no in $FLOWSETS
 			do
-				# Remove previous data files.
+				# Remove previous simulation data for the accuracy of results.
 				$BASE_DIR/remove_log_data.sh
 
 				# Select an app config file.
 				appConfig=$app'_'$pkt'-'$flowset_no
 				appConfigFile=$APPCONFIG_DIR'/'$appConfig'.txt'
 
-				# Debug
-				#echo "Number of nodes: "$numOfNodes
-				echo "Simulating "$appConfigFile
-
 				# Run an ns-3 simulation.
+				echo "Simulating "$appConfigFile
 				./waf --run "p2p-bhshin --apps=$appConfig --scheme=$scheme --topology=$topologyConfigFile" &> output.txt
 
-				# Make statistics and copy to the dedicated location.
+				# Make statistics results and copy them to the dedicated location.
 				python stat.py $appConfigFile
 				python stat_ov.py $numOfNodes
 				python avg_thp.py $appConfigFile > nodestat_avg.txt

@@ -25,6 +25,7 @@ class MyApplication {
 	int videoBuffer; // current video buffer in bytes
 	int minBufSizeToPlay; // minimum buffer size to play (bytes)
 	bool buffering; // buffering state. true == buffering.
+	bool pktConsumptionStarted; // pkt consumption state. true == consumption started.
 	FlowRequest flowReq;
 	Time lastUpdateTime;
 	ofstream appDataOut; // app-layer data statistics
