@@ -72,8 +72,8 @@ if __name__ == "__main__":
         #print('Flow {}'.format(ac_flow.to_string()))
         #print(' -Goodput = {}'.format(goodput))
 
-    goodputs_output_str = get_app_config(appConfigFile)
-    flows_output_str = get_app_config(appConfigFile)
+    goodputs_output_str = '{}\t{}'.format(get_app_config(appConfigFile), 'goodput')
+    flows_output_str = '{}\t{}'.format(get_app_config(appConfigFile), 'goodput_flows')
     for tuple_goodput in array_goodputs:
         goodputs_output_str += '\t{}'.format(tuple_goodput[1])
         flows_output_str += '\t{}:{}'.format(tuple_goodput[0].dst, tuple_goodput[0].dport)
