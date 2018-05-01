@@ -13,8 +13,8 @@ class Flow:
         else:
             self.flowType = int(flowType)
     def __eq__(self, flow):
-        if(self.src == flow.src and 
-              self.sport == flow.sport and 
+        if(self.src == flow.src and
+              self.sport == flow.sport and
               self.dst == flow.dst and
               self.dport == flow.dport and
               self.flowType == flow.flowType):
@@ -36,7 +36,7 @@ class Flow:
         else:
             self.flowType = int(items[4])
 
-    def toString(self):
+    def to_string(self):
         out = 'flow = {}:{} {}:{} {}'.format(self.src, self.sport, self.dst, self.dport, self.flowType)
         return out
 #

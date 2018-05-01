@@ -621,9 +621,9 @@ void MyNode::_setupRoute(Flow flow) {
 #ifdef DEBUG_NODE_OUT
 	this->nodeOut << "[Node "<< this->nodeId <<"] setupRoute, flow: " << flow.toString() << "(t=" << Simulator::Now().GetSeconds() << ")\n";
 #endif
-	ARREPRecvEntry* entry = this->arrepRecvTable->getEntry(flow);
+	ARREPRecvEntry* arrepEntry = this->arrepRecvTable->getEntry(flow);
 
-	if(!entry || entry->getArrepList().size() == 0){
+	if(!arrepEntry || arrepEntry->getArrepList().size() == 0){
 #ifdef DEBUG_PRINT
 		NS_LOG_UNCOND(" - No available route found!!");
 #endif
@@ -634,7 +634,7 @@ void MyNode::_setupRoute(Flow flow) {
 		return;
 	}
 
-	ARREP optimalARREP = getOptimalARREP(entry->getArrepList());
+	ARREP optimalARREP = getOptimalARREP(arrepEntry->getArrepList());
 	RouteSetup rs;
 	rs.parseFromARREP(optimalARREP);
 	uint32_t nextHop = rs.getTrace()[1];
@@ -654,6 +654,8 @@ void MyNode::_setupRoute(Flow flow) {
 		this->nodeOut << "[RT] added route: " << route->toString() << "\n";
 #endif
 		this->flowTable->setQoSReqAsSource(rs.getFlow(), route->getNextHop(), rs.getQosReq());
+		this->flowTable->getFlowEntry(rs.getFlow())->setActive(true);
+		this->flowTable->getFlowEntry(rs.getFlow())->setRouteSearching(false);
 		this->ncTable->get(rs.getFlow().getDst())->addFlow(rs.getFlow());
 		//this->flowTable->setAllocatedBW(rs.getFlow(), outgoingIface, rs.getQosReq().getBandwidth());
 	} else {
@@ -665,6 +667,8 @@ void MyNode::_setupRoute(Flow flow) {
 			this->nodeOut << "[RT] added route: " << route->toString() << "\n";
 #endif
 			this->flowTable->setQoSReqAsSource(rs.getFlow(), route->getNextHop(), rs.getQosReq());
+			this->flowTable->getFlowEntry(rs.getFlow())->setActive(true);
+			this->flowTable->getFlowEntry(rs.getFlow())->setRouteSearching(false);
 			this->ncTable->get(nextHop)->addFlow(rs.getFlow());
 			//this->flowTable->setAllocatedBW(rs.getFlow(), outgoingIface, rs.getQosReq().getBandwidth());
 
@@ -700,7 +704,6 @@ void MyNode::_setupRoute(Flow flow) {
 	}
 
 	// schedule data packets based on FlowReuqest
-	ARREPRecvEntry* arrepEntry = this->arrepRecvTable->getEntry(flow);
 	FlowRequest flowReq = arrepEntry->getFlowReq();
 	string msg(flowReq.getPktSize(), 'a');
 	_schedulePacketsFromFlowRequest(flowReq, msg);
@@ -1607,6 +1610,7 @@ void MyNode::handleARERR(string str, Ipv4Address clientIP, int ifIdx) {
 		this->nodeOut << " - delete current route for route re-discovery..." << "\n";
 #endif
 		this->routeTable->deleteRoute(arerr.getFlow());
+		this->flowTable->getFlowEntry(arerr.getFlow())->setRouteSearching(true);
 
 		// 180313, write ARERR log by source
 		//this->srcRtDscvCount++;
@@ -2314,6 +2318,16 @@ void MyNode::handleLocalRepairRequest(string str, ns3::Ipv4Address clientIP, int
 		table->setFlow(lrreq.getFlow());
 		table->setQosReq(lrreq.getQosReq());
 		if(lrreq.getFlow().getSrc() == this->nodeId){
+			if(this->flowTable->getFlowEntry(lrreq.getFlow())->isRouteSearching()){
+				// If the flow is under route-searching status, ignore this request.
+#ifdef DEBUG_PRINT
+				NS_LOG_UNCOND(" - flow.isRouteSearching == true. Dropped LocalRepairRequest.");
+#endif
+#ifdef DEBUG_NODE_OUT
+				this->nodeOut << " - flow.isRouteSearching == true. Dropped LocalRepairRequest." << "\n";
+#endif
+				return;
+			}
 			table->setNextHopToSrc(NODEID_NOT_FOUND);
 		} else {
 			table->setNextHopToSrc(lrreq.getNextHopToSrc());
@@ -2365,6 +2379,16 @@ void MyNode::handleLocalRepairRequest(string str, ns3::Ipv4Address clientIP, int
 		table->setFlow(lrreq.getFlow());
 		table->setQosReq(lrreq.getQosReq());
 		if(lrreq.getFlow().getSrc() == this->nodeId){
+			if(this->flowTable->getFlowEntry(lrreq.getFlow())->isRouteSearching()){
+				// If the flow is under route-searching status, ignore this request.
+#ifdef DEBUG_PRINT
+				NS_LOG_UNCOND(" - flow.isRouteSearching == true. Dropped LocalRepairRequest.");
+#endif
+#ifdef DEBUG_NODE_OUT
+				this->nodeOut << " - flow.isRouteSearching == true. Dropped LocalRepairRequest." << "\n";
+#endif
+				return;
+			}
 			table->setNextHopToSrc(NODEID_NOT_FOUND);
 		} else {
 			table->setNextHopToSrc(lrreq.getNextHopToSrc());
