@@ -36,9 +36,9 @@ def get_average_of_applog(txt_file):
 #
 def write_goodput_results(flows_output_str, goodputs_output_str, result_dir='.'):
     f = open('{}/nodestat_goodput.txt'.format(result_dir), 'w')
-    f.write(goodputs_output_str)
+    f.write('{}\n'.format(goodputs_output_str))
     f2 = open('{}/nodestat_goodput_flows.txt'.format(result_dir), 'w')
-    f2.write(flows_output_str)
+    f2.write('{}\n'.format(flows_output_str))
     f.close()
     f2.close()
 
