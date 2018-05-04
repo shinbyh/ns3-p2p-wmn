@@ -7,6 +7,7 @@
 
 #include "my_application.h"
 #include "my_config.h"
+#include "my_statistics.h"
 #include <sstream>
 
 MyApplication::MyApplication(std::string name, FlowRequest flowReq) {
@@ -169,6 +170,7 @@ void MyApplication::_consumeDataPackets() {
 
 	// Write stat of consumed data.
 	this->appDataOut << (int)(Simulator::Now().GetSeconds()) << "\t" << consumedData << "\n";
+	MyStatistics::instance().addGoodput(this->flowReq.getFlow(), (double)consumedData);
 
 	// Schedule the next data consumption.
 	if(Simulator::Now() < this->flowReq.getEndTime() + Seconds(atoi(MyConfig::instance().getValue("AppMinimumBufferingTime").c_str()))){

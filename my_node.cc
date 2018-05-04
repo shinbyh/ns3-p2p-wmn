@@ -7,6 +7,7 @@
 
 #include "my_node.h"
 #include "my_config.h"
+#include "my_statistics.h"
 #include "string_tokenizer.h"
 #include "ns3/nstime.h"
 #include "ns3/core-module.h"
@@ -258,7 +259,7 @@ void MyNode::writeFlowLog() {
 	string outline = this->flowTable->getFormattedFlowOutput(ss.str());
 	if(outline != "") this->flowOut << outline << "\n";
 
-	string ctrlOutline = ctrlFlowTable->getControlOutput(ss.str());
+	string ctrlOutline = this->ctrlFlowTable->getControlOutput(ss.str());
 	if(ctrlOutline != "") this->ctrlOut << ctrlOutline << "\n";
 
 	// flowInfo
@@ -276,13 +277,10 @@ void MyNode::writeFlowLog() {
 		stringstream ssfi;
 		ssfi << "ovinfo_" << node->GetId() << ".txt";
 		this->ctrlInfoOut.open(ssfi.str().c_str(), ofstream::out);
-		this->ctrlInfoOut << ctrlFlowTable->getControlFlowInfo();
+		this->ctrlInfoOut << this->ctrlFlowTable->getControlFlowInfo();
 		this->ctrlInfoOut.close();
 		this->numOfCtrlPorts = this->ctrlFlowTable->getNumberOfCtrlPorts();
 	}
-
-	//this->flowInfoOut << ss.str() << "\t" << flowTable->getAllFlowInfo() << "\n";
-	//this->ctrlInfoOut << ss.str() << "\t" << ctrlFlowTable->getControlFlowInfo() << "\n";
 #endif
 }
 
@@ -293,6 +291,8 @@ void MyNode::writeSrcRtLog() {
 	ss << "\t" << this->srcRtDscvCount <<
 			"\t"<< this->srcRtDscvFailCount << "\n";
 	this->srcRtOut << ss.str();
+
+	// Reset route discovery counter variables.
 	this->srcRtDscvCount = 0;
 	this->srcRtDscvFailCount = 0;
 #endif
@@ -430,6 +430,7 @@ void MyNode::_checkFlowQoS(Time interval){
 											nextHopEntry->getNodeId(), selected->getNodeId(), this->nodeId,
 											flowEntry->getFlow(), trace,
 											flowEntry->getQosReq(), lq);
+									MyStatistics::instance().incrementLocalRepairCount(flowEntry->getFlow(), this->nodeId);
 								}
 							}
 						}
@@ -781,6 +782,7 @@ void MyNode::_schedulePacketsFromFlowRequest(FlowRequest flowReq, string msg) {
 
 			// 180313, Increment source's route discovery count
 			this->srcRtDscvCount++;
+			MyStatistics::instance().incrementRtDiscoveryCount(flowReq.getFlow());
 		}
 	}
 }
@@ -826,6 +828,7 @@ void MyNode::_selectNodeFromFlowCheck(int seqNo) {
 				newSrcRoute,
 				table->getQosReq(),
 				table->getEndToEndQuality());
+		MyStatistics::instance().incrementLocalRepairCount(table->getFlow(), this->nodeId);
 	} else {
 		// Error: optimal node not found
 #ifdef DEBUG_PRINT
@@ -883,6 +886,7 @@ void MyNode::_selectNodeFromFlowAcceptReply(int seqNo) {
 				newSrcRoute,
 				table->getQosReq(),
 				table->getEndToEndQuality());
+		MyStatistics::instance().incrementLocalRepairCount(table->getFlow(), this->nodeId);
 	}
 
 	uint32_t optimalDetour = table->getOptimalDetourNode();
@@ -1110,6 +1114,7 @@ void MyNode::_doRouting(Ptr<MyNS3Packet> myPkt, FlowRequest flowReq) {
 
 			// 180313, Increment route discovery count.
 			this->srcRtDscvCount++;
+			MyStatistics::instance().incrementRtDiscoveryCount(flow);
 		}
 	}
 }
@@ -1417,7 +1422,6 @@ void MyNode::handleARREQ(string str, Ipv4Address clientIP, int ifIdx) {
 	NS_LOG_UNCOND("  -delay: " << qosReq.getDelay() << " vs " << arreq.getLinkQuality()->getDelay());
 	NS_LOG_UNCOND("  -jiter: " << qosReq.getJitter() << " vs " << arreq.getLinkQuality()->getJitter());
 	NS_LOG_UNCOND("  -loss: " << qosReq.getLossRate() << " vs " << arreq.getLinkQuality()->getLossRate());
-	NS_LOG_UNCOND(this->ncTable->printNeighborTable(this->node));
 #endif
 #ifdef DEBUG_NODE_OUT
 	this->nodeOut << "  -bw: " << qosReq.getBandwidth() << " vs " << arreq.getLinkQuality()->getBandwidth() << "\n";
@@ -1434,14 +1438,14 @@ void MyNode::handleARREQ(string str, Ipv4Address clientIP, int ifIdx) {
 		this->nodeOut << " -QoSReq is not satisfactory... drop it." << "\n";
 #endif
 		return;
-	} else {
+	}
+
 #ifdef DEBUG_PRINT
-		NS_LOG_UNCOND(" -QoSReq is satisfactory. ");
+	NS_LOG_UNCOND(" -QoSReq is satisfactory. ");
 #endif
 #ifdef DEBUG_NODE_OUT
-		this->nodeOut << " -QoSReq is satisfactory. " << "\n";
+	this->nodeOut << " -QoSReq is satisfactory. " << "\n";
 #endif
-	}
 
 	// If destination is a neighbor, accumulate QoS values of the destination link.
 	// Otherwise, relay (re-broadcast) ARREQ.
@@ -1866,6 +1870,10 @@ void MyNode::handlePathProbe(string str, Ipv4Address clientIP, int ifIdx){
 		this->nodeOut << flowTable->printFlowTable(this->nodeId) << "\n";
 #endif
 
+		// Increment QoS violation count for the flow.
+		MyStatistics::instance().incrementQoSViolationCount(probe.getFlow(), this->nodeId);
+		//MyStatistics::instance().addQoSViolationCount(probe.getFlow(), this->nodeId, 1);
+
 		switch(this->scheme){
 		case BASELINE:{
 			/*
@@ -2036,6 +2044,7 @@ void MyNode::handlePathProbe(string str, Ipv4Address clientIP, int ifIdx){
 							nextHop->getNodeId(), selected->getNodeId(), clientNodeId,
 							probe.getFlow(), trace,
 							probe.getQosReq(), probe.getLinkQuality());
+					MyStatistics::instance().incrementLocalRepairCount(probe.getFlow(), this->nodeId);
 				}
 			}
 

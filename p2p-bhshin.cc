@@ -38,6 +38,7 @@
 
 #include "my_config.h"
 #include "my_node.h"
+#include "my_statistics.h"
 #include "node_id_map.h"
 #include "hello.h"
 #include "app_flowreq_pkt.h"
@@ -629,6 +630,9 @@ int main (int argc, char *argv[])
 		myNodes[dstNodeId]->addMyApplication(myApp);
 	}
 
+	// Initialize an instance for MyStatistics.
+	MyStatistics::instance();
+
 	/*
 	UdpEchoServerHelper echoServer (9);
 	ApplicationContainer serverApps = echoServer.Install (allNodes);
@@ -658,6 +662,9 @@ int main (int argc, char *argv[])
 	Simulator::Stop(Seconds(totalTime));
 	Simulator::Run ();
 	Simulator::Destroy ();
+
+	//MyStatistics::instance().writeQoSViolationCount();
+	MyStatistics::instance().writeFlowGoodputStatistics();
 
 	/*
 	 * bhshin, delete dynamic memory allocations

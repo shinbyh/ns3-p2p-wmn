@@ -2,13 +2,13 @@
 
 BASE_DIR=$(pwd)
 EXP_NAME=$1
-APPS="10apps 11apps 12apps 13apps 14apps 15apps 16apps 17apps 18apps 19apps 20apps" #large30
+#APPS="10apps 11apps 12apps 13apps 14apps 15apps 16apps 17apps 18apps 19apps 20apps" #large30
 #APPS="6apps 7apps 8apps" #large
 #APPS="2apps" # smalltest
-#APPS="20apps" # special case
+APPS="20apps" # special case
 PKTS="250pkts"
-#FLOWSETS=$(seq 0 0) # smalltest
-FLOWSETS=$(seq 0 49) #large
+FLOWSETS=$(seq 0 0) # smalltest
+#FLOWSETS=$(seq 0 49) #large
 
 #
 # Scheme Numbers
@@ -59,6 +59,7 @@ do
 				python avg_thp.py $appConfigFile > nodestat_avg.txt
 				python avg_qos_violation.py $appConfigFile > nodestat_avg_qos_vio.txt
 				python avg_src_rt.py $appConfigFile > nodestat_rt_dscv_cnt.txt
+				python stat_goodput.py $appConfigFile .
 				./copy_results2.sh $appConfig $numOfNodes $EXP_NAME $scheme
 			done
 		done
