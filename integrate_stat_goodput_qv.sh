@@ -31,7 +31,7 @@ do
 				cd $configDir
 				app_pkt_flowno_str=$app'_'$pkt'-'$flowset_no
 				goodput_qv_sum_data=`cat flow_goodput_qv_sum.txt`
-				printf '%s\t%s\n' "[$app_pkt_flowno_str, $goodput_qv_sum_data]"
+				printf '%s\t%s\n' "$app_pkt_flowno_str" "$goodput_qv_sum_data"
 				#echo -e $app"_"$pkt"-"$flowset_no"\t"$goodput_qv_sum_data
 				cd ..
 			done
