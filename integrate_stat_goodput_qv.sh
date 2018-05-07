@@ -30,7 +30,7 @@ do
 				configDir=$numOfNodes'nodes_'$app'_'$pkt'-'$flowset_no
 				cd $configDir
 				goodput_qv_sum_data=`cat flow_goodput_qv_sum.txt`
-				echo "$app'_'$pkt'-'$flowset_no\t$goodput_qv_sum_data"
+				echo -e $app"_"$pkt"-"$flowset_no"\t"$goodput_qv_sum_data
 				cd ..
 			done
 			echo ''
