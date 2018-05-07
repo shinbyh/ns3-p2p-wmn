@@ -46,3 +46,4 @@ $BASE_DIR/integrate_stat_qos_vio.sh > $DIR_PREFIX/$EXP_NAME/integrated_stat_qos_
 $BASE_DIR/integrate_ovstat.sh > $DIR_PREFIX/$EXP_NAME/integrated_stat_overhead.txt
 $BASE_DIR/integrate_stat_src_rt.sh > $DIR_PREFIX/$EXP_NAME/integrated_stat_rt_dscv_cnt.txt
 $BASE_DIR/integrate_stat_goodput.sh > $DIR_PREFIX/$EXP_NAME/integrated_stat_goodput.txt
+$BASE_DIR/integrate_stat_goodput_qv.sh > $DIR_PREFIX/$EXP_NAME/integrated_stat_goodput_qv.txt
