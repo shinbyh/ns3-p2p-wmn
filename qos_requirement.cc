@@ -9,6 +9,7 @@
 #include <sstream>
 #include "string_tokenizer.h"
 #include <boost/format.hpp>
+#include "my_config.h"
 
 #include "ns3/core-module.h"
 
@@ -92,7 +93,8 @@ bool QoSRequirement::isSatisfactory(const QoSRequirement& qosReq,
 	// debug
 	NS_LOG_UNCOND("    ---- qosReq: " << qosReq.getBandwidth() << ", lq: " << lq.getBandwidth());
 
-	if(qosReq.getBandwidth() * 0.9 > lq.getBandwidth()){
+	double softQoSFactor = atof(MyConfig::instance().getValue("SoftQoSFactor").c_str());
+	if(qosReq.getBandwidth() * softQoSFactor > lq.getBandwidth()){
 		return false;
 	}
 
