@@ -2,13 +2,13 @@
 
 BASE_DIR=$(pwd)
 EXP_NAME=$1
-#APPS="10apps 11apps 12apps 13apps 14apps 15apps 16apps 17apps 18apps 19apps 20apps" #large30
+APPS="10apps 11apps 12apps 13apps 14apps 15apps 16apps 17apps 18apps 19apps 20apps" #large30
 #APPS="6apps 7apps 8apps" #large
 #APPS="2apps" # smalltest
-APPS="20apps" # special case
+#APPS="20apps" # special case
 PKTS="250pkts"
-FLOWSETS=$(seq 0 0) # smalltest
-#FLOWSETS=$(seq 0 49) #large
+#FLOWSETS=$(seq 0 0) # smalltest
+FLOWSETS=$(seq 0 49) #large
 
 #
 # Scheme Numbers
@@ -88,6 +88,7 @@ $BASE_DIR/integrate_stat_qos_vio.sh > $DIR_PREFIX/$EXP_NAME/integrated_stat_qos_
 $BASE_DIR/integrate_ovstat.sh > $DIR_PREFIX/$EXP_NAME/integrated_stat_overhead.txt
 $BASE_DIR/integrate_stat_src_rt.sh > $DIR_PREFIX/$EXP_NAME/integrated_stat_rt_dscv_cnt.txt
 $BASE_DIR/integrate_stat_goodput.sh > $DIR_PREFIX/$EXP_NAME/integrated_stat_goodput.txt
+$BASE_DIR/integrate_stat_goodput_qv.sh > $DIR_PREFIX/$EXP_NAME/integrated_stat_goodput_qv.txt
 
 ######################################################################
 # Notify the end of simulation.
