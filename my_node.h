@@ -84,7 +84,9 @@ private:
 	void sendPacketWithJitter(ns3::Time jitter, ns3::Ptr<ns3::Socket> socket, ns3::Ptr<ns3::Packet> pkt);
 	ns3::Time getDelayDifference(ns3::Ipv4Address ipAddr, ns3::Time current);
 	double getMyAvailableBandwidth(NeighborEntry* entry);
+	double getMyAvailableBandwidthWithoutFlow(NeighborEntry* entry, Flow flow);
 	void accumulateLinkQuality(LinkQuality* lq, NeighborEntry* entry);
+	void accumulateLinkQualityWithoutFlow(LinkQuality* lq, NeighborEntry* entry, Flow flow);
 	void distractLinkQuality(LinkQuality* lq, NeighborEntry* entry);
 	bool isControlPort(int port);
 
