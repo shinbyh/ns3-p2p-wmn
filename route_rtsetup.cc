@@ -146,6 +146,7 @@ std::string RouteSetup::serialize() {
 			this->flow.getTypeStr() << "@" <<
 			this->seqNo << "@" <<
 			this->qosReq.serialize() << "@" <<
+			this->endToEndQuality.serialize() << "@" <<
 			serializeTrace();
 	return ss.str();
 }
@@ -166,8 +167,10 @@ void RouteSetup::parse(std::string str) {
 	this->setSeqNo(atoi(tokens[6].c_str()));
 	QoSRequirement qosReq = QoSRequirement::parse(tokens[7]);
 	this->setQosReq(qosReq);
+	LinkQuality e2eQuality = LinkQuality::parse(tokens[8]);
+	this->setEndToEndQuality(e2eQuality);
 
-	if(tokens.size() == 9) parseTrace(tokens[8]);
+	if(tokens.size() == 10) parseTrace(tokens[9]);
 }
 
 void RouteSetup::parseFromARREP(ARREP arrep) {
@@ -178,8 +181,8 @@ void RouteSetup::parseFromARREP(ARREP arrep) {
 	this->setTrace(arrep.getTrace());
 }
 
-const LinkQuality& RouteSetup::getEndToEndQuality() const {
-	return endToEndQuality;
+LinkQuality* RouteSetup::getEndToEndQuality() {
+	return &endToEndQuality;
 }
 
 void RouteSetup::setEndToEndQuality(const LinkQuality& endToEndQuality) {

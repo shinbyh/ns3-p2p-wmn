@@ -25,8 +25,17 @@ ARREPRecvEntry::ARREPRecvEntry(Flow flow, int seqNo, FlowRequest flowReq) {
 ARREPRecvEntry::~ARREPRecvEntry() {
 }
 
-std::vector<ARREP> ARREPRecvEntry::getArrepList() const {
-	return arrepList;
+//std::vector<ARREP> ARREPRecvEntry::getArrepList() const {
+//	return arrepList;
+//}
+
+std::vector<ARREP> ARREPRecvEntry::getArrepList(int seqNo) const {
+	std::vector<ARREP> listWithSeqNo;
+
+	for(ARREP arrep : this->arrepList){
+		if(arrep.getSeqNo() == seqNo) listWithSeqNo.push_back(arrep);
+	}
+	return listWithSeqNo;
 }
 
 

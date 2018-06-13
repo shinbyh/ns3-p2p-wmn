@@ -269,13 +269,15 @@ std::string FlowEntry::toString() {
 
 	std::pair<uint32_t, FlowStat*> p;
 	BOOST_FOREACH(p, this->flowStats){
-		ss << format("\n%26s  %33s  %7d  %7d  %9.2f  %9.2f  %s")
+		ss << format("\n%26s  %33s  %7d  %7d  %9.2f  %9.2f  %5d %4d  %s")
 				% this->flow.toString()
 				% this->qosReq.serialize()
 				% this->fwdNodeId
 				% p.first
 				% p.second->getAllocatedBandwidth()
 				% p.second->getAvgRealTimeBandwidth()
+				% this->isRouteSearching()
+				% this->isActive()
 				% srcRouteToString();
 	}
 	return ss.str();

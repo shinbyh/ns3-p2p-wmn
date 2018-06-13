@@ -34,7 +34,7 @@ public:
 	void setFlow(const Flow& flow);
 	const QoSRequirement& getQosReq() const;
 	void setQosReq(const QoSRequirement& qosReq);
-	const LinkQuality& getEndToEndQuality() const;
+	LinkQuality* getEndToEndQuality();
 	void setEndToEndQuality(const LinkQuality& endToEndQuality);
 	int getSeqNo() const;
 	void setSeqNo(int seqNo);

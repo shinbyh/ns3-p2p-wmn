@@ -83,6 +83,7 @@ private:
 
 	void sendPacketWithJitter(ns3::Time jitter, ns3::Ptr<ns3::Socket> socket, ns3::Ptr<ns3::Packet> pkt);
 	ns3::Time getDelayDifference(ns3::Ipv4Address ipAddr, ns3::Time current);
+	double getMyUnallocatedBandwidth(NeighborEntry* entry);
 	double getMyAvailableBandwidth(NeighborEntry* entry);
 	double getMyAvailableBandwidthWithoutFlow(NeighborEntry* entry, Flow flow);
 	void accumulateLinkQuality(LinkQuality* lq, NeighborEntry* entry);
@@ -114,8 +115,8 @@ public:
 	void _checkBroadcastHello(ns3::Time interval);
 	static void checkFlowRandomness(MyNode* myNode, ns3::Time interval);
 	void _checkFlowRandomness(ns3::Time interval);
-	static void setupRoute(MyNode* myNode, Flow flow);
-	void _setupRoute(Flow flow);
+	static void setupRoute(MyNode* myNode, Flow flow, int seqNo);
+	void _setupRoute(Flow flow, int seqNo);
 	static void schedulePacketsFromFlowRequest(MyNode* myNode, FlowRequest flowReq, string msg);
 	void _schedulePacketsFromFlowRequest(FlowRequest flowReq, string msg);
 	static void selectNodeFromFlowCheck(MyNode* myNode, int seqNo);

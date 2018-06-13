@@ -85,11 +85,11 @@ int LinkQuality::compare(const LinkQuality target) const {
 		flag--;
 	}
 
-//	if(this->delay < target.getDelay()){
-//		flag++;
-//	} else {
-//		flag--;
-//	}
+	if(this->delay < target.getDelay()){
+		flag++;
+	} else {
+		flag--;
+	}
 
 	return flag;
 }

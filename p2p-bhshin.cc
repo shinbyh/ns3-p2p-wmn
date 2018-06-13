@@ -201,6 +201,17 @@ static void ReceiveMyPacket (Ptr<Socket> socket)
 	delete(dataBuffer);
 }
 
+static void ChangeLinkBandwidth(uint32_t i, uint32_t j, string bandwidth)
+{
+	//stringstream ss;
+
+	// TODO: get device index of a corresponding node j ???
+
+	//NS_LOG_UNCOND("@@@@@@@@@@ Change Link Bandwidth! t=" << Simulator::Now().GetMilliSeconds());
+	//ss << "/NodeList/" << i << "/DeviceList/1/$ns3::PointToPointNetDevice/DataRate";
+	//Config::Set(ss.str(), StringValue(bandwidth));
+}
+
 /**
  * Write statistics of flows, neighbors, and routes to files.
  * Note that flow statistics are reset after writing to files.
@@ -629,6 +640,9 @@ int main (int argc, char *argv[])
 		MyApplication* myApp = new MyApplication(flowReq.getName(), flowReq);
 		myNodes[dstNodeId]->addMyApplication(myApp);
 	}
+
+	// Debug, change link bandwidth
+	Simulator::Schedule(Seconds(40), &ChangeLinkBandwidth, 0, 1, "1Mbps");
 
 	// Initialize an instance for MyStatistics.
 	MyStatistics::instance();

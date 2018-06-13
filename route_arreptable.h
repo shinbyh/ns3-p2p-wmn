@@ -28,7 +28,8 @@ public:
 	ARREPRecvEntry(Flow flow, int seqNo);
 	ARREPRecvEntry(Flow flow, int seqNo, FlowRequest flowReq);
 	virtual ~ARREPRecvEntry();
-	std::vector<ARREP> getArrepList() const;
+	//std::vector<ARREP> getArrepList() const;
+	std::vector<ARREP> getArrepList(int seqNo) const;
 	void addARREP(ARREP arrep, ns3::Time time);
 	int getDupArreqCount() const;
 	void incrementDupArreqCount();

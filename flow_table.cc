@@ -271,8 +271,8 @@ double FlowTable::getOccupiedBandwidth(uint32_t nodeId) {
 std::string FlowTable::printFlowTable(uint32_t nodeId){
 	std::stringstream ss;
 	ss << std::fixed << "[Node "<< nodeId << "] FlowTable (t=" << Simulator::Now().GetSeconds() << ")\n";
-	ss << "         flow                        QoS Requirement               fwd   nodeId     allocBW    avgRTBW    trace\n"
-		<< "---------------------------------------------------------------------------------------------------------------------";
+	ss << "         flow                        QoS Requirement               fwd   nodeId     allocBW    avgRTBW   rtSch  act    trace\n"
+		<< "----------------------------------------------------------------------------------------------------------------------------";
 
 	for(Flow flow : keysTimeOrder){
 		FlowEntry* entry = flowTable[flow];
