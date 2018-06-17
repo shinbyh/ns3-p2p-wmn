@@ -29,6 +29,7 @@ void NeighborEntry::initialize() {
 	this->avgDelay.set_capacity(CIRCULAR_BUFFER_SIZE_NC);
 	this->avgJitter.set_capacity(CIRCULAR_BUFFER_SIZE_NC);
 	this->dmSeqNo = 0;
+	this->localRepairing = false;
 }
 
 void NeighborEntry::addFlow(Flow flow) {
@@ -248,6 +249,14 @@ const std::string NeighborEntry::toString() const {
 
 const std::vector<uint32_t>& NeighborEntry::getReachableNodeIds() const {
 	return reachableNodeIds;
+}
+
+bool NeighborEntry::isLocalRepairing() const {
+	return localRepairing;
+}
+
+void NeighborEntry::setLocalRepairing(bool localRepairing) {
+	this->localRepairing = localRepairing;
 }
 
 void NeighborEntry::setReachableNodeIds(

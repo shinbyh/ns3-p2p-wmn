@@ -166,7 +166,7 @@ void MyApplication::_consumeDataPackets() {
 	}
 
 	// Debug
-	NS_LOG_UNCOND(" [consumeDataPackets] " << consumedData << " bytes!! (buf = " << this->videoBuffer << ")");
+	//NS_LOG_UNCOND(" [consumeDataPackets] " << consumedData << " bytes!! (buf = " << this->videoBuffer << ")");
 
 	// Write stat of consumed data.
 	this->appDataOut << (int)(Simulator::Now().GetSeconds()) << "\t" << consumedData << "\n";

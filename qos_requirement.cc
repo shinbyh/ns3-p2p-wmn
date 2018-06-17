@@ -97,6 +97,31 @@ bool QoSRequirement::isSatisfactory(const QoSRequirement& qosReq,
 	if(qosReq.getBandwidth() * softQoSFactor > lq.getBandwidth()){
 		return false;
 	}
+	if(qosReq.getDelay() < lq.getDelay() * softQoSFactor){
+		return false;
+	}
 
 	return true;
+}
+
+bool QoSRequirement::operator ==(const QoSRequirement& ref) const {
+	if(this->bandwidth == ref.getBandwidth()
+			&& this->delay == ref.getDelay()
+			&& this->jitter == ref.getJitter()
+			&& this->lossRate == ref.getLossRate()){
+		return true;
+	} else {
+		return false;
+	}
+}
+
+bool QoSRequirement::operator !=(const QoSRequirement& ref) const {
+	if(this->bandwidth == ref.getBandwidth()
+			&& this->delay == ref.getDelay()
+			&& this->jitter == ref.getJitter()
+			&& this->lossRate == ref.getLossRate()){
+		return false;
+	} else {
+		return true;
+	}
 }

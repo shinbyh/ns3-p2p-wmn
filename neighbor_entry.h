@@ -37,6 +37,7 @@ private:
 	ns3::Time prevSrcDelayMsrTime;
 	bool isActive;
 	bool isMeshRouter;
+	bool localRepairing; // local repair flag
 	int dmSeqNo; // DelayMeasurement seqNo.
 	ns3::Time dmSendTime; // DelayMeasurement Requested time
 
@@ -93,6 +94,8 @@ public:
 	const std::string toString() const;
 	const std::vector<uint32_t>& getReachableNodeIds() const;
 	void setReachableNodeIds(const std::vector<uint32_t>& reachableNodeIds);
+	bool isLocalRepairing() const;
+	void setLocalRepairing(bool localRepairing);
 };
 
 

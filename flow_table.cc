@@ -227,9 +227,9 @@ std::string FlowTable::getFormattedFlowOutput(std::string time) {
 		if(entry->isActive()){
 			//ss << "\t" << entry->getAvgRealTimeBandwidth();
 			if(entry->getPrevNodeId() != NODEID_NOT_FOUND){
-				ss << "\t" << entry->getRealTimeBandwidth(entry->getPrevNodeId());
+				ss << "\t" << entry->getLastAccumulatedBandwidth(entry->getPrevNodeId());
 			} else {
-				ss << "\t" << entry->getRealTimeBandwidth(entry->getFwdNodeId());
+				ss << "\t" << entry->getLastAccumulatedBandwidth(entry->getFwdNodeId());
 			}
 		} else {
 			ss << "\t0";

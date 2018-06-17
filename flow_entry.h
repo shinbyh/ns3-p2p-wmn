@@ -53,6 +53,7 @@ public:
 	~FlowEntry();
 	bool isFlowStatExists(uint32_t nodeId);
 	void addFlowStat(uint32_t nodeId);
+	void deleteFlowStat(uint32_t nodeId);
 	void addPacketInfo(uint32_t nodeId, PacketInfo pktInfo); // packetinfo for a neighbor
 	bool isActive() const;
 	void setActive(bool active);
@@ -77,6 +78,7 @@ public:
 	void setAllocatedBandwidth(uint32_t nodeId, double allocatedBW);
 	double getAllocatedBandwidth(uint32_t nodeId);
 	double getAvgRealTimeBandwidth(uint32_t nodeId);
+	double getLastAccumulatedBandwidth(uint32_t nodeId);
 	double getRealTimeBandwidth(uint32_t nodeId);
 	const double getAvgRealTimeBandwidth() const;
 	QoSRequirement getQosReq() const;

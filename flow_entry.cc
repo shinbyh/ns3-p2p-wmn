@@ -39,20 +39,20 @@ FlowEntry::FlowEntry(uint32_t nodeId, PacketInfo pktInfo) {
 	addPacketInfo(nodeId, pktInfo);
 }
 
-void FlowEntry::addFlowStat(uint32_t nodeId) {
-	FlowStat* flowStat = new FlowStat();
-	this->flowStats[nodeId] = flowStat;
-}
-
-//void FlowEntry::removeFlowStat(int nodeId) {
-//
-//}
-
 FlowEntry::~FlowEntry() {
 	std::map<uint32_t, FlowStat*>::iterator itr;
 	for(itr = this->flowStats.begin(); itr != this->flowStats.end(); itr++){
 		delete itr->second;
 	}
+}
+
+void FlowEntry::addFlowStat(uint32_t nodeId) {
+	FlowStat* flowStat = new FlowStat();
+	this->flowStats[nodeId] = flowStat;
+}
+
+void FlowEntry::deleteFlowStat(uint32_t nodeId) {
+	this->flowStats.erase(nodeId);
 }
 
 void FlowEntry::initAppReq() {
@@ -205,11 +205,24 @@ double FlowEntry::getAvgRealTimeBandwidth(uint32_t nodeId) {
 	}
 }
 
-double FlowEntry::getRealTimeBandwidth(uint32_t nodeId){
+double FlowEntry::getLastAccumulatedBandwidth(uint32_t nodeId){
 	if(this->flowStats.find(nodeId) == this->flowStats.end()){
 		return 0.0;
 	} else {
 		return this->flowStats[nodeId]->getRealTimeBandwidth();
+	}
+}
+
+double FlowEntry::getRealTimeBandwidth(uint32_t nodeId){
+	if(this->flowStats.find(nodeId) == this->flowStats.end()){
+		return 0.0;
+	} else {
+		int64_t elapsedMilliSec = Simulator::Now().GetMilliSeconds() % 1000;
+		if(elapsedMilliSec != 0){
+			return (double)this->flowStats[nodeId]->getRealTimeBandwidth() * (1000.0 / (double)elapsedMilliSec);
+		} else {
+			return this->flowStats[nodeId]->getRealTimeBandwidth();
+		}
 	}
 }
 

@@ -162,6 +162,12 @@ static void ReceiveRoutingMessages (Ptr<Socket> socket)
 	case ROUTE_LOCAL_REPAIR_REQUEST:
 		myNode->handleLocalRepairRequest(dataStr, senderAddr.GetIpv4(), 0);
 		break;
+	case ROUTE_LOCAL_REPAIR_REPLY:
+		myNode->handleLocalRepairReply(dataStr, senderAddr.GetIpv4(), 0);
+		break;
+	case ROUTE_PATH_QUALITY_REPORT:
+		myNode->handlePathQualityReport(dataStr, senderAddr.GetIpv4(), 0);
+		break;
 	default:
 		break;
 	}
@@ -600,7 +606,7 @@ int main (int argc, char *argv[])
 		// flow verification (QoS check)
 		Simulator::ScheduleWithContext (
 				allNodes.Get(i)->GetId(),
-				Seconds(2.0),
+				Seconds(2.5),
 				&MyNode::checkFlowQoS,
 				myNodes[allNodes.Get(i)->GetId()],
 				flowInterval);

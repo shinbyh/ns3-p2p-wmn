@@ -34,6 +34,8 @@ public:
 	void setLossRate(double lossRate);
 	static QoSRequirement parse(string str);
 	string serialize();
+	bool operator == (const QoSRequirement &ref) const;
+	bool operator != (const QoSRequirement &ref) const;
 	//bool isSatisfactory(LinkQuality* lq);
 	static bool isSatisfactory(const QoSRequirement& qosReq, const LinkQuality& lq);
 };
