@@ -12,10 +12,12 @@
 
 FlowCheck::FlowCheck(int msgType, int TTL) {
 	this->msgType = msgType;
-	this->nodeId = 9999999;
+	this->nodeId = NODEID_NOT_FOUND;
 	this->seqNo = 0;
 	this->TTL = TTL;
-	this->replierNodeId = 9999999;
+	this->prevNextHop = NODEID_NOT_FOUND;
+	this->replierNodeId = NODEID_NOT_FOUND;
+	this->avgAvailableBw = 0.0;
 }
 
 FlowCheck::~FlowCheck() {
@@ -68,7 +70,9 @@ const string FlowCheck::serialize() const {
 	ss << this->msgType << "@" <<
 			this->nodeId << "@" <<
 			this->seqNo << "@" <<
-			this->TTL << "@";
+			this->TTL << "@" <<
+			this->prevNextHop << "@" <<
+			this->avgAvailableBw << "@";
 	if(this->msgType == ROUTE_FLOWCHECK_REPLY){
 		ss << this->replierNodeId << "@" << serializeStats();
 	}
@@ -102,12 +106,15 @@ void FlowCheck::parse(string str) {
 		this->nodeId = atoi(tokens[1].c_str());
 		this->seqNo = atoi(tokens[2].c_str());
 		this->TTL =  atoi(tokens[3].c_str());
+		this->prevNextHop = atoi(tokens[4].c_str());
 	} else if(this->msgType == ROUTE_FLOWCHECK_REPLY){
 		this->nodeId = atoi(tokens[1].c_str());
 		this->seqNo = atoi(tokens[2].c_str());
 		this->TTL =  atoi(tokens[3].c_str());
-		this->replierNodeId = atoi(tokens[4].c_str());
-		if(tokens.size() >= 6) parseStats(tokens[5]);
+		this->prevNextHop = atoi(tokens[4].c_str());
+		this->avgAvailableBw = atof(tokens[5].c_str());
+		this->replierNodeId = atoi(tokens[6].c_str());
+		if(tokens.size() >= 8) parseStats(tokens[7]);
 	} else {
 		// Error. Invalid message format.
 	}
@@ -131,4 +138,20 @@ void FlowCheck::setNodeId(uint32_t nodeId) {
 
 void FlowCheck::decrementTTL() {
 	if(this->TTL > 0) this->TTL--;
+}
+
+uint32_t FlowCheck::getPrevNextHop() const {
+	return prevNextHop;
+}
+
+void FlowCheck::setPrevNextHop(uint32_t prevNextHop) {
+	this->prevNextHop = prevNextHop;
+}
+
+double FlowCheck::getAvgAvailableBw() const {
+	return avgAvailableBw;
+}
+
+void FlowCheck::setAvgAvailableBw(double avgAvailableBw) {
+	this->avgAvailableBw = avgAvailableBw;
 }

@@ -14,14 +14,15 @@
 class SourceRouteUpdate {
 private:
 	Flow flow;
+	int seqNo;
 	std::vector<uint32_t> srcRoute;
 	std::string serializeTrace();
 	void parseTrace(std::string str);
 
 public:
 	SourceRouteUpdate();
-	SourceRouteUpdate(Flow flow);
-	SourceRouteUpdate(Flow flow, const std::vector<uint32_t>& srcRoute);
+	SourceRouteUpdate(Flow flow, int seqNo);
+	SourceRouteUpdate(Flow flow, int seqNo, const std::vector<uint32_t>& srcRoute);
 	virtual ~SourceRouteUpdate();
 
 	std::string serialize();
@@ -30,6 +31,8 @@ public:
 	void setFlow(const Flow& flow);
 	const std::vector<uint32_t>& getSrcRoute() const;
 	void setSrcRoute(const std::vector<uint32_t>& srcRoute);
+	int getSeqNo() const;
+	void setSeqNo(int seqNo);
 };
 
 #endif /* SCRATCH_P2P_BHSHIN_ROUTE_SRC_RT_UPDATE_H_ */

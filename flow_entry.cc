@@ -57,7 +57,7 @@ void FlowEntry::deleteFlowStat(uint32_t nodeId) {
 
 void FlowEntry::initAppReq() {
 	//this->qosReq initialize?
-	appReqSeqNo = 0;
+	flowSeqNo = 0;
 	packetSeqNo = 0;
 	unsatisfactoryCount = 0;
 	routingFlag = FLOW_NO_ROUTE;
@@ -73,12 +73,12 @@ void FlowEntry::setActive(bool active) {
 	this->active = active;
 }
 
-int FlowEntry::getAppReqSeqNo() const {
-	return appReqSeqNo;
+int FlowEntry::getFlowSeqNo() const {
+	return flowSeqNo;
 }
 
-void FlowEntry::setAppReqSeqNo(int appReqSeqNo) {
-	this->appReqSeqNo = appReqSeqNo;
+void FlowEntry::setFlowSeqNo(int flowSeqNo) {
+	this->flowSeqNo = flowSeqNo;
 }
 
 const Flow& FlowEntry::getFlow() const {
@@ -282,7 +282,7 @@ std::string FlowEntry::toString() {
 
 	std::pair<uint32_t, FlowStat*> p;
 	BOOST_FOREACH(p, this->flowStats){
-		ss << format("\n%26s  %33s  %7d  %7d  %9.2f  %9.2f  %5d %4d  %s")
+		ss << format("\n%26s  %33s  %7d  %7d  %9.2f  %9.2f  %5d %4d  %4d  %s")
 				% this->flow.toString()
 				% this->qosReq.serialize()
 				% this->fwdNodeId
@@ -291,6 +291,7 @@ std::string FlowEntry::toString() {
 				% p.second->getAvgRealTimeBandwidth()
 				% this->isRouteSearching()
 				% this->isActive()
+				% this->flowSeqNo
 				% srcRouteToString();
 	}
 	return ss.str();

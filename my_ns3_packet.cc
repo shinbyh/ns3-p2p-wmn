@@ -18,6 +18,7 @@ MyNS3Packet::MyNS3Packet(uint32_t src, int appSrcPort, uint32_t dst, int appDstP
 	this->appDstPort = appDstPort;
 	this->msg = msg;
 	this->seqNo = 0;
+	this->genTime = MilliSeconds(0);
 }
 
 MyNS3Packet::MyNS3Packet() {
@@ -26,6 +27,7 @@ MyNS3Packet::MyNS3Packet() {
 	this->src = 0;
 	this->dst = 0;
 	this->seqNo = 0;
+	this->genTime = MilliSeconds(0);
 }
 
 const uint32_t MyNS3Packet::getDst() const {
@@ -59,6 +61,7 @@ const std::string MyNS3Packet::serialize() {
 			this->dst << "|" <<
 			this->appDstPort << "|" <<
 			this->seqNo << "|" <<
+			this->genTime.GetMilliSeconds() << "|" <<
 			this->msg;
 
 	return ss.str();
@@ -74,7 +77,9 @@ Ptr<MyNS3Packet> MyNS3Packet::parse(std::string str) {
 	myPkt->setDst(atoi(tokens[2].c_str()));
 	myPkt->setAppDstPort(atoi(tokens[3].c_str()));
 	myPkt->setSeqNo(atoi(tokens[4].c_str()));
-	myPkt->setMsg(tokens[5]);
+	ns3::Time genTime = ns3::MilliSeconds(atoi(tokens[5].c_str()));
+	myPkt->setGenTime(genTime);
+	myPkt->setMsg(tokens[6]);
 
 	return myPkt;
 }
@@ -119,4 +124,12 @@ void MyNS3Packet::setSeqNo(int seqNo) {
 
 const size_t MyNS3Packet::getDataSize() const {
 	return this->msg.size();
+}
+
+const ns3::Time& MyNS3Packet::getGenTime() const {
+	return genTime;
+}
+
+void MyNS3Packet::setGenTime(const ns3::Time& genTime) {
+	this->genTime = genTime;
 }

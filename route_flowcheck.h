@@ -18,9 +18,11 @@ class FlowCheck {
 private:
 	int msgType;
 	uint32_t nodeId; // nodeID of the initiator
+	uint32_t prevNextHop; // previous (current) next hop
 	int seqNo;
 	int TTL; // for request only
 	uint32_t replierNodeId; // for reply only
+	double avgAvailableBw; // average available bandwidth of the neighbors of a replier node
 	vector<SourceRouteStat> stats;
 
 	const string serializeStats() const;
@@ -46,6 +48,10 @@ public:
 	void setNodeId(uint32_t nodeId);
 	uint32_t getReplierNodeId() const;
 	void setReplierNodeId(uint32_t replierNodeId);
+	uint32_t getPrevNextHop() const;
+	void setPrevNextHop(uint32_t prevNextHop);
+	double getAvgAvailableBw() const;
+	void setAvgAvailableBw(double avgAvailableBw);
 };
 
 #endif /* SCRATCH_P2P_BHSHIN_ROUTE_FLOWCHECK_H_ */

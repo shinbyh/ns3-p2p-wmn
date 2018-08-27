@@ -25,11 +25,15 @@ MyApplication::MyApplication(std::string name, FlowRequest flowReq) {
 
 	stringstream ss;
 	ss << "applog_" << flowReq.getFlow().getDst() << "-" << flowReq.getFlow().getDstPort() << ".txt";
-	this->appDataOut.open(ss.str().c_str(), ofstream::out);
+	this->appGoodputOut.open(ss.str().c_str(), ofstream::out);
+	stringstream ss2;
+	ss2 << "applog_delay_" << flowReq.getFlow().getDst() << "-" << flowReq.getFlow().getDstPort() << ".txt";
+	this->appDelayOut.open(ss2.str().c_str(), ofstream::out);
 }
 
 MyApplication::~MyApplication() {
-	this->appDataOut.close();
+	this->appGoodputOut.close();
+	this->appDelayOut.close();
 }
 
 int MyApplication::getDataRate() const {
@@ -123,6 +127,11 @@ void MyApplication::handleApplicationPacket(Ptr<MyNS3Packet> myPkt) {
 	this->tempRecvBytes += myPkt->getDataSize();
 	this->videoBuffer += myPkt->getDataSize();
 
+	// packet end-to-end delay measurement
+	Time pktE2eDelay = Simulator::Now() - myPkt->getGenTime();
+	this->appDelayOut << myPkt->getSeqNo() << "\t" << pktE2eDelay.GetMilliSeconds() << "\n";
+	//NS_LOG_UNCOND("*** delay: " << myPkt->getSrc() << " ~ " << myPkt->getDst() << "(seq " << myPkt->getSeqNo() << ") = " << pktE2eDelay.GetMilliSeconds() << "ms.");
+
 	// The first triggering point of packet consumption.
 	if(this->buffering && !this->pktConsumptionStarted){
 		if(this->videoBuffer >= this->minBufSizeToPlay){
@@ -169,7 +178,7 @@ void MyApplication::_consumeDataPackets() {
 	//NS_LOG_UNCOND(" [consumeDataPackets] " << consumedData << " bytes!! (buf = " << this->videoBuffer << ")");
 
 	// Write stat of consumed data.
-	this->appDataOut << (int)(Simulator::Now().GetSeconds()) << "\t" << consumedData << "\n";
+	this->appGoodputOut << (int)(Simulator::Now().GetSeconds()) << "\t" << consumedData << "\n";
 	MyStatistics::instance().addGoodput(this->flowReq.getFlow(), (double)consumedData);
 
 	// Schedule the next data consumption.

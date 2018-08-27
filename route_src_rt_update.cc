@@ -12,15 +12,18 @@
 
 using namespace std;
 
-SourceRouteUpdate::SourceRouteUpdate() {
+SourceRouteUpdate::SourceRouteUpdate(){
+	this->seqNo = 0;
 }
 
-SourceRouteUpdate::SourceRouteUpdate(Flow flow) {
+SourceRouteUpdate::SourceRouteUpdate(Flow flow, int seqNo) {
 	this->flow = flow;
+	this->seqNo = seqNo;
 }
 
-SourceRouteUpdate::SourceRouteUpdate(Flow flow, const std::vector<uint32_t>& srcRoute) {
+SourceRouteUpdate::SourceRouteUpdate(Flow flow, int seqNo, const std::vector<uint32_t>& srcRoute) {
 	this->flow = flow;
+	this->seqNo = seqNo;
 	this->srcRoute = srcRoute;
 }
 
@@ -48,6 +51,7 @@ std::string SourceRouteUpdate::serialize() {
 			this->flow.getDst() << "@" <<
 			this->flow.getDstPort() << "@" <<
 			this->flow.getTypeStr() << "@" <<
+			this->seqNo << "@" <<
 			serializeTrace();
 	return ss.str();
 }
@@ -88,5 +92,15 @@ void SourceRouteUpdate::parse(std::string str) {
 	FlowType::Type type = checkType(tokens[5]);
 	Flow flow(src, srcPort, dst, dstPort, type);
 	this->setFlow(flow);
-	if(tokens.size() == 7) parseTrace(tokens[6]);
+	int seqNo = atoi(tokens[6].c_str());
+	this->setSeqNo(seqNo);
+	if(tokens.size() == 8) parseTrace(tokens[7]);
+}
+
+int SourceRouteUpdate::getSeqNo() const {
+	return seqNo;
+}
+
+void SourceRouteUpdate::setSeqNo(int seqNo) {
+	this->seqNo = seqNo;
 }

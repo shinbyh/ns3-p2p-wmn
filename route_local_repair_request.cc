@@ -88,6 +88,7 @@ std::string LocalRepairRequest::serialize() {
 			this->flow.getDst() << "@" <<
 			this->flow.getDstPort() << "@" <<
 			this->flow.getTypeStr() << "@" <<
+			this->seqNo << "@" <<
 			this->nextHopToSrc << "@" <<
 			this->previousNextHop << "@" <<
 			this->qosReq.serialize() << "@" <<
@@ -117,18 +118,28 @@ LocalRepairRequest LocalRepairRequest::parse(std::string str) {
 	int dstPort = atoi(tokens[4].c_str());
 	FlowType::Type type = checkType(tokens[5]);
 	Flow flow(src, srcPort, dst, dstPort, type);
-	uint32_t nextHopToSrc = atoi(tokens[6].c_str());
-	uint32_t previousNextHop = atoi(tokens[7].c_str());
-	QoSRequirement qosReq = QoSRequirement::parse(tokens[8]);
-	LinkQuality e2elq = LinkQuality::parse(tokens[9]);
-	std::vector<uint32_t> srcRoute = LocalRepairRequest::parseTrace(tokens[10]);
+	int seqNo = atoi(tokens[6].c_str());
+	uint32_t nextHopToSrc = atoi(tokens[7].c_str());
+	uint32_t previousNextHop = atoi(tokens[8].c_str());
+	QoSRequirement qosReq = QoSRequirement::parse(tokens[9]);
+	LinkQuality e2elq = LinkQuality::parse(tokens[10]);
+	std::vector<uint32_t> srcRoute = LocalRepairRequest::parseTrace(tokens[11]);
 
 	LocalRepairRequest lrreq;
 	lrreq.setFlow(flow);
+	lrreq.setSeqNo(seqNo);
 	lrreq.setQosReq(qosReq);
 	lrreq.setEndToEndQuality(e2elq);
 	lrreq.setNextHopToSrc(nextHopToSrc);
 	lrreq.setPreviousNextHop(previousNextHop);
 	lrreq.setSrcRoute(srcRoute);
 	return lrreq;
+}
+
+int LocalRepairRequest::getSeqNo() const {
+	return seqNo;
+}
+
+void LocalRepairRequest::setSeqNo(int seqNo) {
+	this->seqNo = seqNo;
 }

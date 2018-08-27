@@ -12,10 +12,12 @@
 
 ARERR::ARERR() {
 	this->originator = 0;
+	this->seqNo = 0;
 }
 
-ARERR::ARERR(Flow flow, uint32_t originator, QoSRequirement appReq) {
+ARERR::ARERR(Flow flow, int seqNo, uint32_t originator, QoSRequirement appReq) {
 	this->flow = flow;
+	this->seqNo = seqNo;
 	this->originator = originator;
 	this->appReq = appReq;
 }
@@ -56,6 +58,7 @@ std::string ARERR::serialize() {
 			this->flow.getDst() << "@" <<
 			this->flow.getDstPort() << "@" <<
 			this->flow.getTypeStr() << "@" <<
+			this->seqNo << "@" <<
 			this->originator << "@" <<
 			this->appReq.serialize();
 	return ss.str();
@@ -73,8 +76,17 @@ ARERR ARERR::parse(std::string str) {
 	FlowType::Type type = checkType(tokens[5]);
 	Flow flow(src, srcPort, dst, dstPort, type);
 
-	uint32_t originator = atoi(tokens[6].c_str());
-	QoSRequirement qosReq = QoSRequirement::parse(tokens[7]);
+	int seqNo = atoi(tokens[6].c_str());
+	uint32_t originator = atoi(tokens[7].c_str());
+	QoSRequirement qosReq = QoSRequirement::parse(tokens[8]);
 
-	return ARERR(flow, originator, qosReq);
+	return ARERR(flow, seqNo, originator, qosReq);
+}
+
+int ARERR::getSeqNo() const {
+	return seqNo;
+}
+
+void ARERR::setSeqNo(int seqNo) {
+	this->seqNo = seqNo;
 }

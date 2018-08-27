@@ -28,7 +28,8 @@ class MyApplication {
 	bool pktConsumptionStarted; // pkt consumption state. true == consumption started.
 	FlowRequest flowReq;
 	Time lastUpdateTime;
-	ofstream appDataOut; // app-layer data statistics
+	ofstream appGoodputOut; // app-layer goodput statistics
+	ofstream appDelayOut; // app-layer delay statistics
 
 public:
 	MyApplication(std::string name, FlowRequest flowReq);

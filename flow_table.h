@@ -42,6 +42,7 @@ public:
 	int getNumOfFlows();
 	std::vector<FlowEntry*> getUnpopularFlows(size_t k);
 	double getOccupiedBandwidth(uint32_t nodeId);
+	double getAvailableBandwidth(uint32_t nodeId); // reverse of getOccupiedBandwidth
 
 	//vector<FlowEntry> getInactiveFlows();
 	//void deleteFlowEntry(Flow flow);

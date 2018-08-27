@@ -11,21 +11,21 @@
 
 PathProbe::PathProbe() {
 	this->hopCount = 0;
-	this->routeSeqNo = 0;
+	this->seqNo = 0;
 }
 
 PathProbe::PathProbe(Flow flow, QoSRequirement qosReq) {
 	this->flow = flow;
 	this->hopCount = 0;
-	this->routeSeqNo = 0;
+	this->seqNo = 0;
 	this->qosReq = qosReq;
 }
 
-PathProbe::PathProbe(Flow flow, int hopCount, int routeSeqNo,
+PathProbe::PathProbe(Flow flow, int hopCount, int seqNo,
 		QoSRequirement qosReq, LinkQuality linkQuality) {
 	this->flow = flow;
 	this->hopCount = hopCount;
-	this->routeSeqNo = routeSeqNo;
+	this->seqNo = seqNo;
 	this->qosReq = qosReq;
 	this->linkQuality = linkQuality;
 }
@@ -43,7 +43,7 @@ std::string PathProbe::serialize() {
 			this->flow.getDstPort() << "@" <<
 			this->flow.getTypeStr() << "@" <<
 			this->hopCount << "@" <<
-			this->routeSeqNo << "@" <<
+			this->seqNo << "@" <<
 			this->qosReq.serialize() << "@" <<
 			this->linkQuality.serialize() << "@" <<
 			serializeTrace();
@@ -65,7 +65,7 @@ void PathProbe::parse(std::string str) {
 	this->setFlow(flow);
 
 	this->setHopCount(atoi(tokens[6].c_str()));
-	this->setRouteSeqNo(atoi(tokens[7].c_str()));
+	this->setSeqNo(atoi(tokens[7].c_str()));
 	QoSRequirement qosReq = QoSRequirement::parse(tokens[8]);
 	this->setQosReq(qosReq);
 	LinkQuality lq = LinkQuality::parse(tokens[9]);
@@ -105,12 +105,12 @@ void PathProbe::setLinkQuality(const LinkQuality& linkQuality) {
 	this->linkQuality = linkQuality;
 }
 
-int PathProbe::getRouteSeqNo() const {
-	return routeSeqNo;
+int PathProbe::getSeqNo() const {
+	return seqNo;
 }
 
-void PathProbe::setRouteSeqNo(int routeSeqNo) {
-	this->routeSeqNo = routeSeqNo;
+void PathProbe::setSeqNo(int seqNo) {
+	this->seqNo = seqNo;
 }
 
 const std::vector<uint32_t>& PathProbe::getTrace() const {

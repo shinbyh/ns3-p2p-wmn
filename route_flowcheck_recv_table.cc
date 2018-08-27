@@ -94,7 +94,8 @@ uint32_t FlowCheckRecvTable::getOptimalDetourNode(int hopCount) {
 
 	if(hopCount == 1){
 		uint32_t optimalNode = NODEID_NOT_FOUND;
-		double occupiedBW = 99999999.0;
+		//double occupiedBW = 99999999.0;
+		double availableBW = 0.0; // 180826
 		std::pair<uint32_t, FlowCheck*> p;
 		BOOST_FOREACH(p, table){
 			// Discard the information of the previous nextHop.
@@ -108,7 +109,12 @@ uint32_t FlowCheckRecvTable::getOptimalDetourNode(int hopCount) {
 				// The link between candidate and prevNextHop is empty.
 				optimalNode = p.first;
 			} else {
-				for(SourceRouteStat stat : fc->getStats()){
+				if(availableBW < fc->getAvgAvailableBw()){
+					availableBW = fc->getAvgAvailableBw();
+					optimalNode = p.first;
+				}
+
+				/*for(SourceRouteStat stat : fc->getStats()){
 					int prevNextHopIdx = stat.getNodeIdPosition(this->prevNextHop);
 					vector<uint32_t> trace = stat.getTrace();
 
@@ -153,7 +159,7 @@ uint32_t FlowCheckRecvTable::getOptimalDetourNode(int hopCount) {
 							}
 						}
 					}
-				}
+				}*/
 			}
 		}
 

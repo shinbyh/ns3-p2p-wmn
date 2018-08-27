@@ -16,6 +16,7 @@
 class LocalRepairRequest {
 private:
 	Flow flow;
+	int seqNo;
 	QoSRequirement qosReq;
 	LinkQuality endToEndQuality;
 	uint32_t nextHopToSrc;
@@ -43,6 +44,8 @@ public:
 	std::string serialize();
 	static vector<uint32_t> parseTrace(std::string str);
 	static LocalRepairRequest parse(std::string str);
+	int getSeqNo() const;
+	void setSeqNo(int seqNo);
 };
 
 #endif /* SCRATCH_P2P_BHSHIN_ROUTE_LOCAL_REPAIR_REQUEST_H_ */

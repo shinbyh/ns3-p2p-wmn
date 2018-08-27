@@ -16,7 +16,7 @@ class PathProbe {
 private:
 	Flow flow;
 	int hopCount;
-	int routeSeqNo;
+	int seqNo; // flow seqNo
 	QoSRequirement qosReq;
 	LinkQuality linkQuality;
 	std::vector<uint32_t> trace;
@@ -26,7 +26,7 @@ private:
 public:
 	PathProbe();
 	PathProbe(Flow flow, QoSRequirement qosReq);
-	PathProbe(Flow flow, int hopCount, int routeSeqNo, QoSRequirement qosReq, LinkQuality linkQuality);
+	PathProbe(Flow flow, int hopCount, int seqNo, QoSRequirement qosReq, LinkQuality linkQuality);
 	virtual ~PathProbe();
 
 	std::string serialize();
@@ -39,8 +39,8 @@ public:
 	void setLinkQuality(const LinkQuality& linkQuality);
 	QoSRequirement getQosReq();
 	void setQosReq(const QoSRequirement& qosReq);
-	int getRouteSeqNo() const;
-	void setRouteSeqNo(int routeSeqNo);
+	int getSeqNo() const;
+	void setSeqNo(int seqNo);
 	const std::vector<uint32_t>& getTrace() const;
 	void setTrace(const std::vector<uint32_t>& trace);
 	void addTrace(uint32_t nodeId);

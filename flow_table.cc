@@ -268,11 +268,31 @@ double FlowTable::getOccupiedBandwidth(uint32_t nodeId) {
 	return bandwidth;
 }
 
+/**
+ * Returns the available bandwidth of a link between
+ * myself and a neighbor node specified by nodeId.
+ * Note that this is the reverse of the getOccupiedBandwidth.
+ * It is: MAX_BANDWIDTH - getOccupiedBandwidth(nodeId).
+ */
+double FlowTable::getAvailableBandwidth(uint32_t nodeId) {
+	double bandwidth = 0.0;
+
+	std::pair<Flow, FlowEntry*> p;
+	BOOST_FOREACH (p, flowTable){
+		FlowEntry* entry = p.second;
+		if(entry->getFwdNodeId() == nodeId){
+			bandwidth += entry->getAvgRealTimeBandwidth(nodeId);
+		}
+	}
+
+	return bandwidth;
+}
+
 std::string FlowTable::printFlowTable(uint32_t nodeId){
 	std::stringstream ss;
 	ss << std::fixed << "[Node "<< nodeId << "] FlowTable (t=" << Simulator::Now().GetSeconds() << ")\n";
-	ss << "         flow                        QoS Requirement               fwd   nodeId     allocBW    avgRTBW   rtSch  act    trace\n"
-		<< "----------------------------------------------------------------------------------------------------------------------------";
+	ss << "         flow                        QoS Requirement               fwd   nodeId     allocBW    avgRTBW   rtSch  act  seqN    trace\n"
+		<< "--------------------------------------------------------------------------------------------------------------------------------------";
 
 	for(Flow flow : keysTimeOrder){
 		FlowEntry* entry = flowTable[flow];

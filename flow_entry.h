@@ -30,7 +30,7 @@ private:
 	std::vector<uint32_t> srcRoute;
 	QoSRequirement qosReq;
 	QoSRequirement hopQosReq;
-	int appReqSeqNo;
+	int flowSeqNo;
 	int unsatisfactoryCount;
 	bool active;
 	int routingFlag;
@@ -57,8 +57,8 @@ public:
 	void addPacketInfo(uint32_t nodeId, PacketInfo pktInfo); // packetinfo for a neighbor
 	bool isActive() const;
 	void setActive(bool active);
-	int getAppReqSeqNo() const;
-	void setAppReqSeqNo(int appReqSeqNo);
+	int getFlowSeqNo() const;
+	void setFlowSeqNo(int flowSeqNo);
 	const Flow& getFlow() const;
 	void setFlow(const Flow& flow);
 	bool isControlFlow() const;

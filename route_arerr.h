@@ -15,11 +15,12 @@
 class ARERR {
 private:
 	Flow flow;
+	int seqNo; // sequence number of the current flow
 	uint32_t originator;
 	QoSRequirement appReq;
 public:
 	ARERR();
-	ARERR(Flow flow, uint32_t originator, QoSRequirement appReq);
+	ARERR(Flow flow, int seqNo, uint32_t originator, QoSRequirement appReq);
 	virtual ~ARERR();
 	const QoSRequirement getAppReq() const;
 	void setAppReq(const QoSRequirement appReq);
@@ -27,6 +28,8 @@ public:
 	void setFlow(const Flow flow);
 	uint32_t getOriginator() const;
 	void setOriginator(uint32_t originator);
+	int getSeqNo() const;
+	void setSeqNo(int seqNo);
 	std::string serialize();
 	static ARERR parse(std::string str);
 };

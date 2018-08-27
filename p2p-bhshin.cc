@@ -44,6 +44,7 @@
 #include "app_flowreq_pkt.h"
 #include "string_tokenizer.h"
 #include "my_application.h"
+#include "route_maintenance_stats.h"
 
 #include <iostream>
 #include <string>
@@ -57,6 +58,7 @@ NS_LOG_COMPONENT_DEFINE ("BhshinP2PExample");
 
 std::map<uint32_t, MyNode*> myNodes;
 NodeIdMap* nodeIdMap;
+RouteMaintenanceStats* rtMtncStats;
 
 static void ReceiveHello (Ptr<Socket> socket)
 {
@@ -524,6 +526,7 @@ int main (int argc, char *argv[])
 		myNodes[i] = myNode;
 	}
 	nodeIdMap = new NodeIdMap();
+	rtMtncStats = new RouteMaintenanceStats();
 
 	// Routing protocol for all nodes
 //	OlsrHelper olsr;
@@ -685,6 +688,7 @@ int main (int argc, char *argv[])
 
 	//MyStatistics::instance().writeQoSViolationCount();
 	MyStatistics::instance().writeFlowGoodputStatistics();
+	rtMtncStats->writeStatsToFile("rt_mtnc_stat.txt");
 
 	/*
 	 * bhshin, delete dynamic memory allocations
@@ -693,6 +697,7 @@ int main (int argc, char *argv[])
 		delete myNodes[i];
 	}
 	delete nodeIdMap;
+	delete rtMtncStats;
 
 	return 0;
 }

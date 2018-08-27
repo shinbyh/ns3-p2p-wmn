@@ -68,6 +68,7 @@ private:
 	ofstream ctrlOut;
 	ofstream ctrlInfoOut;
 	ofstream srcRtOut; // 180313, route discovery count of each source node
+	ofstream delayOut; // delay output of flows
 
 	int helloSeqNo;
 	int flowCheckSeqNo; // Scheme 2.
@@ -142,7 +143,6 @@ public:
 	static void doRouting(MyNode* myNode, ns3::Ptr<MyNS3Packet> myPkt, FlowRequest flowReq);
 	void _doRouting(ns3::Ptr<MyNS3Packet> myPkt, FlowRequest flowReq);
 	void performLocalRepair(uint32_t prevNextHop, uint32_t newNextHop, uint32_t nextHopToSrc, Flow flow, vector<uint32_t> srcRoute, QoSRequirement qosReq, LinkQuality endToEndQuality);
-	void performLocalRepairMultiHop(uint32_t prevNextHop, vector<uint32_t> newNextHopIds, uint32_t nextHopToSrc, Flow flow, vector<uint32_t> srcRoute, QoSRequirement qosReq, LinkQuality endToEndQuality);
 	void handlePacketInfo(int senderNodeId, PacketInfo pktInfo);
 	void handleHello(ns3::Ptr<ns3::Node> node, ns3::Ipv4Address ipAddr, Hello hello);
 	void handleDelayMeasurement(ns3::Ptr<ns3::Node> node, ns3::Ptr<ns3::Socket> socket, ns3::Ipv4Address ipAddr, int ifIdx, DelayMeasurement dm);
@@ -162,6 +162,7 @@ public:
 	const bool checkDstOfMyPacket(const MyNS3Packet* myPkt) const;
 	int getAndIncrementHelloSeqNo();
 	const double getAvgResidualBW();
+	const int getTxQueueSize(uint32_t nodeId);
 
 	// my application layer functions
 	void addMyApplication(MyApplication* myApp);

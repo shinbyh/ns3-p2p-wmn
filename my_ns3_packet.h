@@ -9,6 +9,7 @@
 #define SCRATCH_BHSHIN_MY_NS3_PACKET_H_
 
 #include "ns3/object.h"
+#include "ns3/core-module.h"
 
 class MyNS3Packet : public ns3::Object
 {
@@ -18,6 +19,7 @@ private:
 	uint32_t dst;
 	int appDstPort;
 	int seqNo;
+	ns3::Time genTime;
 	std::string msg;
 
 public:
@@ -40,6 +42,8 @@ public:
 	int getSeqNo() const;
 	void setSeqNo(int seqNo);
 	const size_t getDataSize() const;
+	const ns3::Time& getGenTime() const;
+	void setGenTime(const ns3::Time& genTime);
 };
 
 

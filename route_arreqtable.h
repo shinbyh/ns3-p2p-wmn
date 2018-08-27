@@ -11,6 +11,10 @@
 #include "flow.h"
 #include <map>
 
+/**
+ * This is used for tracking the recent
+ * sequence number for each flow.
+ */
 class ARREQSentEntry {
 private:
 	Flow flow;
