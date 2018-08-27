@@ -2,13 +2,13 @@
 
 BASE_DIR=$(pwd)
 EXP_NAME=$1
-APPS="10apps 11apps 12apps 13apps 14apps 15apps 16apps 17apps 18apps 19apps 20apps" #large30
+APPS="15apps 16apps 17apps 18apps 19apps 20apps" #large30
 #APPS="6apps 7apps 8apps" #large
-#APPS="2apps" # smalltest
+#APPS="4apps" # smalltest
 #APPS="20apps" # special case
 PKTS="250pkts"
-#FLOWSETS=$(seq 0 0) # smalltest
-FLOWSETS=$(seq 0 49) #large
+#FLOWSETS=$(seq 1 1) # smalltest
+FLOWSETS=$(seq 0 20) #large
 
 #
 # Scheme Numbers
@@ -18,7 +18,7 @@ FLOWSETS=$(seq 0 49) #large
 # 3: local repair with 2-hop detours
 # 4: local repair with average bandwidth
 #
-SCHEMES="3 0"
+SCHEMES="0 2 3"
 
 DIR_PREFIX=$HOME"/exp/ns-3"
 APPCONFIG_DIR="./apps_config"

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-FILE_PREFIXES="applog_ flowinfo_ flowlog_ flow_qos flow_goodput srcrtlog ovinfo_ ovlog_ ovstat_ nodelog_ nodestat integrated_stat_ output temp_"
+FILE_PREFIXES="applog_ flowinfo_ flowlog_ flow_qos flow_goodput srcrtlog ovinfo_ ovlog_ ovstat_ nodelog_ nodestat integrated_stat_ output temp_ rt_mtnc_stat"
 
 for prefix in $FILE_PREFIXES
 do
