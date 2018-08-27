@@ -58,7 +58,7 @@ private:
 	RouteTable* routeTable;
 	ARREPRecvTable* arrepRecvTable;
 	ARREQSentTable* arreqSentTable;
-	map<int, FlowCheckRecvTable*> flowCheckRecvMap; // map of FlowCheck-reply tables.
+	map<Flow, FlowCheckRecvTable*> flowCheckRecvMap; // map of FlowCheck-reply tables.
 	map<int, FlowAcceptReplyRecvTable*> flowAccRepRecvMap; // map of FlowCheck-reply tables.
 	map<Flow, MyApplication*> myAppMap; // map of MyApplications
 
@@ -122,8 +122,8 @@ public:
 	void _setupRoute(Flow flow, int seqNo);
 	static void schedulePacketsFromFlowRequest(MyNode* myNode, FlowRequest flowReq, string msg);
 	void _schedulePacketsFromFlowRequest(FlowRequest flowReq, string msg);
-	static void selectNodeFromFlowCheck(MyNode* myNode, int seqNo);
-	void _selectNodeFromFlowCheck(int seqNo);
+	static void selectNodeFromFlowCheck(MyNode* myNode, Flow flow, int seqNo);
+	void _selectNodeFromFlowCheck(Flow flow, int seqNo);
 	static void selectNodeFromFlowAcceptReply(MyNode* myNode, int seqNo);
 	void _selectNodeFromFlowAcceptReply(int seqNo);
 	static void checkMyApplicationStatistics(MyNode* myNode, Flow flow);

@@ -11,12 +11,14 @@
 #include <vector>
 #include <string>
 #include "source_route_stat.h"
+#include "flow.h"
 
 using namespace std;
 
 class FlowCheck {
 private:
 	int msgType;
+	Flow flow;
 	uint32_t nodeId; // nodeID of the initiator
 	uint32_t prevNextHop; // previous (current) next hop
 	int seqNo;
@@ -52,6 +54,8 @@ public:
 	void setPrevNextHop(uint32_t prevNextHop);
 	double getAvgAvailableBw() const;
 	void setAvgAvailableBw(double avgAvailableBw);
+	const Flow& getFlow() const;
+	void setFlow(const Flow& flow);
 };
 
 #endif /* SCRATCH_P2P_BHSHIN_ROUTE_FLOWCHECK_H_ */

@@ -68,6 +68,11 @@ const string FlowCheck::serialize() const {
 	stringstream ss;
 	ss << std::fixed;
 	ss << this->msgType << "@" <<
+			this->flow.getSrc() << "@" <<
+			this->flow.getSrcPort() << "@" <<
+			this->flow.getDst() << "@" <<
+			this->flow.getDstPort() << "@" <<
+			this->flow.getTypeStr() << "@" <<
 			this->nodeId << "@" <<
 			this->seqNo << "@" <<
 			this->TTL << "@" <<
@@ -101,22 +106,23 @@ void FlowCheck::parse(string str) {
 	vector<string> tokens;
 	tokenizeString(str, tokens, "@");
 	this->msgType = atoi(tokens[0].c_str());
+	uint32_t src = atoi(tokens[1].c_str());
+	int srcPort = atoi(tokens[2].c_str());
+	uint32_t dst = atoi(tokens[3].c_str());
+	int dstPort = atoi(tokens[4].c_str());
+	FlowType::Type type = checkType(tokens[5]);
+	Flow flow(src, srcPort, dst, dstPort, type);
+	this->flow = flow;
 
-	if(this->msgType == ROUTE_FLOWCHECK_REQUEST){
-		this->nodeId = atoi(tokens[1].c_str());
-		this->seqNo = atoi(tokens[2].c_str());
-		this->TTL =  atoi(tokens[3].c_str());
-		this->prevNextHop = atoi(tokens[4].c_str());
-	} else if(this->msgType == ROUTE_FLOWCHECK_REPLY){
-		this->nodeId = atoi(tokens[1].c_str());
-		this->seqNo = atoi(tokens[2].c_str());
-		this->TTL =  atoi(tokens[3].c_str());
-		this->prevNextHop = atoi(tokens[4].c_str());
-		this->avgAvailableBw = atof(tokens[5].c_str());
-		this->replierNodeId = atoi(tokens[6].c_str());
-		if(tokens.size() >= 8) parseStats(tokens[7]);
-	} else {
-		// Error. Invalid message format.
+	this->nodeId = atoi(tokens[6].c_str());
+	this->seqNo = atoi(tokens[7].c_str());
+	this->TTL =  atoi(tokens[8].c_str());
+	this->prevNextHop = atoi(tokens[9].c_str());
+
+	if(this->msgType == ROUTE_FLOWCHECK_REPLY){
+		this->avgAvailableBw = atof(tokens[10].c_str());
+		this->replierNodeId = atoi(tokens[11].c_str());
+		if(tokens.size() >= 13) parseStats(tokens[12]);
 	}
 }
 
@@ -154,4 +160,12 @@ double FlowCheck::getAvgAvailableBw() const {
 
 void FlowCheck::setAvgAvailableBw(double avgAvailableBw) {
 	this->avgAvailableBw = avgAvailableBw;
+}
+
+const Flow& FlowCheck::getFlow() const {
+	return flow;
+}
+
+void FlowCheck::setFlow(const Flow& flow) {
+	this->flow = flow;
 }

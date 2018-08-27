@@ -20,6 +20,7 @@ using namespace std;
 class FlowCheckRecvTable {
 private:
 	Flow flow;
+	int flowSeqNo;
 	QoSRequirement qosReq;
 	LinkQuality endToEndQuality;
 	uint32_t nextHopToSrc;
@@ -30,7 +31,7 @@ private:
 	bool containsNodeId(uint32_t nodeId);
 
 public:
-	FlowCheckRecvTable();
+	FlowCheckRecvTable(int seqNo);
 	virtual ~FlowCheckRecvTable();
 
 	void addFlowCheckReply(uint32_t nodeId, FlowCheck* flowCheck);
@@ -53,6 +54,9 @@ public:
 	void setSrcRoute(const vector<uint32_t>& srcRoute) {
 		this->srcRoute = srcRoute;
 	}
+
+	int getFlowSeqNo() const;
+	void setFlowSeqNo(int flowSeqNo);
 };
 
 #endif /* SCRATCH_P2P_BHSHIN_ROUTE_FLOWCHECK_RECV_TABLE_H_ */

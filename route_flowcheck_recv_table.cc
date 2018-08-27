@@ -11,9 +11,10 @@
 #include <algorithm>
 #include "ns3/core-module.h"
 
-FlowCheckRecvTable::FlowCheckRecvTable() {
+FlowCheckRecvTable::FlowCheckRecvTable(int seqNo) {
 	this->nextHopToSrc = NODEID_NOT_FOUND;
 	this->prevNextHop = NODEID_NOT_FOUND;
+	this->flowSeqNo = seqNo;
 }
 
 FlowCheckRecvTable::~FlowCheckRecvTable() {
@@ -226,4 +227,12 @@ uint32_t FlowCheckRecvTable::getOptimalDetourNode(int hopCount) {
 
 		return optimalNode;
 	}
+}
+
+int FlowCheckRecvTable::getFlowSeqNo() const {
+	return flowSeqNo;
+}
+
+void FlowCheckRecvTable::setFlowSeqNo(int flowSeqNo) {
+	this->flowSeqNo = flowSeqNo;
 }
