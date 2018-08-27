@@ -711,7 +711,8 @@ void MyNode::_setupRoute(Flow flow, int seqNo) {
 		this->srcRtDscvFailCount++;
 		rtMtncStats->addQVEndTime(flow, arrepEntry->getSeqNo(), Simulator::Now());
 		rtMtncStats->setQVResolved(flow, arrepEntry->getSeqNo(), false);
-		this->flowTable->getFlowEntry(flow)->setRouteSearching(false);
+		FlowEntry* flowEntry = this->flowTable->getFlowEntry(flow);
+		if(flowEntry) flowEntry->setRouteSearching(false);
 		return;
 	}
 
