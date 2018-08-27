@@ -1068,12 +1068,12 @@ void MyNode::checkMyApplicationStatistics(MyNode* myNode, Flow flow) {
 }
 
 void MyNode::_checkMyApplicationStatistics(Flow flow) {
-#ifdef DEBUG_PRINT
-	NS_LOG_UNCOND("[Node " << this->nodeId << "] _checkMyApplicationStatistics " << flow.toString());
-#endif
-#ifdef DEBUG_NODE_OUT
-	this->nodeOut << "[Node " << this->nodeId << "] _checkMyApplicationStatistics " << flow.toString() << "\n";
-#endif
+//#ifdef DEBUG_PRINT
+//	NS_LOG_UNCOND("[Node " << this->nodeId << "] _checkMyApplicationStatistics " << flow.toString());
+//#endif
+//#ifdef DEBUG_NODE_OUT
+//	this->nodeOut << "[Node " << this->nodeId << "] _checkMyApplicationStatistics " << flow.toString() << "\n";
+//#endif
 
 	MyApplication* myApp = this->myAppMap[flow];
 	myApp->updateStatistics();
@@ -1432,12 +1432,10 @@ void MyNode::handleARREQ(string str, Ipv4Address clientIP, int ifIdx) {
 	// debug
 	NS_LOG_UNCOND("[Node "<< this->nodeId <<"] handleARREQ (from " << clientNodeId << ", trIdx=" << arreq.getTrace().size() << ") t=" << Simulator::Now().GetMilliSeconds());
 	NS_LOG_UNCOND(" - " << str);
-	NS_LOG_UNCOND(" - seqNo=" << arreq.getSeqNo());
 #endif
 #ifdef DEBUG_NODE_OUT
 	this->nodeOut << "[Node "<< this->nodeId <<"] handleARREQ (from " << clientNodeId << ", trIdx=" << arreq.getTrace().size() << ") t=" << Simulator::Now().GetMilliSeconds() << "\n";
 	this->nodeOut << " - " << str << "\n";
-	this->nodeOut << " - seqNo=" << arreq.getSeqNo() << "\n";
 #endif
 
 	// if the ARREQ is already passed by myself, ignore it for preventing loop.
@@ -1474,25 +1472,20 @@ void MyNode::handleARREQ(string str, Ipv4Address clientIP, int ifIdx) {
 	accumulateLinkQualityWithoutFlow(arreq.getLinkQuality(), prevHop, arreq.getFlow());
 
 	QoSRequirement qosReq = arreq.getQosReq();
-#ifdef DEBUG_PRINT
-	NS_LOG_UNCOND("  -bw: " << qosReq.getBandwidth() << " vs " << arreq.getLinkQuality()->getBandwidth());
-	NS_LOG_UNCOND("  -delay: " << qosReq.getDelay() << " vs " << arreq.getLinkQuality()->getDelay());
-	NS_LOG_UNCOND("  -jiter: " << qosReq.getJitter() << " vs " << arreq.getLinkQuality()->getJitter());
-	NS_LOG_UNCOND("  -loss: " << qosReq.getLossRate() << " vs " << arreq.getLinkQuality()->getLossRate());
-#endif
-#ifdef DEBUG_NODE_OUT
-	this->nodeOut << "  -bw: " << qosReq.getBandwidth() << " vs " << arreq.getLinkQuality()->getBandwidth() << "\n";
-	this->nodeOut << "  -delay: " << qosReq.getDelay() << " vs " << arreq.getLinkQuality()->getDelay() << "\n";
-	this->nodeOut << "  -jiter: " << qosReq.getJitter() << " vs " << arreq.getLinkQuality()->getJitter() << "\n";
-	this->nodeOut << "  -loss: " << qosReq.getLossRate() << " vs " << arreq.getLinkQuality()->getLossRate() << "\n";
-#endif
-
 	if(!QoSRequirement::isSatisfactory(qosReq, arreq.getLinkQuality())){
 #ifdef DEBUG_PRINT
 		NS_LOG_UNCOND(" -QoSReq is not satisfactory... drop it.");
+		NS_LOG_UNCOND("  -bw: " << qosReq.getBandwidth() << " vs " << arreq.getLinkQuality()->getBandwidth());
+		NS_LOG_UNCOND("  -delay: " << qosReq.getDelay() << " vs " << arreq.getLinkQuality()->getDelay());
+		NS_LOG_UNCOND("  -jiter: " << qosReq.getJitter() << " vs " << arreq.getLinkQuality()->getJitter());
+		NS_LOG_UNCOND("  -loss: " << qosReq.getLossRate() << " vs " << arreq.getLinkQuality()->getLossRate());
 #endif
 #ifdef DEBUG_NODE_OUT
 		this->nodeOut << " -QoSReq is not satisfactory... drop it." << "\n";
+		this->nodeOut << "  -bw: " << qosReq.getBandwidth() << " vs " << arreq.getLinkQuality()->getBandwidth() << "\n";
+		this->nodeOut << "  -delay: " << qosReq.getDelay() << " vs " << arreq.getLinkQuality()->getDelay() << "\n";
+		this->nodeOut << "  -jiter: " << qosReq.getJitter() << " vs " << arreq.getLinkQuality()->getJitter() << "\n";
+		this->nodeOut << "  -loss: " << qosReq.getLossRate() << " vs " << arreq.getLinkQuality()->getLossRate() << "\n";
 #endif
 		return;
 	}
@@ -1504,35 +1497,6 @@ void MyNode::handleARREQ(string str, Ipv4Address clientIP, int ifIdx) {
 	this->nodeOut << " -QoSReq is satisfactory. " << "\n";
 #endif
 
-/*	// If destination is a neighbor, accumulate QoS values of the destination link.
-	// Otherwise, relay (re-broadcast) ARREQ.
-	uint32_t nextHop = routeTable->getNextHop(arreq.getFlow());
-	if((nextHop != NODEID_NOT_FOUND) && nextHop == arreq.getFlow().getDst()){
-		// It knows destination as a neighbor.
-		// Accumulate QoS values of the destinaion link.
-		NeighborEntry* nextHop = ncTable->get(arreq.getFlow().getDst());
-		accumulateLinkQuality(arreq.getLinkQuality(), nextHop);
-
-		// TODO: Determine if requirement is satisfactory.
-		// - Proposed scheme,
-		// - Existing work
-
-		// If requirement is satisfactory, send ARREP back to sender.
-		// generate ARREP and send back to the previous hop.
-#ifdef DEBUG_PRINT
-		NS_LOG_UNCOND(" - generate ARREP from neighbor.");
-#endif
-#ifdef DEBUG_NODE_OUT
-		this->nodeOut << " - generate ARREP from neighbor." << "\n";
-#endif
-		ARREP arrep = ARREP::deriveFrom(arreq);
-		arrep.addTrace(this->nodeId);
-		arrep.addTrace(arreq.getFlow().getDst());
-
-		// send ARREP
-		sendRoutingPacket(clientIP, arrep.serialize());
-	}
-	else */
 	if(this->nodeId == arreq.getFlow().getDst()){
 		// Destination is myself.
 		// If requirement is satisfactory, send ARREP back to sender.

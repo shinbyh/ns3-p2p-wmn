@@ -144,13 +144,13 @@ void MyApplication::handleApplicationPacket(Ptr<MyNS3Packet> myPkt) {
 
 void MyApplication::updateStatistics() {
 	// Debug
-	NS_LOG_UNCOND(" [updateStatistics]");
-	NS_LOG_UNCOND("   - flow: " << this->flowReq.getFlow().toString());
-	NS_LOG_UNCOND("   - numOfPkts = " << this->tempNumberOfPkts);
-	NS_LOG_UNCOND("   - recvBytes = " << this->tempRecvBytes);
-	NS_LOG_UNCOND("   - totalNumOfPkts = " << this->totalNumberOfPkts);
-	NS_LOG_UNCOND("   - videoBuffer = " << this->videoBuffer);
-	NS_LOG_UNCOND("   - buffering? " << this->buffering);
+//	NS_LOG_UNCOND(" [updateStatistics]");
+//	NS_LOG_UNCOND("   - flow: " << this->flowReq.getFlow().toString());
+//	NS_LOG_UNCOND("   - numOfPkts = " << this->tempNumberOfPkts);
+//	NS_LOG_UNCOND("   - recvBytes = " << this->tempRecvBytes);
+//	NS_LOG_UNCOND("   - totalNumOfPkts = " << this->totalNumberOfPkts);
+//	NS_LOG_UNCOND("   - videoBuffer = " << this->videoBuffer);
+//	NS_LOG_UNCOND("   - buffering? " << this->buffering);
 
 	// Reset temporary counter variables.
 	this->tempNumberOfPkts = 0;
