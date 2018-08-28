@@ -11,9 +11,10 @@
 #include "ns3/core-module.h"
 #include "route_flow_accept_rep_table.h"
 
-FlowAcceptReplyRecvTable::FlowAcceptReplyRecvTable() {
+FlowAcceptReplyRecvTable::FlowAcceptReplyRecvTable(int seqNo) {
 	this->nextHopToSrc = NODEID_NOT_FOUND;
 	this->prevNextHop = NODEID_NOT_FOUND;
+	this->flowSeqNo = seqNo;
 }
 
 FlowAcceptReplyRecvTable::~FlowAcceptReplyRecvTable() {

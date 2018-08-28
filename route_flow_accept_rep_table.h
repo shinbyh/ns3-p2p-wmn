@@ -20,6 +20,7 @@ using namespace std;
 class FlowAcceptReplyRecvTable {
 private:
 	Flow flow;
+	int flowSeqNo;
 	QoSRequirement qosReq;
 	LinkQuality endToEndQuality;
 	uint32_t nextHopToSrc;
@@ -28,7 +29,7 @@ private:
 	map<uint32_t, FlowAcceptReply*> table;
 
 public:
-	FlowAcceptReplyRecvTable();
+	FlowAcceptReplyRecvTable(int seqNo);
 	virtual ~FlowAcceptReplyRecvTable();
 
 	void addFlowAcceptReply(uint32_t nodeId, FlowAcceptReply* flowAccRep);
@@ -81,6 +82,14 @@ public:
 
 	void setQosReq(const QoSRequirement& qosReq) {
 		this->qosReq = qosReq;
+	}
+
+	int getFlowSeqNo() const {
+		return flowSeqNo;
+	}
+
+	void setFlowSeqNo(int flowSeqNo) {
+		this->flowSeqNo = flowSeqNo;
 	}
 };
 
