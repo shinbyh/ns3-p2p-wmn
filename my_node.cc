@@ -1447,7 +1447,7 @@ void MyNode::handleARREQ(string str, Ipv4Address clientIP, int ifIdx) {
 #ifdef DEBUG_PRINT
 	// debug
 	NS_LOG_UNCOND("[Node "<< this->nodeId <<"] handleARREQ (from " << clientNodeId << ", trIdx=" << arreq.getTrace().size() << ") t=" << Simulator::Now().GetMilliSeconds());
-	NS_LOG_UNCOND(" - " << str);
+	//NS_LOG_UNCOND(" - " << str);
 #endif
 #ifdef DEBUG_NODE_OUT
 	this->nodeOut << "[Node "<< this->nodeId <<"] handleARREQ (from " << clientNodeId << ", trIdx=" << arreq.getTrace().size() << ") t=" << Simulator::Now().GetMilliSeconds() << "\n";
@@ -1458,10 +1458,10 @@ void MyNode::handleARREQ(string str, Ipv4Address clientIP, int ifIdx) {
 	for(uint32_t traceId : arreq.getTrace()){
 		if(this->nodeId == traceId){
 #ifdef DEBUG_PRINT
-			NS_LOG_UNCOND(" -ignoring an ARREQ with a routing loop");
+			NS_LOG_UNCOND(" -discard ARREQ: routing loop");
 #endif
 #ifdef DEBUG_NODE_OUT
-			this->nodeOut << " -ignoring an ARREQ with a routing loop" << "\n";
+			this->nodeOut << " -discard ARREQ: routing loop" << "\n";
 #endif
 			return;
 		}
@@ -1469,16 +1469,6 @@ void MyNode::handleARREQ(string str, Ipv4Address clientIP, int ifIdx) {
 
 	// If ARREQ with the same seqNo arrives more than repeat threshold, discard it.
 	this->arrepRecvTable->addEntry(arreq.getFlow(), arreq.getSeqNo()); // no flowReq for intermediate nodes
-/*	ARREPRecvEntry* arrepEntry = this->arrepRecvTable->getEntry(arreq.getFlow());
-	if(arrepEntry->getDupArreqCount() >= 2){
-#ifdef DEBUG_PRINT
-		NS_LOG_UNCOND(" -ignoring a duplicate ARREQ exceeding threshold");
-#endif
-#ifdef DEBUG_NODE_OUT
-		this->nodeOut << " -ignoring a duplicate ARREQ exceeding threshold" << "\n";
-#endif
-		return;
-	}*/
 
 	// decrement TTL
 	arreq.decrementTTL();
@@ -1490,14 +1480,14 @@ void MyNode::handleARREQ(string str, Ipv4Address clientIP, int ifIdx) {
 	QoSRequirement qosReq = arreq.getQosReq();
 	if(!QoSRequirement::isSatisfactory(qosReq, arreq.getLinkQuality())){
 #ifdef DEBUG_PRINT
-		NS_LOG_UNCOND(" -QoSReq is not satisfactory... drop it.");
+		NS_LOG_UNCOND(" -QoSReq not satisfactory... drop it.");
 		NS_LOG_UNCOND("  -bw: " << qosReq.getBandwidth() << " vs " << arreq.getLinkQuality()->getBandwidth());
 		NS_LOG_UNCOND("  -delay: " << qosReq.getDelay() << " vs " << arreq.getLinkQuality()->getDelay());
 		NS_LOG_UNCOND("  -jiter: " << qosReq.getJitter() << " vs " << arreq.getLinkQuality()->getJitter());
 		NS_LOG_UNCOND("  -loss: " << qosReq.getLossRate() << " vs " << arreq.getLinkQuality()->getLossRate());
 #endif
 #ifdef DEBUG_NODE_OUT
-		this->nodeOut << " -QoSReq is not satisfactory... drop it." << "\n";
+		this->nodeOut << " -QoSReq not satisfactory... drop it." << "\n";
 		this->nodeOut << "  -bw: " << qosReq.getBandwidth() << " vs " << arreq.getLinkQuality()->getBandwidth() << "\n";
 		this->nodeOut << "  -delay: " << qosReq.getDelay() << " vs " << arreq.getLinkQuality()->getDelay() << "\n";
 		this->nodeOut << "  -jiter: " << qosReq.getJitter() << " vs " << arreq.getLinkQuality()->getJitter() << "\n";
@@ -1505,13 +1495,6 @@ void MyNode::handleARREQ(string str, Ipv4Address clientIP, int ifIdx) {
 #endif
 		return;
 	}
-
-#ifdef DEBUG_PRINT
-	NS_LOG_UNCOND(" -QoSReq is satisfactory. ");
-#endif
-#ifdef DEBUG_NODE_OUT
-	this->nodeOut << " -QoSReq is satisfactory. " << "\n";
-#endif
 
 	if(this->nodeId == arreq.getFlow().getDst()){
 		// Destination is myself.
@@ -1535,10 +1518,10 @@ void MyNode::handleARREQ(string str, Ipv4Address clientIP, int ifIdx) {
 		if(arreq.getTTL() == 0) return;
 
 #ifdef DEBUG_PRINT
-		NS_LOG_UNCOND(" - relay ARREQ.");
+		NS_LOG_UNCOND(" - relay ARREQ");
 #endif
 #ifdef DEBUG_NODE_OUT
-		this->nodeOut << " - relay ARREQ." << "\n";
+		this->nodeOut << " - relay ARREQ" << "\n";
 #endif
 
 		// broadcast ARREQ
@@ -1565,12 +1548,6 @@ void MyNode::handleARREP(string str, Ipv4Address clientIP, int ifIdx) {
 	if(this->nodeId == arrep.getFlow().getSrc()){
 		// this is a source node who initiated ARREQ.
 		// check sequence number and store this.
-#ifdef DEBUG_PRINT
-		NS_LOG_UNCOND(" - add ARREP to ARREPRecvTable, flow: " << arrep.getFlow().toString());
-#endif
-#ifdef DEBUG_NODE_OUT
-		this->nodeOut << " - add ARREP to ARREPRecvTable, flow: " << arrep.getFlow().toString() << "\n";
-#endif
 		this->arrepRecvTable->addARREP(arrep);
 
 	} else {
@@ -1587,12 +1564,6 @@ void MyNode::handleARREP(string str, Ipv4Address clientIP, int ifIdx) {
 			// check src ability to talk via protocol
 			if(myPosInTrace == 0){
 				// store ARREP to the ARREP table.
-#ifdef DEBUG_PRINT
-				NS_LOG_UNCOND(" - @@ add ARREP to ARREPRecvTable, flow: " << arrep.getFlow().toString());
-#endif
-#ifdef DEBUG_NODE_OUT
-				this->nodeOut << " - @@ add ARREP to ARREPRecvTable, flow: " << arrep.getFlow().toString() << "\n";
-#endif
 				this->arrepRecvTable->addARREP(arrep);
 			}
 			if(myPosInTrace > 0){
@@ -1654,10 +1625,10 @@ void MyNode::handleARERR(string str, Ipv4Address clientIP, int ifIdx) {
 
 	if(flowEntry->getFlowSeqNo() > arerr.getSeqNo()){
 #ifdef DEBUG_PRINT
-		NS_LOG_UNCOND(" - ignoring ARERR with a smaller seqNo.");
+		NS_LOG_UNCOND(" - ignoring ARERR: smaller seqNo");
 #endif
 #ifdef DEBUG_NODE_OUT
-		this->nodeOut << " - ignoring ARERR with a smaller seqNo.\n";
+		this->nodeOut << " - ignoring ARERR: smaller seqNo\n";
 #endif
 		return;
 	}
@@ -1678,10 +1649,10 @@ void MyNode::handleARERR(string str, Ipv4Address clientIP, int ifIdx) {
 		// Intermediate of the flow.
 		// Relay ARERR to the source.
 #ifdef DEBUG_PRINT
-		NS_LOG_UNCOND(" - relay ARERR to src...");
+		NS_LOG_UNCOND(" - relay ARERR");
 #endif
 #ifdef DEBUG_NODE_OUT
-		this->nodeOut << " - relay ARERR to src..." << "\n";
+		this->nodeOut << " - relay ARERR" << "\n";
 #endif
 
 		Flow reverseFlow(arerr.getFlow().getDst(), arerr.getFlow().getDstPort(),
@@ -1690,9 +1661,6 @@ void MyNode::handleARERR(string str, Ipv4Address clientIP, int ifIdx) {
 		Route* reverseRoute = this->routeTable->getRoute(reverseFlow);
 		NeighborEntry* ncEntry = this->ncTable->get(reverseRoute->getNextHop());
 		if(ncEntry){
-#ifdef DEBUG_NODE_OUT
-			this->nodeOut << "    - prevHop = " << reverseRoute->getNextHop() << "\n";
-#endif
 			flowEntry->deleteFlowStat(reverseRoute->getNextHop());
 			sendRoutingPacket(ncEntry->getIp(), str);
 		}
@@ -1728,14 +1696,6 @@ void MyNode::handleRouteSetup(string str, Ipv4Address clientIP, int ifIdx){
 	Route* reverseRoute = new Route(reverseFlow, clientNodeId, myPosInTrace);
 	this->routeTable->addRoute(reverseRoute);
 
-#ifdef DEBUG_PRINT
-	// debug
-	NS_LOG_UNCOND("  [RT] added a reverse route: " << reverseRoute->toString());
-#endif
-#ifdef DEBUG_NODE_OUT
-	this->nodeOut << "  [RT] added a reverse route: " << reverseRoute->toString() << "\n";
-#endif
-
 	if(this->nodeId == rs.getFlow().getDst()){
 		// This is the destination of the route.
 		this->flowTable->setQoSReqAsDestination(rs.getFlow(), clientNodeId, rs.getQosReq());
@@ -1769,10 +1729,6 @@ void MyNode::handleRouteSetup(string str, Ipv4Address clientIP, int ifIdx){
 	Route* route = new Route(rs.getFlow(), nextHopInTrace, rs.getTrace().size() - myPosInTrace - 1);
 	this->routeTable->addRoute(route);
 
-#ifdef DEBUG_PRINT
-	// debug
-	NS_LOG_UNCOND("  [RT] added route: " << route->toString());
-#endif
 #ifdef DEBUG_NODE_OUT
 	this->nodeOut << "  [RT] added route: " << route->toString() << "\n";
 #endif
@@ -1860,11 +1816,10 @@ void MyNode::handlePathProbe(string str, Ipv4Address clientIP, int ifIdx){
 
 		if((this->scheme == SCHEME_LOCAL_REPAIR_1HOP || this->scheme == SCHEME_LOCAL_REPAIR_2HOPS) &&
 				QoSRequirement::isSatisfactory(probe.getQosReq(), probe.getLinkQuality())){
-			// Send End-to-end quality to the source.
-			this->nodeOut << " - sending PathQualityReport to src (prevHop: " << clientNodeId << ")\n";
-			this->nodeOut << " - probe: " << probe.getQosReq().serialize() << "/n";
-			this->nodeOut << " - table: " << flowEntry->getQosReq().serialize() << "\n";
+			// Debug
+			this->nodeOut << " - sending PathQualityReport to src\n";
 
+			// Send End-to-end quality to the source.
 			PathQualityReport pqr(probe.getFlow(), probe.getTrace().size() - 1);
 			pqr.setQosReq(probe.getQosReq());
 			pqr.setEndToEndQuality(probe.getLinkQuality());
@@ -1924,14 +1879,12 @@ void MyNode::handlePathProbe(string str, Ipv4Address clientIP, int ifIdx){
 			MyStatistics::instance().incrementQoSViolationCount(probe.getFlow(), this->nodeId);
 
 #ifdef DEBUG_PRINT
-			NS_LOG_UNCOND(" - (Existing Work) Path QoSReq NOT satisfactory!");
-			NS_LOG_UNCOND(" - (Existing Work) send ARERR.");
+			NS_LOG_UNCOND(" -(Existing Work) Path QoSReq NOT satisfactory! Send ARERR");
 #endif
 #ifdef DEBUG_NODE_OUT
-			this->nodeOut << " - (Existing Work) Path QoSReq NOT satisfactory!\n";
-			this->nodeOut << "   - qosReq: " << probe.getQosReq().serialize() << "\n";
-			this->nodeOut << "   - pathLQ: " << probe.getLinkQuality()->serialize() << "\n";
-			this->nodeOut << " - (Existing Work) send ARERR." << "\n";
+			this->nodeOut << " -(Existing Work) Path QoSReq NOT satisfactory! Send ARERR\n";
+			this->nodeOut << "   -qosReq: " << probe.getQosReq().serialize() << "\n";
+			this->nodeOut << "   -pathLQ: " << probe.getLinkQuality()->serialize() << "\n";
 #endif
 
 			// Reply ARERR back to the source.
@@ -1955,8 +1908,6 @@ void MyNode::handlePathProbe(string str, Ipv4Address clientIP, int ifIdx){
 		if(QoSRequirement::isSatisfactory(flowEntry->getHopQosReq(), hopLq)){
 #ifdef DEBUG_PRINT
 			NS_LOG_UNCOND(" - @@ hop-by-hop QoS satisfactory.");
-			NS_LOG_UNCOND("   - hopReq: " << flowEntry->getHopQosReq().serialize());
-			NS_LOG_UNCOND("   - hopLQ : " << hopLq.serialize());
 #endif
 #ifdef DEBUG_NODE_OUT
 			this->nodeOut << " - @@ hop-by-hop QoS satisfactory.\n";
@@ -2205,21 +2156,8 @@ void MyNode::handleSourceRouteUpdate(string str, Ipv4Address clientIP, int ifIdx
 	}
 
 	if(srcUpdate.getFlow().getSrc() == this->nodeId){
-		// debug
-		stringstream ss;
-		for (uint32_t srcRtNode : srcUpdate.getSrcRoute()){
-			ss << srcRtNode << " ";
-		}
-#ifdef DEBUG_PRINT
-		NS_LOG_UNCOND(" - srcRoute: " << ss.str());
-#endif
-#ifdef DEBUG_NODE_OUT
-		this->nodeOut << " - srcRoute: " << ss.str() << "\n";
-#endif
 		this->arreqSentTable->getEntry(srcUpdate.getFlow())->setSeqNo(srcUpdate.getSeqNo());
-
 		// Send RouteSetup to the destination.
-
 	} else {
 		// TODO: Change the route (forward route) if next-hop is changed in the trace.
 
