@@ -4,9 +4,9 @@ import random
 target_dir = 'apps_config'
 node_id_min = 1
 start_time_min = 10
-start_time_max = 50
-duration_min = 25
-duration_max = 50
+start_time_max = 35
+duration_min = 50
+duration_max = 65
 flow_type = 'UDP'
 pkt_size = 1024
 pkts_per_second = 250
