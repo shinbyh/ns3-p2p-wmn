@@ -38,7 +38,18 @@ def generate_flows_incremental(max_num_of_apps, num_of_flowsets):
                 fw.close()
         f.close()
 
+def print_usage():
+    print('*Usage:\npython flows_generator_incremental.py [MAX_NUM_OF_APPS] [NUM_OF_FLOWSETS]')
+    print(' -MAX_NUM_OF_APPS = the target apps_config file based on the number of apps(flows)')
+    print(' -NUM_OF_FLOWSETS = the number of iterations to be accessed and generated.')
+    print('\n*This code accesses ./apps_config/[MAX_NUM_OF_APPS]apps_250pkts-[FLOWSET_NUMBER].txt')
+    print(' -For each FLOWSET_NUMBER in NUM_OF_FLOWSETS, it generates apps_config files smaller than the MAX_NUM_OF_APPS.')
+    print(' -e.g. If MAX_NUM_OF_APPS is 10, then it creates 1apps_250pkts-0.txt, 2apps_250pkts_0.txt, ..., and 9apps_250pkts_0.txt.')
+
 if __name__ == "__main__":
-    max_num_of_apps = int(sys.argv[1])
-    num_of_flowsets = int(sys.argv[2])
-    generate_flows_incremental(max_num_of_apps, num_of_flowsets)
+    if(len(sys.argv) < 3):
+        print_usage()
+    else:
+        max_num_of_apps = int(sys.argv[1])
+        num_of_flowsets = int(sys.argv[2])
+        generate_flows_incremental(max_num_of_apps, num_of_flowsets)
