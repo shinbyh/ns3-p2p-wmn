@@ -1,0 +1,1 @@
+./run_newripple.sh: line 56: ./waf: No such file or directory
