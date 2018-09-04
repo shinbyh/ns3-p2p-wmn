@@ -9,7 +9,8 @@ SCHEME=$4
 DIR_PREFIX=$HOME"/exp/ns-3"
 DIR_NAME=$NUM_NODES"nodes_"$APP_CONFIG
 APPCONFIG_DIR='./apps_config'
-FILE_PREFIXES="applog_ flowinfo_ flowlog_ flow_goodput srcrtlog ovinfo_ ovlog_ ovstat_ nodelog_ nodestat output $APPCONFIG_DIR/$APP_CONFIG temp_ rt_mtnc_stat"
+#FILE_PREFIXES="applog_ flowinfo_ flowlog_ flow_goodput srcrtlog ovinfo_ ovlog_ ovstat_ nodelog_ nodestat output $APPCONFIG_DIR/$APP_CONFIG rt_mtnc_stat"
+FILE_PREFIXES="applog_ flowinfo_ flowlog_ flow_goodput srcrtlog ovinfo_ ovlog_ ovstat_ nodestat $APPCONFIG_DIR/$APP_CONFIG rt_mtnc_stat" # exclude nodelog, output
 
 TARGET=$DIR_PREFIX"/"$EXP_TITLE"/"$SCHEME"/"$DIR_NAME
 mkdir $TARGET
