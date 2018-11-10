@@ -1,5 +1,13 @@
 import math
 import random
+import sys
+
+#####################################################
+# (Node Distributor)
+# It creates a (pseudo) uniform random distribution
+# of nodes in the specified square area of
+# X * Y square meters.
+#####################################################
 
 def get_uniform_random_distribution(width, height, num_nodes):
     coordinates = []
@@ -42,14 +50,25 @@ def write_coordinates_to_file(coordinates, file_name):
         counter += 1
     f.close()
 
+def print_usage():
+    print('Usage: $ python node_distributor.py [X] [Y] [N] [output_file]')
+    print(' - X: width of a square area')
+    print(' - Y: height of a square area')
+    print(' - N: the number of nodes to be distributed')
+    print(' - output_file: an output file name of node coordinates')
+    print('e.g. $ python node_distributor.py 500 500 30 coordinates.config')
 
-#
-# Test Code for the function
-#
+
 if __name__ == "__main__":
-    coordinates = get_uniform_random_distribution(500, 500, 30)
-    print(len(coordinates))
-    print(coordinates)
-    write_coordinates_to_file(coordinates, 'coordinate_test.config')
+    if len(sys.argv) < 4:
+        print_usage()
 
-
+    else:
+        x = int(sys.argv[1])
+        y = int(sys.argv[2])
+        n = int(sys.argv[3])
+        output_file = sys.argv[4]
+        coordinates = get_uniform_random_distribution(x, y, n)
+        print(len(coordinates))
+        print(coordinates)
+        write_coordinates_to_file(coordinates, output_file)
