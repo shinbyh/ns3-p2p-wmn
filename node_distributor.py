@@ -129,13 +129,53 @@ def get_distance_meters(lat_1, lon_1, lat_2, lon_2):
     return geodesic((lat_1, lon_1), (lat_2, lon_2)).meters
 
 
+#
+# Append meter-based coordinates (keys: 'x','y') to the existing
+# set of ap_info (i.e. ap_topology_set).
+# Based on the set of given APs, the smallest values of the
+# latitude and the longitude are used as a comparison point.
+# Using the comparison point, the GPS coordinate of each AP
+# is converted to the meter-based distance.
+#
 def convert_gps_to_meter_coordinates(ap_topology_set):
     s_lat, s_lon = get_comparison_point(ap_topology_set)
 
     for ap_info in ap_topology_set:
         x, y = get_coordinate_meters(s_lat, s_lon, ap_info['lat'], ap_info['lon'])
-        ap_info['x'] = x
-        ap_info['y'] = y
+        ap_info['x'] = round(x)
+        ap_info['y'] = round(y)
+
+
+#
+# Append the hosting channel number to each AP based on reading
+# detailed AP interaction dataset (e.g. 'metrifi/random.csv').
+# Through this, each AP will have 'channel' key and an integer
+# value which stands for an IEEE 802.11 channel number.
+# Note that this channel is used for hosting mobile clients.
+#
+def append_channel_info(ap_topology_set, ap_interaction_set):
+    for ap_interaction in ap_interaction_set:
+        for ap_info in ap_topology_set:
+            if ap_interaction['bssid'] == ap_info['bssid']:
+                ap_info['channel'] = ap_interaction['channel']
+
+    # Write channel to the APs which are not obtained from the ap_interaction_set data.
+    channels = [1, 6, 11]
+    index = 0
+    for ap_info in ap_topology_set:
+        if 'channel' not in ap_info:
+            ap_info['channel'] = channels[index%len(channels)]
+            index += 1
+
+
+def write_new_ap_topology_to_file(ap_topology_set, file_name):
+    counter = 1
+    f = open(file_name, 'w')
+    for ap_info in ap_topology_set:
+        output_row = '{}\tR\t{},{}\t{}\t{}\n'.format(counter, ap_info['x'], ap_info['y'], ap_info['bssid'], ap_info['channel'])
+        f.write(output_row)
+        counter += 1
+    f.close()
 
 
 def print_usage():
@@ -150,19 +190,14 @@ def print_usage():
 if __name__ == "__main__":
     if len(sys.argv) < 4:
         print_usage()
-        ap_topology_set = load_ap_coordinates_from_file('metrofi/aps.txt')
 
+        ap_topology_set = load_ap_coordinates_from_file('metrofi/aps.txt')
         convert_gps_to_meter_coordinates(ap_topology_set)
+        ap_interaction_set = load_ap_interaction_data_from_csv('metrofi/random.csv')
+        append_channel_info(ap_topology_set, ap_interaction_set)
+        write_new_ap_topology_to_file(ap_topology_set, 'coordinates.config')
         print('----------------')
         print(ap_topology_set)
-
-        #s_lat, s_lon = get_comparison_point(ap_topology_set)
-        #print('(s_lat, s_lon) = ({}, {})'.format(s_lat, s_lon))
-        #x, y = get_coordinate_meters(s_lat, s_lon, ap_topology_set[0]['lat'], ap_topology_set[0]['lon'])
-        #dist = get_distance_meters(s_lat, s_lon, ap_topology_set[0]['lat'], ap_topology_set[0]['lon'])
-        #print('(x, y) = ({}, {}) meters'.format(x, y))
-        #print('  - dist[0] = ', dist)
-        load_ap_interaction_data_from_csv('metrofi/random.csv')
 
     else:
         x = int(sys.argv[1])
