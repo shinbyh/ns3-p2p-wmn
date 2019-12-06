@@ -48,5 +48,3 @@ do
 		done
 	done
 done
-
-./slack_webhook.sh 'Your ns-3 simulation has finished: '$EXP_NAME
